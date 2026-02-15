@@ -19,10 +19,16 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
     const [logs, setLogs] = useState<NotificationLog[]>([]);
 
-    // Carregar dados iniciais (Mock)
+    // Carregar dados salvos
     useEffect(() => {
-        const mockSubscribers: Subscriber[] = [
-            {
+        const savedSubs = localStorage.getItem('radar_subscribers');
+        const savedLogs = localStorage.getItem('radar_logs');
+
+        if (savedSubs) {
+            setSubscribers(JSON.parse(savedSubs));
+        } else {
+            // Mock inicial apenas se não houver nada
+            setSubscribers([{
                 id: '1',
                 name: 'Maj Silva',
                 email: 'silva@eb.mil.br',
@@ -30,10 +36,26 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
                 department: 'Ordenador de Despesas',
                 preferences: { email: true, whatsapp: true, sms: false },
                 createdAt: new Date().toISOString()
-            }
-        ];
-        setSubscribers(mockSubscribers);
+            }]);
+        }
+
+        if (savedLogs) {
+            setLogs(JSON.parse(savedLogs));
+        }
     }, []);
+
+    // Salvar mudanças
+    useEffect(() => {
+        if (subscribers.length > 0) {
+            localStorage.setItem('radar_subscribers', JSON.stringify(subscribers));
+        }
+    }, [subscribers]);
+
+    useEffect(() => {
+        if (logs.length > 0) {
+            localStorage.setItem('radar_logs', JSON.stringify(logs));
+        }
+    }, [logs]);
 
     const addSubscriber = (newSub: Omit<Subscriber, 'id' | 'createdAt'>) => {
         const subscriber: Subscriber = {

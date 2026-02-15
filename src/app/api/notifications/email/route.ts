@@ -6,6 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(request: Request) {
     try {
         const { to, subject, html } = await request.json();
+        console.log(`Sending email to: ${to}`);
 
         if (!process.env.RESEND_API_KEY) {
             console.error('RESEND_API_KEY is not defined');
@@ -13,13 +14,14 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await resend.emails.send({
-            from: 'Radar Licitações <notifications@resend.dev>', // No modo free do Resend, só envia para o e-mail cadastrado ou verificados
+            from: 'Radar <onboarding@resend.dev>',
             to: [to],
             subject: subject,
             html: html,
         });
 
         if (error) {
+            console.error('Resend API Error:', error);
             return NextResponse.json({ error }, { status: 400 });
         }
 
