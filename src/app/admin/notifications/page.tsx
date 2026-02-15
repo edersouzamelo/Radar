@@ -55,6 +55,15 @@ export default function AdminNotificationsPage() {
         setIsAddModalOpen(false)
     }
 
+    const handleEdit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (editingSub) {
+            removeSubscriber(editingSub.id)
+            addSubscriber(editingSub)
+            setEditingSub(null)
+        }
+    }
+
     const handleManualTrigger = async () => {
         setIsSending(true)
         await checkAndSendNotifications()
