@@ -1,65 +1,168 @@
-import Image from "next/image";
+import { tenders } from "@/lib/data";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreateTenderModal } from "@/components/create-tender-modal";
+import {
+  Gavel,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  ArrowUpRight
+} from "lucide-react";
 
-export default function Home() {
+export default function Dashboard() {
+  // Cálculos de métricas
+  const totalTenders = tenders.length;
+  const activeTenders = tenders.filter(t => t.status === 'active' || t.status === 'pending').length;
+  const issuesCount = tenders.filter(t => t.hasIssues || t.status === 'suspended').length;
+  const completedTenders = tenders.filter(t => t.status === 'completed').length;
+
+  // Obter atualizações recentes
+  const recentUpdates = tenders
+    .flatMap(t => t.updates.map(u => ({ ...u, tender: t })))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-radar-dark dark:text-radar-cream">
+          Dashboard
+        </h1>
+        <div className="flex items-center gap-4">
+          <CreateTenderModal />
+          <div className="flex items-center space-x-2 text-sm text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            <span>Atualizado agora</span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      {/* Cards de Métricas */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-l-4 border-l-radar-dark">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+              Total de Pregões
+            </CardTitle>
+            <Gavel className="h-5 w-5 text-radar-gold" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">{totalTenders}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              +2 novos esta semana
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-radar-gold">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              Em Andamento
+            </CardTitle>
+            <Clock className="h-5 w-5 text-radar-gold" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">{activeTenders}</div>
+            <p className="text-xs text-gray-400 mt-1">
+              Aguardando ações
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-red-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+              Intercorrências
+            </CardTitle>
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">{issuesCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Requerem atenção
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-green-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              Concluídos
+            </CardTitle>
+            <CheckCircle className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">{completedTenders}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Neste exercício
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Seção Principal: Tabela Recente e Atividades */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+
+        {/* Atividades Recentes */}
+        <Card className="col-span-4 rounded-[2rem]">
+          <CardHeader>
+            <CardTitle>Atualizações em Tempo Real</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-8">
+              {recentUpdates.map((update, idx) => (
+                <div key={idx} className="flex items-start group">
+                  <div className={`mt-1 h-3 w-3 rounded-full ring-2 ring-offset-2 ${update.type === 'alert' ? 'bg-red-500 ring-red-100 dark:ring-red-900' :
+                    update.type === 'warning' ? 'bg-radar-gold ring-radar-beige dark:ring-yellow-900' :
+                      update.type === 'success' ? 'bg-green-500 ring-green-100 dark:ring-green-900' :
+                        'bg-radar-dark ring-gray-100 dark:ring-gray-800'
+                    }`} />
+                  <div className="ml-4 space-y-1">
+                    <p className="text-sm font-bold text-foreground leading-none">
+                      {update.tender.number} - {update.tender.department}
+                    </p>
+                    <p className="text-sm text-muted-foreground group-hover:text-radar-gold transition-colors">
+                      {update.description}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-medium">
+                      {new Date(update.date).toLocaleDateString('pt-BR')} às {new Date(update.date).toLocaleTimeString('pt-BR')}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Status dos Pregões */}
+        <Card className="col-span-3 rounded-[2rem] bg-radar-dark text-radar-cream">
+          <CardHeader>
+            <CardTitle className="text-radar-cream">Status dos Pregões</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {['Edital Publicado', 'Disputa', 'Julgamento', 'Homologação'].map((stage) => {
+                const count = tenders.filter(t => t.currentStage === stage).length;
+                const percentage = (count / totalTenders) * 100;
+                return (
+                  <div key={stage} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="font-medium text-radar-cream">{stage}</div>
+                      <div className="text-radar-gold font-bold">{count}</div>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-white/10">
+                      <div
+                        className="h-2 rounded-full bg-radar-gold"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
