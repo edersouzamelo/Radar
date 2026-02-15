@@ -62,6 +62,42 @@ export interface TenderDates {
     prazoGCALC?: string;
 }
 
+export type UserRole = 'Chefe da Seção de Licitações' | 'Pregoeiro' | 'Auxiliar' | 'Setor Requisitante';
+
+export interface User {
+    id: string;
+    email: string;
+    name: string;
+    role: UserRole;
+    department?: string;
+    avatar?: string;
+}
+
+export interface Subscriber {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    department: string;
+    preferences: {
+        email: boolean;
+        whatsapp: boolean;
+        sms: boolean;
+    };
+    createdAt: string;
+}
+
+export interface NotificationLog {
+    id: string;
+    subscriberId: string;
+    subscriberName: string;
+    tenderNumber: string;
+    channel: 'email' | 'whatsapp' | 'sms';
+    type: '30_days' | '5_days' | 'deadline';
+    sentAt: string;
+    status: 'sent' | 'failed';
+}
+
 export interface Tender {
     id: string;
     uasg: string;

@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UserProvider } from "@/contexts/user-context";
 import { TendersProvider } from "@/contexts/tenders-context";
+import { NotificationsProvider } from "@/contexts/notifications-context";
 import { AppShell } from "@/components/layout/app-shell";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -31,9 +32,11 @@ export default function RootLayout({
         >
           <UserProvider>
             <TendersProvider>
-              <AppShell>
-                {children}
-              </AppShell>
+              <NotificationsProvider>
+                <AppShell>
+                  {children}
+                </AppShell>
+              </NotificationsProvider>
             </TendersProvider>
           </UserProvider>
         </ThemeProvider>

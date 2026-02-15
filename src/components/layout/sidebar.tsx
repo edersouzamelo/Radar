@@ -9,7 +9,8 @@ import {
     LogOut,
     Calendar as CalendarIcon,
     Shield,
-    MessageSquare
+    MessageSquare,
+    Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/user-context";
@@ -28,6 +29,7 @@ export function Sidebar() {
 
     if (role === 'Chefe da Seção de Licitações') {
         navigation.push({ name: 'Gerenciamento de Perfis', href: '/admin', icon: Shield });
+        navigation.push({ name: 'Central de Alertas', href: '/admin/notifications', icon: Bell });
     }
 
     return (
