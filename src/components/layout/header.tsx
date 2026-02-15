@@ -1,14 +1,27 @@
-import { Bell, Search } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
 import { UserNav } from "@/components/user-nav";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useTenders } from "@/contexts/tenders-context";
 
-export function Header() {
+interface HeaderProps {
+    onMenuOpen?: () => void;
+}
+
+export function Header({ onMenuOpen }: HeaderProps) {
     const { searchQuery, setSearchQuery } = useTenders();
 
     return (
-        <header className="flex h-24 w-full items-center gap-x-4 px-8 bg-transparent">
+        <header className="flex h-24 w-full items-center gap-x-4 px-4 md:px-8 bg-transparent">
             <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 items-center">
+                <button
+                    type="button"
+                    className="md:hidden -m-2.5 p-2.5 text-gray-400 hover:text-radar-gold transition-colors"
+                    onClick={onMenuOpen}
+                >
+                    <span className="sr-only">Abrir menu</span>
+                    <Menu className="h-6 w-6" aria-hidden="true" />
+                </button>
+
                 <div className="flex flex-col">
                     <h2 className="text-lg font-semibold text-radar-dark dark:text-white">Olá, Gestor!</h2>
                     <p className="text-sm text-gray-500">Bem-vindo ao RADAR</p>
