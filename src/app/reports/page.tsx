@@ -15,8 +15,8 @@ export default function ReportsPage() {
             tenderNumber: t.number,
             uasg: t.uasg,
             openingDate: t.openingDate,
-            responsible: t.responsibleSector || "SALC / PREGOEIRO",
-            status: t.currentPhase || "Em Andamento"
+            responsible: t.department || "SALC / PREGOEIRO",
+            status: t.currentStage || "Em Andamento"
         }))
 
         generateSpedDocument(data)
