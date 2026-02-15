@@ -9,7 +9,7 @@ interface NotificationsContextType {
     logs: NotificationLog[];
     addSubscriber: (subscriber: Omit<Subscriber, 'id' | 'createdAt'>) => void;
     removeSubscriber: (id: string) => void;
-    checkAndSendNotifications: () => void;
+    checkAndSendNotifications: () => Promise<void>;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
@@ -48,34 +48,58 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         setSubscribers(prev => prev.filter(s => s.id !== id));
     };
 
-    const checkAndSendNotifications = () => {
+    const checkAndSendNotifications = async () => {
         const today = new Date();
         const newLogs: NotificationLog[] = [];
 
-        tenders.forEach(tender => {
+        for (const tender of tenders) {
             const openingDate = new Date(tender.openingDate);
             const diffDays = Math.ceil((openingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
             if ([30, 5, 0].includes(diffDays)) {
-                subscribers.forEach(sub => {
+                for (const sub of subscribers) {
                     const type = diffDays === 30 ? '30_days' : diffDays === 5 ? '5_days' : 'deadline';
 
-                    // Simular envio e log
                     if (sub.preferences.email) {
-                        newLogs.push({
-                            id: Math.random().toString(36).substr(2, 9),
-                            subscriberId: sub.id,
-                            subscriberName: sub.name,
-                            tenderNumber: tender.number,
-                            channel: 'email',
-                            type,
-                            sentAt: new Date().toISOString(),
-                            status: 'sent'
-                        });
+                        try {
+                            const response = await fetch('/api/notifications/email', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    to: sub.email,
+                                    subject: `ALERTA RADAR: Pregão ${tender.number} - Faltam ${diffDays} dias`,
+                                    html: `
+                                        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
+                                            <h2 style="color: #1A1A1A;">Olá, ${sub.name}!</h2>
+                                            <p>Este é um alerta automático do sistema <strong>RADAR</strong>.</p>
+                                            <p>O <strong>Pregão nº ${tender.number}</strong> (UASG ${tender.uasg}) possui abertura prevista para <strong>${new Date(tender.openingDate).toLocaleDateString('pt-BR')}</strong>.</p>
+                                            <hr />
+                                            <p><strong>Status:</strong> Faltam ${diffDays} dias.</p>
+                                            <p>Por favor, verifique se toda a documentação está protocolada na SALC.</p>
+                                        </div>
+                                    `
+                                })
+                            });
+
+                            const result = await response.json();
+
+                            newLogs.push({
+                                id: Math.random().toString(36).substr(2, 9),
+                                subscriberId: sub.id,
+                                subscriberName: sub.name,
+                                tenderNumber: tender.number,
+                                channel: 'email',
+                                type,
+                                sentAt: new Date().toISOString(),
+                                status: result.success ? 'sent' : 'failed'
+                            });
+                        } catch (error) {
+                            console.error('Error sending email:', error);
+                        }
                     }
-                });
+                }
             }
-        });
+        }
 
         if (newLogs.length > 0) {
             setLogs(prev => [...newLogs, ...prev]);

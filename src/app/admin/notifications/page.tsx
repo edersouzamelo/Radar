@@ -33,6 +33,7 @@ export default function AdminNotificationsPage() {
     const { subscribers, logs, removeSubscriber, addSubscriber, checkAndSendNotifications } = useNotifications()
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [editingSub, setEditingSub] = useState<Subscriber | null>(null)
+    const [isSending, setIsSending] = useState(false)
     const [newSub, setNewSub] = useState({
         name: '',
         email: '',
@@ -54,13 +55,10 @@ export default function AdminNotificationsPage() {
         setIsAddModalOpen(false)
     }
 
-    const handleEdit = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (editingSub) {
-            removeSubscriber(editingSub.id)
-            addSubscriber(editingSub)
-            setEditingSub(null)
-        }
+    const handleManualTrigger = async () => {
+        setIsSending(true)
+        await checkAndSendNotifications()
+        setIsSending(false)
     }
 
     return (
@@ -111,11 +109,12 @@ export default function AdminNotificationsPage() {
 
                     <Button
                         variant="outline"
-                        onClick={checkAndSendNotifications}
-                        className="bg-radar-gold/10 border-radar-gold text-radar-dark font-bold hover:bg-radar-gold/20"
+                        onClick={handleManualTrigger}
+                        disabled={isSending}
+                        className="bg-radar-gold/10 border-radar-gold text-radar-dark font-bold hover:bg-radar-gold/20 disabled:opacity-50"
                     >
-                        <Send className="w-4 h-4 mr-2 text-radar-gold" />
-                        Disparo Manual
+                        <Send className={`w-4 h-4 mr-2 text-radar-gold ${isSending ? 'animate-pulse' : ''}`} />
+                        {isSending ? 'Enviando...' : 'Disparo Manual'}
                     </Button>
                 </div>
             </div>
