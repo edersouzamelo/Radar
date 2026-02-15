@@ -53,3 +53,4 @@ Este projeto está sob a licença GNU General Public License v3.0 (GPL-3.0). Vej
 
 ---
 Desenvolvido com foco na eficiência da administração pública. 🇧🇷
+
