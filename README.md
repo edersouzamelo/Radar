@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RADAR - Monitoramento de Licitações 🛡️
 
-## Getting Started
+O **RADAR** é uma plataforma moderna e intuitiva desenvolvida para o acompanhamento sistemático de pregões eletrônicos e licitações. O sistema foca na transparência operacional, controle de prazos críticos (previsto vs. realizado) e gestão de responsabilidades, servindo como uma ferramenta de C2 (Comando e Controle) para a Seção de Licitações (SALC).
 
-First, run the development server:
+![Radar Dashboard](public/radar-logo.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Funcionalidades Principais
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **📊 Dashboard Estratégico**: Visualização rápida do status geral dos pregões (Ativos, Pendentes, Suspensos, Homologados).
+- **📅 Controle de Prazos Refinado**: Monitoramento detalhado de cada fase (Protocolo, Fase Interna, CJU, Publicação, Sessão Pública e Homologação).
+- **👤 Gestão de Responsáveis**: Atribuição clara de responsáveis pela Fase Interna e Pregoeiros (Fase Externa).
+- **📝 Notas de Gestão**: Campos específicos para "O que pode ser otimizado?" e registro de Intercorrências.
+- **🔄 Persistência de Estado**: Gerenciamento de estado global (React Context) que permite edições em tempo real durante a sessão.
+- **🌑 Dark Mode Nativo**: Interface adaptável para diferentes ambientes de trabalho.
+- **🛡️ Controle de Acesso por Papel**: Funcionalidades condicionais baseadas no perfil (Chefe SALC, Pregoeiro, Auxiliar, OD, etc.).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Tecnologias Utilizadas
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Frontend**: [Next.js 15+](https://nextjs.org/) (App Router)
+- **Estilização**: [Tailwind CSS 4+](https://tailwindcss.com/)
+- **Componentes**: [Radix UI](https://www.radix-ui.com/) & [Lucide React](https://lucide.dev/)
+- **Estado**: React Context API
+- **Linguagem**: TypeScript
 
-## Learn More
+## 🛠️ Como Executar o Projeto
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clonar o Repositório**:
+   ```bash
+   git clone https://github.com/edersouzamelo/Radar.git
+   cd Radar
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Instalar Dependências**:
+   ```bash
+   npm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Rodar o Servidor de Desenvolvimento**:
+   ```bash
+   npm run dev
+   ```
 
-## Deploy on Vercel
+4. **Acessar a Aplicação**:
+   Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📈 Importação de Dados
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O sistema está configurado para interpretar dados estruturados oriundos de planilhas de controle (Google Sheets), facilitando a transição de processos manuais para a plataforma digital.
+
+## 📜 Licença
+
+Este projeto está sob a licença GNU General Public License v3.0 (GPL-3.0). Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+Desenvolvido com foco na eficiência da administração pública. 🇧🇷
