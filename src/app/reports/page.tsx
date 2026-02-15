@@ -26,7 +26,7 @@ export default function ReportsPage() {
 
     const handleDownloadDiex = async () => {
         console.log("Iniciando geração de DIEx...");
-        const activeTenders = tenders.filter(t => t.status === 'active');
+        const activeTenders = tenders.filter(t => t.status !== 'completed');
         console.log(`Pregões ativos encontrados: ${activeTenders.length}`);
 
         if (activeTenders.length === 0) {
