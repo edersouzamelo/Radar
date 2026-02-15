@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Shield, UserPlus, Key, UserCog, AlertTriangle, Download } from "lucide-react"
+import { Shield, UserPlus, Key, UserCog, AlertTriangle, Download, Trash2 } from "lucide-react"
 import { useTenders } from "@/contexts/tenders-context"
 import { exportTendersToCSV } from "@/lib/export-utils"
 import {
@@ -89,8 +89,8 @@ export default function AdminPage() {
 
                     <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-black text-white hover:bg-[#333333] font-bold shadow-xl px-4 border border-white/10">
-                                <UserPlus className="mr-2 h-4 w-4" />
+                            <Button className="bg-radar-dark text-white hover:bg-black font-black px-6 shadow-2xl border-2 border-white/20 uppercase tracking-tight">
+                                <UserPlus className="mr-2 h-5 w-5 text-radar-gold" />
                                 Novo Usuário
                             </Button>
                         </DialogTrigger>
@@ -149,15 +149,25 @@ export default function AdminPage() {
                                             <p className="text-xs text-muted-foreground">{u.email}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center space-x-2 text-radar-dark dark:text-gray-100">
-                                        <Badge variant="outline" className="font-semibold border-radar-dark/30">{u.role}</Badge>
+                                    <div className="flex items-center space-x-1">
+                                        <Badge variant="outline" className="font-black border-radar-dark/30 text-[10px] uppercase tracking-widest mr-2">{u.role}</Badge>
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="text-radar-dark hover:bg-radar-gold/20"
+                                            className="h-9 w-9 text-radar-dark hover:bg-radar-gold/20 transition-all"
                                             onClick={() => setEditingUser(u)}
+                                            title="Editar Perfil"
                                         >
-                                            <UserCog className="h-4 w-4" />
+                                            <UserCog className="h-5 w-5" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 text-red-500 hover:bg-red-50 transition-all"
+                                            onClick={() => setUsers(users.filter(user => user.id !== u.id))}
+                                            title="Remover Usuário"
+                                        >
+                                            <Trash2 className="h-5 w-5" />
                                         </Button>
                                     </div>
                                 </div>
