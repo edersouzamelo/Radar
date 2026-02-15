@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UserProvider } from "@/contexts/user-context";
 import { TendersProvider } from "@/contexts/tenders-context";
+import { AppShell } from "@/components/layout/app-shell";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,20 +31,9 @@ export default function RootLayout({
         >
           <UserProvider>
             <TendersProvider>
-              <div className="flex h-full">
-                {/* Sidebar */}
-                <div className="hidden md:flex md:w-[18rem] md:flex-col md:fixed md:inset-y-0 z-50">
-                  <Sidebar />
-                </div>
-
-                {/* Área principal */}
-                <div className="flex flex-col flex-1 md:pl-[18rem] h-full">
-                  <Header />
-                  <main className="flex-1 overflow-y-auto px-8 pb-8">
-                    {children}
-                  </main>
-                </div>
-              </div>
+              <AppShell>
+                {children}
+              </AppShell>
             </TendersProvider>
           </UserProvider>
         </ThemeProvider>

@@ -6,6 +6,10 @@ import { tenders as initialTenders } from '@/lib/data';
 
 interface TendersContextType {
     tenders: Tender[];
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+    statusFilter: string;
+    setStatusFilter: (filter: string) => void;
     updateTender: (id: string, updates: Partial<Tender>) => void;
 }
 
@@ -13,6 +17,8 @@ const TendersContext = createContext<TendersContextType | undefined>(undefined);
 
 export function TendersProvider({ children }: { children: ReactNode }) {
     const [tenders, setTenders] = useState<Tender[]>(initialTenders);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
 
     const updateTender = (id: string, updates: Partial<Tender>) => {
         setTenders(prevTenders =>
@@ -23,7 +29,14 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <TendersContext.Provider value={{ tenders, updateTender }}>
+        <TendersContext.Provider value={{
+            tenders,
+            searchQuery,
+            setSearchQuery,
+            statusFilter,
+            setStatusFilter,
+            updateTender
+        }}>
             {children}
         </TendersContext.Provider>
     );

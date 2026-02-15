@@ -1,8 +1,11 @@
 import { Bell, Search } from "lucide-react";
 import { UserNav } from "@/components/user-nav";
 import { ModeToggle } from "@/components/mode-toggle";
+import { useTenders } from "@/contexts/tenders-context";
 
 export function Header() {
+    const { searchQuery, setSearchQuery } = useTenders();
+
     return (
         <header className="flex h-24 w-full items-center gap-x-4 px-8 bg-transparent">
             <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 items-center">
@@ -11,7 +14,7 @@ export function Header() {
                     <p className="text-sm text-gray-500">Bem-vindo ao RADAR</p>
                 </div>
 
-                <form className="relative flex flex-1 ml-12 max-w-md" action="#" method="GET">
+                <div className="relative flex flex-1 ml-12 max-w-md">
                     <label htmlFor="search-field" className="sr-only">
                         Buscar licitações
                     </label>
@@ -24,10 +27,11 @@ export function Header() {
                             className="block w-full rounded-2xl border-0 bg-white dark:bg-radar-dark/50 py-3 pl-10 pr-4 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-radar-gold shadow-sm sm:text-sm"
                             placeholder="Buscar pregão..."
                             type="search"
-                            name="search"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                </form>
+                </div>
 
                 <div className="flex items-center gap-x-4 ml-auto">
                     <ModeToggle />

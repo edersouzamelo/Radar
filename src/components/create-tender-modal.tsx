@@ -32,42 +32,47 @@ export function CreateTenderModal() {
                     Novo Pregão
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-radar-cream text-radar-dark border-radar-gold">
-                <DialogHeader>
-                    <DialogTitle>Novo Pregão</DialogTitle>
-                    <DialogDescription>
+            <DialogContent className="sm:max-w-[425px] bg-white dark:bg-slate-900 text-radar-dark dark:text-white border-radar-gold shadow-2xl">
+                <DialogHeader className="border-b pb-4 mb-4">
+                    <DialogTitle className="text-2xl font-bold">Novo Pregão</DialogTitle>
+                    <DialogDescription className="text-gray-500 dark:text-gray-400">
                         Preencha os dados básicos do novo pregão. Clique em Salvar quando terminar.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="number" className="text-right">
-                                Número
+                    <div className="grid gap-6 py-2">
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="number" className="font-semibold">
+                                Número do Processo
                             </Label>
-                            <Input id="number" placeholder="99/2026" className="col-span-3" />
+                            <Input id="number" placeholder="99/2026" className="focus:ring-radar-gold" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="uasg" className="text-right">
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="uasg" className="font-semibold">
                                 UASG
                             </Label>
-                            <Input id="uasg" placeholder="987654" className="col-span-3" />
+                            <Input id="uasg" placeholder="987654" className="focus:ring-radar-gold" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="date" className="text-right">
-                                Abertura
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="date" className="font-semibold">
+                                Data de Abertura
                             </Label>
-                            <Input id="date" type="datetime-local" className="col-span-3" />
+                            <Input id="date" type="datetime-local" className="focus:ring-radar-gold" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="description" className="text-right">
-                                Objeto
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="description" className="font-semibold">
+                                Objeto da Licitação
                             </Label>
-                            <Input id="description" placeholder="Aquisição de..." className="col-span-3" />
+                            <Input id="description" placeholder="Aquisição de material..." className="focus:ring-radar-gold" />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button type="submit" className="bg-radar-dark text-white hover:bg-gray-800">Salvar alterações</Button>
+                    <DialogFooter className="mt-8 pt-4 border-t">
+                        <Button
+                            type="submit"
+                            className="w-full bg-radar-dark hover:bg-black text-white font-bold h-12 transition-all hover:scale-[1.02] shadow-lg"
+                        >
+                            Salvar Pregão
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

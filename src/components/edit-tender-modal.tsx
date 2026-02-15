@@ -85,8 +85,8 @@ export function EditTenderModal({ tender }: EditTenderModalProps) {
                     Editar Dados
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-radar-gold">
-                <DialogHeader>
+            <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto bg-white dark:bg-slate-950 text-gray-900 dark:text-gray-100 border-radar-gold shadow-2xl">
+                <DialogHeader className="border-b pb-4 sticky top-0 bg-white dark:bg-slate-950 z-20">
                     <DialogTitle>Editar Pregão {tender.number}</DialogTitle>
                     <DialogDescription className="text-gray-600 dark:text-gray-400">
                         Atualize os dados e prazos do pregão. Campos opcionais podem ser deixados em branco.
@@ -362,9 +362,12 @@ export function EditTenderModal({ tender }: EditTenderModalProps) {
                             </div>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button type="submit" className="bg-radar-dark text-white hover:bg-gray-800">
-                            Salvar alterações
+                    <DialogFooter className="sticky bottom-0 bg-white dark:bg-slate-950 pt-4 border-t z-20 mt-4 pb-2">
+                        <Button
+                            type="submit"
+                            className="w-full bg-radar-dark hover:bg-black text-white font-bold h-12 transition-all hover:scale-[1.02] shadow-lg"
+                        >
+                            Salvar Alterações
                         </Button>
                     </DialogFooter>
                 </form>
