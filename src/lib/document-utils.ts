@@ -57,6 +57,7 @@ export interface DiexParaData {
  * Gera um documento DIEx (.docx) seguindo o padrão do Exército Brasileiro
  */
 export const generateDiexDocument = async (parts: DiexParaData[]) => {
+    console.log("Gerando estrutura do documento DOCX...", parts);
     const doc = new Document({
         sections: [{
             properties: {},
@@ -71,16 +72,35 @@ export const generateDiexDocument = async (parts: DiexParaData[]) => {
                     alignment: AlignmentType.CENTER,
                     children: [
                         new TextRun({ text: "MINISTÉRIO DA DEFESA", bold: true, size: 24 }),
-                        new TextRun({ text: "\nEXÉRCITO BRASILEIRO", bold: true, size: 24 }),
-                        new TextRun({ text: "\nCOMANDO DO 9º GRUPAMENTO LOGÍSTICO", bold: true, size: 24 }),
-                        new TextRun({ text: "\n(GRUPAMENTO GENERAL PEDRO DE ALCÂNTARA CAVALCANTI DE ALBUQUERQUE)", bold: true, size: 20 }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                        new TextRun({ text: "EXÉRCITO BRASILEIRO", bold: true, size: 24 }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                        new TextRun({ text: "COMANDO DO 9º GRUPAMENTO LOGÍSTICO", bold: true, size: 24 }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                        new TextRun({ text: "(GRUPAMENTO GENERAL PEDRO DE ALCÂNTARA CAVALCANTI DE ALBUQUERQUE)", bold: true, size: 20 }),
                     ],
                 }),
                 new Paragraph({ text: "", spacing: { before: 400 } }),
                 new Paragraph({
                     children: [
                         new TextRun({ text: `DIEx nº ${Math.floor(Math.random() * 2000)}-SAL/CAF/Cmdo 9º Gpt Log`, bold: true }),
-                        new TextRun({ text: `\nEB: 65297.001293/${new Date().getFullYear()}-57`, bold: true }),
+                    ],
+                }),
+                new Paragraph({
+                    children: [
+                        new TextRun({ text: `EB: 65297.001293/${new Date().getFullYear()}-57`, bold: true }),
                     ],
                 }),
                 new Paragraph({
@@ -139,8 +159,18 @@ export const generateDiexDocument = async (parts: DiexParaData[]) => {
                     alignment: AlignmentType.CENTER,
                     children: [
                         new TextRun({ text: "ROBSON JOSÉ OLIVEIRA - Cel", bold: true }),
-                        new TextRun({ text: "\nChefe do Estado-Maior Interino do 9º Grupamento Logístico" }),
-                        new TextRun({ text: '\n"160 ANOS DA VITÓRIA DE TUIUTI: A BATALHA DOS PATRONOS"', bold: true }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                        new TextRun({ text: "Chefe do Estado-Maior Interino do 9º Grupamento Logístico" }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                        new TextRun({ text: '"160 ANOS DA VITÓRIA DE TUIUTI: A BATALHA DOS PATRONOS"', bold: true }),
                     ],
                 }),
             ],

@@ -25,29 +25,41 @@ export default function ReportsPage() {
     }
 
     const handleDownloadDiex = async () => {
-        const data: DiexParaData[] = tenders.filter(t => t.status === 'active').map(t => {
+        console.log("Iniciando geração de DIEx...");
+        const activeTenders = tenders.filter(t => t.status === 'active');
+        console.log(`Pregões ativos encontrados: ${activeTenders.length}`);
+
+        if (activeTenders.length === 0) {
+            alert("Nenhum pregão ATIVO encontrado para gerar o DIEx de cobrança.");
+            return;
+        }
+
+        const data: DiexParaData[] = activeTenders.map(t => {
             // Lógica automática de providência baseada na fase
             let reason = "o protocolo inicial do TR";
-            let deadline = format(new Date(), "dd MMM yy", { locale: ptBR }).toUpperCase();
 
-            if (t.currentStage.includes("Publicado")) {
+            if (t.currentStage?.includes("Publicado")) {
                 reason = "a devolução do processo para análise de recursos";
-            } else if (t.currentStage.includes("Homologado")) {
+            } else if (t.currentStage?.includes("Homologado")) {
                 reason = "o encerramento da fase administrativa no sistema";
             }
 
             return {
                 omds: t.section || t.department || "OM Requisitante",
                 tenderNumber: t.number,
-                nup: "65345.000123/2026-00", // Placeholder ou campo real se existir
+                nup: "65345.000123/2026-00",
                 object: t.description,
-                deadline: "20 FEV 26", // Exemplo fixo como no print, idealmente calculado
+                deadline: "20 FEV 26",
                 reason: reason
             }
         })
 
-        if (data.length > 0) {
-            await generateDiexDocument(data)
+        try {
+            await generateDiexDocument(data);
+            console.log("DIEx gerado com sucesso!");
+        } catch (error) {
+            console.error("Erro ao gerar DIEx:", error);
+            alert("Erro ao gerar o documento DIEx. Verifique o console do navegador.");
         }
     }
 
