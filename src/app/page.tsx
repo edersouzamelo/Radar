@@ -12,9 +12,9 @@ import {
 export default function Dashboard() {
   // Cálculos de métricas
   const totalTenders = tenders.length;
-  const activeTenders = tenders.filter(t => t.status === 'active' || t.status === 'pending').length;
-  const issuesCount = tenders.filter(t => t.hasIssues || t.status === 'suspended').length;
-  const completedTenders = tenders.filter(t => t.status === 'completed').length;
+  const activeTenders = tenders.filter(t => t.status !== 'HOMOLOGADO').length;
+  const issuesCount = tenders.filter(t => t.hasIssues || t.status === 'CORREÇÕES PARA PUBLICAÇÃO').length;
+  const completedTenders = tenders.filter(t => t.status === 'HOMOLOGADO').length;
 
   // Obter atualizações recentes
   const recentUpdates = tenders

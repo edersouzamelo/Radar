@@ -10,6 +10,14 @@ interface TendersContextType {
     setSearchQuery: (query: string) => void;
     statusFilter: string;
     setStatusFilter: (filter: string) => void;
+    nupFilter: string;
+    setNupFilter: (filter: string) => void;
+    commitmentFilter: string;
+    setCommitmentFilter: (filter: string) => void;
+    coordinatorFilter: string;
+    setCoordinatorFilter: (filter: string) => void;
+    requesterSectorFilter: string;
+    setRequesterSectorFilter: (filter: string) => void;
     updateTender: (id: string, updates: Partial<Tender>) => void;
 }
 
@@ -19,6 +27,10 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     const [tenders, setTenders] = useState<Tender[]>(initialTenders);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [nupFilter, setNupFilter] = useState("");
+    const [commitmentFilter, setCommitmentFilter] = useState("all");
+    const [coordinatorFilter, setCoordinatorFilter] = useState("all");
+    const [requesterSectorFilter, setRequesterSectorFilter] = useState("all");
 
     const updateTender = (id: string, updates: Partial<Tender>) => {
         setTenders(prevTenders =>
@@ -35,6 +47,14 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             setSearchQuery,
             statusFilter,
             setStatusFilter,
+            nupFilter,
+            setNupFilter,
+            commitmentFilter,
+            setCommitmentFilter,
+            coordinatorFilter,
+            setCoordinatorFilter,
+            requesterSectorFilter,
+            setRequesterSectorFilter,
             updateTender
         }}>
             {children}

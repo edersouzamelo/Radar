@@ -1,4 +1,11 @@
-export type TenderStatus = 'pending' | 'active' | 'completed' | 'suspended';
+export type TenderStatus =
+    | 'FASE INTERNA NA OMDS'
+    | 'FASE INTERNA NA SAL'
+    | 'FASE INTERNA NA CJU'
+    | 'CORREÇÕES PARA PUBLICAÇÃO'
+    | 'EDITAL PUBLICADO'
+    | 'FASE EXTERNA'
+    | 'HOMOLOGADO';
 
 export type TenderStage =
     | 'Edital Publicado'
@@ -60,6 +67,16 @@ export interface TenderDates {
     vigenciaAnterior?: string;
     // Prazo do GCALC
     prazoGCALC?: string;
+
+    // Novos campos solicitados
+    cjuSendDeadline?: string; // Prazo de envio à CJU
+    cjuReturnDate?: string; // Data de regresso da CJU
+    publicationAdjustmentsDeadline?: string; // Prazo de ajustes para publicação
+    publicationDate?: string; // Data de publicação
+    proposalOpeningDate?: string; // Data de abertura e julgamento das propostas
+    homologationForecast?: string; // Previsão interna de homologação (previsão)
+    homologationDeadline?: string; // Prazo de homologação
+    minutesSignatureDeadline?: string; // Prazo de assinatura das atas
 }
 
 export type UserRole = 'Chefe da Seção de Licitações' | 'Pregoeiro' | 'Auxiliar' | 'Setor Requisitante';
@@ -102,6 +119,7 @@ export interface Tender {
     id: string;
     uasg: string;
     number: string; // e.g., "90/2024"
+    nup?: string; // NUP: 17 digits
     description: string;
     department: string; // e.g., "Divisão de Logística"
     openingDate: string; // Data da sessão pública
@@ -125,4 +143,7 @@ export interface Tender {
     nextDeadline?: string;
     nextActivity?: string;
     intercurrences?: string;
+    commitment?: 'GCALC' | 'PCA da OM' | 'Operação Perseu' | 'Outros';
+    requesterSector?: '9º B Mnt' | '9º B Sup' | '18º B Trnp' | 'Cia Cmdo' | '9º B Sau' | 'Cmdo 9º Gpt' | 'A definir';
+    coordinator?: 'CAF' | 'CCOL' | '9º B Sup' | 'A definir';
 }

@@ -36,19 +36,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <VisuallyHidden>
                         <DialogTitle>Menu de Navegação</DialogTitle>
                     </VisuallyHidden>
-                    <div className="h-screen w-[18rem]">
+                    <div className="h-screen w-[15rem]">
                         <Sidebar />
                     </div>
                 </DialogContent>
             </Dialog>
 
             {/* Sidebar Desktop */}
-            <div className="hidden md:flex md:w-[20rem] md:flex-col md:fixed md:inset-y-0 z-50">
+            <div className="hidden md:flex md:w-[15rem] md:flex-col md:fixed md:inset-y-0 z-50">
                 <Sidebar />
             </div>
 
             {/* Área principal */}
-            <div className="flex flex-col flex-1 md:pl-[20rem] h-full">
+            <div className="flex flex-col flex-1 md:pl-[15rem] h-full">
                 <Header onMenuOpen={() => setIsMobileMenuOpen(true)} />
                 <main className="flex-1 overflow-y-auto px-4 md:px-8 pb-8">
                     {children}

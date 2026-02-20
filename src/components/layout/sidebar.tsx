@@ -33,10 +33,10 @@ export function Sidebar() {
     }
 
     return (
-        <div className="flex h-full w-[18rem] flex-col bg-[#1A1A1A] text-[#FDFBF7] rounded-r-[3rem] shadow-2xl mr-4 my-4 ml-4 h-[calc(100vh-2rem)] border-r border-white/10">
-            <div className="flex h-[20rem] items-center justify-center py-4 shrink-0">
+        <div className="flex h-full w-52 flex-col bg-[#1A1A1A] text-[#FDFBF7] rounded-r-[3rem] shadow-2xl mr-4 my-4 ml-4 h-[calc(100vh-2rem)] border-r border-white/10">
+            <div className="flex h-44 items-center justify-center py-4 shrink-0">
                 <Link href="/" className="flex flex-col items-center gap-4 transition-transform hover:scale-105">
-                    <div className="relative h-[16rem] w-[16rem] drop-shadow-2xl">
+                    <div className="relative h-32 w-32 drop-shadow-2xl">
                         <Image
                             src="/radar-logo.png"
                             alt="Radar Logo"
