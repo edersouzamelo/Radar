@@ -1,21 +1,36 @@
--- SCRIPT DE INICIALIZAÇÃO DO BANCO RADAR (v3.0.1 - Corrigido para IDs de Texto)
+-- SCRIPT DE VERIFICAÇÃO E RESET ABSOLUTO (V4)
+-- 1. PRIMEIRO, VAMOS VER O QUE TEM NO BANCO AGORA
+SELECT 
+    table_name, 
+    column_name, 
+    data_type 
+FROM 
+    information_schema.columns 
+WHERE 
+    table_name IN ('team_members', 'tenders', 'date_checks')
+    AND column_name IN ('id', 'assigned_pregoeiro_id', 'tender_id');
 
--- 1. Tabela de Equipe (Membros da SALC, Pregoeiros e Requisitantes)
+-- 2. RESET AGRESSIVO (Se o de cima mostrar "uuid", este resolve)
+DROP TABLE IF EXISTS date_checks CASCADE;
+DROP TABLE IF EXISTS conference_statuses CASCADE;
+DROP TABLE IF EXISTS tenders CASCADE;
+DROP TABLE IF EXISTS team_members CASCADE;
+
+-- 3. RECRIAÇÃO LIMPA (Forçando TEXT em tudo)
 CREATE TABLE team_members (
-    id TEXT PRIMARY KEY, -- Mudado de UUID para TEXT para aceitar IDs legados
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT,
     whatsapp TEXT,
     role TEXT,
-    type TEXT NOT NULL, -- 'pregoeiro', 'supervisor', 'requisitante'
-    organization TEXT, -- OM ou Órgão
+    type TEXT NOT NULL,
+    organization TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Tabela de Pregões (Tenders)
 CREATE TABLE tenders (
-    id TEXT PRIMARY KEY, -- Mudado de UUID para TEXT para aceitar 'tender-90012-2025'
+    id TEXT PRIMARY KEY,
     uasg TEXT,
     number TEXT NOT NULL,
     nup TEXT,
@@ -45,24 +60,19 @@ CREATE TABLE tenders (
     assigned_pregoeiro_id TEXT REFERENCES team_members(id),
     pregoeiro_fase_interna_id TEXT REFERENCES team_members(id),
     pregoeiro_fase_externa_id TEXT REFERENCES team_members(id),
-    
-    -- Campos complexos como JSONB para flexibilidade
     dates JSONB DEFAULT '{}'::jsonb,
     updates JSONB DEFAULT '[]'::jsonb,
     observations JSONB DEFAULT '[]'::jsonb,
-    
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Tabela de Status de Conferência (para garantir sincronia entre sessões)
 CREATE TABLE conference_statuses (
     tender_id TEXT PRIMARY KEY REFERENCES tenders(id) ON DELETE CASCADE,
     status TEXT NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Tabela de Verificação de Datas (Checkbox de conferência)
 CREATE TABLE date_checks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tender_id TEXT REFERENCES tenders(id) ON DELETE CASCADE,
@@ -72,13 +82,24 @@ CREATE TABLE date_checks (
     UNIQUE(tender_id, date_key)
 );
 
--- 5. Configuração de Segurança de Linha (RLS)
+-- 4. POLÍTICAS RLS (Garantindo que o sistema pode escrever)
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tenders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conference_statuses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE date_checks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Acesso Permitido" ON team_members FOR ALL TO anon, authenticated USING (true);
-CREATE POLICY "Acesso Permitido" ON tenders FOR ALL TO anon, authenticated USING (true);
-CREATE POLICY "Acesso Permitido" ON conference_statuses FOR ALL TO anon, authenticated USING (true);
-CREATE POLICY "Acesso Permitido" ON date_checks FOR ALL TO anon, authenticated USING (true);
+CREATE POLICY "Acesso Total Anon" ON team_members FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso Total Anon" ON tenders FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso Total Anon" ON conference_statuses FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso Total Anon" ON date_checks FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+
+-- 5. VERIFICAÇÃO FINAL (Deve aparecer 'text' em todos os IDs após o Run)
+SELECT 
+    table_name, 
+    column_name, 
+    data_type 
+FROM 
+    information_schema.columns 
+WHERE 
+    table_name IN ('team_members', 'tenders', 'date_checks')
+    AND column_name IN ('id', 'assigned_pregoeiro_id', 'tender_id');

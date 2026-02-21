@@ -215,64 +215,99 @@ export function TendersProvider({ children }: { children: ReactNode }) {
 
         try {
             // 1. Puxar dados para contar registros (Verificar conexão)
+            if (!supabase) {
+                console.error("❌ Erro Crítico: Cliente Supabase não inicializado. Verifique .env.local");
+                setCloudStatus(prev => ({ ...prev, status: 'error', message: 'Cliente Supabase não inicializado' }));
+                return;
+            }
+
             const { count, error: countError } = await supabase
                 .from('tenders')
                 .select('*', { count: 'exact', head: true });
 
             if (countError) throw countError;
 
-            // 2. Preparar dados locais para Upload
-            // Mapeamos para bater com as colunas do PostgreSQL (supabase_init.sql)
-            const tendersToUpload = tenders.map(t => ({
-                id: t.id,
-                uasg: t.uasg,
-                number: t.number,
-                nup: t.nup,
-                description: t.description,
-                department: t.department,
-                opening_date: t.openingDate,
-                estimated_value: t.estimatedValue,
-                status: t.status,
-                current_stage: t.currentStage,
-                has_issues: t.hasIssues,
-                is_gcalc: t.isGCALC,
-                commitment: t.commitment,
-                requester_sector: t.requesterSector,
-                coordinator: t.coordinator,
-                coord: t.coord,
-                section: t.section,
-                responsible_internal: t.responsibleInternal,
-                responsible_external: t.responsibleExternal,
-                bi_publication: t.biPublication,
-                optimization_notes: t.optimizationNotes,
-                next_deadline: t.nextDeadline,
-                next_activity: t.nextActivity,
-                intercurrences: t.intercurrences,
-                last_updated_by: t.lastUpdatedBy,
-                verification_status: t.verificationStatus,
-                assigned_pregoeiro_id: t.assignedPregoeiroId,
-                pregoeiro_fase_interna_id: t.pregoeiroFaseInternaId,
-                pregoeiro_fase_externa_id: t.pregoeiroFaseExternaId,
-                dates: t.dates || {},
-                updates: t.updates || [],
-                observations: t.observations || []
-            }));
+            // 2. Preparar dados de membros da equipe para validação de FK
+            const allTeamIds = new Set([
+                ...pregoeiros.map(p => p.id),
+                ...supervisors.map(s => s.id),
+                ...people.map(p => p.id)
+            ]);
 
-            // 3. Executar Upsert (Insere se novo, atualiza se existir ID)
+            // 3. Preparar dados locais para Upload com Validação de FK
+            const tendersToUpload = tenders.map(t => {
+                // Função auxiliar para validar se um ID existe na equipe
+                const getSafeId = (id: string | undefined | null) => {
+                    if (!id || id.trim() === "" || !allTeamIds.has(id)) {
+                        if (id && id.trim() !== "") {
+                            console.warn(`⚠️ ID de Pregoeiro/Supervisor fantasma detectado: "${id}" no pregão ${t.number}. Limpando para evitar erro de banco.`);
+                        }
+                        return null;
+                    }
+                    return id;
+                };
+
+                return {
+                    id: t.id,
+                    uasg: t.uasg,
+                    number: t.number,
+                    nup: t.nup,
+                    description: t.description,
+                    department: t.department,
+                    opening_date: t.openingDate,
+                    estimated_value: t.estimatedValue,
+                    status: t.status,
+                    current_stage: t.currentStage,
+                    has_issues: t.hasIssues,
+                    is_gcalc: t.isGCALC,
+                    commitment: t.commitment,
+                    requester_sector: t.requesterSector,
+                    coordinator: t.coordinator,
+                    coord: t.coord,
+                    section: t.section,
+                    responsible_internal: t.responsibleInternal,
+                    responsible_external: t.responsibleExternal,
+                    bi_publication: t.biPublication,
+                    optimization_notes: t.optimizationNotes,
+                    next_deadline: t.nextDeadline,
+                    next_activity: t.nextActivity,
+                    intercurrences: t.intercurrences,
+                    last_updated_by: t.lastUpdatedBy,
+                    verification_status: t.verificationStatus,
+                    assigned_pregoeiro_id: getSafeId(t.assignedPregoeiroId),
+                    pregoeiro_fase_interna_id: getSafeId(t.pregoeiroFaseInternaId),
+                    pregoeiro_fase_externa_id: getSafeId(t.pregoeiroFaseExternaId),
+                    dates: t.dates || {},
+                    updates: t.updates || [],
+                    observations: t.observations || []
+                };
+            });
+
+            // 4. Sincronizar Membros da Equipe PRIMEIRO (Evita erro de FK)
+            const teamToUpload = [
+                ...pregoeiros.map(p => ({
+                    id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role,
+                    type: 'pregoeiro', om: (p as any).om || ""
+                })),
+                ...supervisors.map(s => ({
+                    id: s.id, name: s.name, email: s.email, whatsapp: s.whatsapp, role: s.role,
+                    type: 'supervisor', om: s.organization || ""
+                })),
+                ...people.map(p => ({
+                    id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role,
+                    type: 'requisitante', om: p.sector || ""
+                }))
+            ];
+
+            const { error: teamError } = await supabase.from('team_members').upsert(teamToUpload);
+            if (teamError) throw teamError;
+
+            // 4. Sincronizar Pregões (Agora que os pregoeiros existem no banco)
             const { error: upsertError } = await supabase
                 .from('tenders')
                 .upsert(tendersToUpload);
 
             if (upsertError) throw upsertError;
-
-            // 4. Sincronizar Membros da Equipe (Opcional por enquanto, mas bom manter)
-            const teamToUpload = [
-                ...pregoeiros.map(p => ({ ...p, type: 'pregoeiro' })),
-                ...supervisors.map(s => ({ ...s, type: 'supervisor' })),
-                ...people.map(p => ({ ...p, type: 'requisitante' }))
-            ];
-
-            await supabase.from('team_members').upsert(teamToUpload);
 
             setCloudStatus({
                 isConnected: true,
@@ -282,12 +317,29 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             });
 
         } catch (err: any) {
-            console.error("Erro na sincronia cloud:", err);
+            console.error("❌ Erro na sincronia cloud (BRUTO):", err);
+            console.dir(err); // Tenta mostrar a estrutura interna
+
+            // Extrai a mensagem da forma mais agressiva possível
+            let errorMsg = "Erro desconhecido de conexão";
+            if (err.message) errorMsg = err.message;
+            else if (err.error_description) errorMsg = err.error_description;
+            else if (err.statusText) errorMsg = err.statusText;
+            else if (err.toString() !== "[object Object]") errorMsg = err.toString();
+
+            // Adiciona código e dica se existirem
+            if (err.code) errorMsg += ` (Cod: ${err.code})`;
+            if (err.hint) errorMsg += ` - Dica: ${err.hint}`;
+
+            // Tenta forçar a mensagem a aparecer no Red Overlay do Next.js
+            const finalMessage = `ERRO CLOUD: ${errorMsg}`;
+            console.error(finalMessage);
+
             setCloudStatus(prev => ({
                 ...prev,
                 status: 'error',
                 isConnected: false,
-                message: err.message
+                message: errorMsg
             }));
         }
     }, [tenders, pregoeiros, supervisors, people]);
