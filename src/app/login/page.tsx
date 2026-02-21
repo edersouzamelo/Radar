@@ -146,10 +146,13 @@ export default function LoginPage() {
                     </form>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
-                    <p className="text-center text-xs text-gray-500 max-w-[280px]">
+                    <p className="text-center text-[10px] text-gray-400 max-w-[280px]">
                         Sistema Restrito para uso militar.
                         O acesso indevido está sujeito a sanções conforme o RDE.
                     </p>
+                    <div className="absolute bottom-4 right-4 text-[10px] text-muted-foreground opacity-50 font-mono">
+                        v1.2.5
+                    </div>
                 </CardFooter>
             </Card>
         </div>

@@ -1,5 +1,5 @@
 "use client"
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type UserRole =
     | 'Ordenador de Despesas'
@@ -21,28 +21,22 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [role, setRole] = useState<UserRole>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('radar-role');
-            return (saved as UserRole) || 'Agente Diretor';
-        }
-        return 'Agente Diretor';
-    });
+    const [role, setRole] = useState<UserRole>('Agente Diretor');
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('radar-auth') === 'true';
-        }
-        return false;
-    });
+    // Carregar dados de autenticação após montagem (evita erro de hidratação)
+    useEffect(() => {
+        const savedAuth = localStorage.getItem('radar-auth') === 'true';
+        const savedRole = localStorage.getItem('radar-role') as UserRole;
+        const savedUser = localStorage.getItem('radar-user');
 
-    const [user, setUser] = useState<{ name: string; email: string } | null>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('radar-user');
-            return saved ? JSON.parse(saved) : null;
+        if (savedAuth) {
+            setIsAuthenticated(true);
+            if (savedRole) setRole(savedRole);
+            if (savedUser) setUser(JSON.parse(savedUser));
         }
-        return null;
-    });
+    }, []);
 
     const login = (role: UserRole, name: string, email: string) => {
         setIsAuthenticated(true);

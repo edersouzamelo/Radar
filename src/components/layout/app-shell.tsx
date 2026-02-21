@@ -13,13 +13,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const { isAuthenticated } = useUser()
     const pathname = usePathname()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+    const [isMounted, setIsMounted] = useState(false)
+
+    // Garantir montagem
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
+    // Carregar preferência da sidebar
+    useEffect(() => {
+        const saved = localStorage.getItem('radar_sidebar_collapsed')
+        if (saved !== null) setIsSidebarCollapsed(saved === 'true')
+    }, [])
+
+    // Salvar preferência
+    useEffect(() => {
+        localStorage.setItem('radar_sidebar_collapsed', String(isSidebarCollapsed))
+    }, [isSidebarCollapsed])
 
     // Fechar menu mobile ao mudar de página
     useEffect(() => {
         setIsMobileMenuOpen(false)
     }, [pathname])
 
-    // Se estiver na página de login explicitly (opcional se usarmos só o wrapper)
+    if (!isMounted) {
+        return null; // Evita qualquer discrepância no primeiro render
+    }
+
     if (pathname === '/login') {
         return <LoginPage />
     }
@@ -43,12 +64,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Dialog>
 
             {/* Sidebar Desktop */}
-            <div className="hidden md:flex md:w-[15rem] md:flex-col md:fixed md:inset-y-0 z-50">
-                <Sidebar />
+            <div className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 z-50 transition-all duration-300 ${isSidebarCollapsed ? 'md:w-20' : 'md:w-60'}`}>
+                <Sidebar isCollapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
             </div>
 
             {/* Área principal */}
-            <div className="flex flex-col flex-1 md:pl-[15rem] h-full">
+            <div className={`flex flex-col flex-1 h-full transition-all duration-300 ${isSidebarCollapsed ? 'md:pl-20' : 'md:pl-60'}`}>
                 <Header onMenuOpen={() => setIsMobileMenuOpen(true)} />
                 <main className="flex-1 overflow-y-auto px-4 md:px-8 pb-8">
                     {children}

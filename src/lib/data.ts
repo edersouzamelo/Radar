@@ -1,36 +1,30 @@
+export const DATA_VERSION = "1.3.0";
+
 import { Tender } from "@/types";
 
 export const tenders: Tender[] = [
     {
-        "id": "tender-900012-2025-0",
-        "uasg": "122456",
-        "number": "900012/2025",
-        "description": "Aqs Ração Canina (1) e Equina (2)",
+        "id": "tender-90012-2025",
+        "uasg": "160136",
+        "number": "90012/2025",
+        "description": "Aqs Ração Canina e Equina",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
         "status": "HOMOLOGADO",
-        "currentStage": "Edital Publicado",
+        "currentStage": "1. Entrada do TR na SAL",
         "hasIssues": false,
         "isGCALC": true,
-        "commitment": "GCALC",
-        "coordinator": "CCOL",
-        "requesterSector": "9º B Sup",
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "999999999999999991",
+        "commitment": "GCALC",
+        "verificationStatus": "OK",
         "dates": {
             "protocoloSetorRequisitante": {
-                "defined": "2026-01-01",
-                "executed": "2026-01-05"
+                "defined": "2025-06-15",
+                "executed": "2025-06-04"
             },
-            "cjuSendDeadline": "2026-01-10",
-            "cjuReturnDate": "2026-01-20",
-            "publicationAdjustmentsDeadline": "2026-01-25",
-            "publicationDate": "2026-02-01",
-            "proposalOpeningDate": "2026-02-15",
-            "homologationForecast": "2026-02-20",
-            "homologationDeadline": "2026-02-25",
-            "minutesSignatureDeadline": "2026-02-28",
-            "vigenciaAnterior": "2025-12-31",
-            "prazoGCALC": "2026-03-01"
+            "vigenciaAnterior": "2026-12-01"
         },
         "responsibleInternal": "",
         "responsibleExternal": "S Ten L Alves",
@@ -43,35 +37,32 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90013-2025-1",
-        "uasg": "122456",
+        "id": "tender-90013-2025",
+        "uasg": "160136",
         "number": "90013/2025",
-        "description": "Contratação de serviços - PASA",
+        "description": "Contratação de serviços do PASA",
         "department": "18º B Trnp",
         "openingDate": "2026-01-09T09:00:00",
-        "status": "CORREÇÕES PARA PUBLICAÇÃO",
-        "currentStage": "Homologação",
+        "status": "FASE INTERNA NA SAL",
+        "currentStage": "8 Adjudicação e Homologação",
         "hasIssues": true,
         "isGCALC": true,
-        "commitment": "PCA da OM",
-        "coordinator": "CAF",
-        "requesterSector": "18º B Trnp",
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "999999999999999991",
+        "commitment": "GCALC",
+        "verificationStatus": "OK",
         "dates": {
             "protocoloSetorRequisitante": {
-                "defined": "2026-01-09",
-                "executed": ""
+                "defined": "2025-05-29",
+                "executed": "2025-05-29"
             },
-            "cjuSendDeadline": "2026-01-15",
-            "cjuReturnDate": "",
-            "publicationAdjustmentsDeadline": "",
-            "publicationDate": "",
-            "proposalOpeningDate": "",
-            "homologationForecast": "",
-            "homologationDeadline": "",
-            "minutesSignatureDeadline": "",
-            "vigenciaAnterior": "",
-            "prazoGCALC": ""
+            "publicationDate": "2025-12-19",
+            "proposalOpeningDate": "2026-01-09",
+            "homologationForecast": "2026-02-07",
+            "homologationDeadline": "2026-02-07",
+            "minutesSignatureDeadline": "2026-02-07",
+            "vigenciaAnterior": "2025-08-30"
         },
         "responsibleInternal": "S Ten L Alves",
         "responsibleExternal": "3º Sgt Caldeira",
@@ -84,48 +75,58 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90014-2025-2",
-        "uasg": "122456",
+        "id": "tender-90014-2025",
+        "uasg": "160136",
         "number": "90014/2025",
         "description": "Aqs Pç Mnt Vtr - AUDATEX",
         "department": "9º B Mnt",
         "openingDate": "2025-12-29T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE EXTERNA - EDITAL PUBLICADO",
         "currentStage": "Edital Publicado",
-        "hasIssues": true,
+        "hasIssues": false,
         "isGCALC": true,
-        "commitment": "Operação Perseu",
-        "coordinator": "CCOL",
-        "requesterSector": "9º B Mnt",
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "888888888888888881",
+        "commitment": "GCALC",
+        "verificationStatus": "OK",
         "dates": {
             "protocoloSetorRequisitante": {
-                "defined": "2025-12-29",
-                "executed": "2026-01-02"
-            }
+                "defined": "2025-05-26",
+                "executed": "2025-05-23"
+            },
+            "publicationDate": "2025-12-12",
+            "proposalOpeningDate": "2025-12-29"
         },
-        "responsibleInternal": "S Ten Cunha",
-        "responsibleExternal": "2º Sgt Octávio",
-        "biPublication": "PREGOEIRO FAVOR CONFERIR  A PUBLICAÇÃO EM BI, SE ESTIVER PUBLICADO",
-        "intercurrences": "Ficou mais de um mês em correção no setor requisitante após parecer jurídico",
-        "optimizationNotes": "Já tá tá encaminhado para publicação, já tem data, só esperar a seção publica chegar e operar",
-        "nextDeadline": "Sem prazo\nHomologado",
-        "nextActivity": "8 Adjudicação e Homologação",
         "updates": [],
         "observations": []
     },
     {
-        "id": "tender-90017-2025-3",
-        "uasg": "122456",
+        "id": "tender-90017-2025",
+        "uasg": "160136",
         "number": "90017/2025",
         "description": "Aquisição de material permanente - PASA",
         "department": "18º B Trnp",
         "openingDate": "2025-12-26T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA SAL",
+        "currentStage": "8 Adjudicação e Homologação",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "888888888888888881",
+        "commitment": "GCALC",
+        "verificationStatus": "OK",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-06-05",
+                "executed": "2025-11-07"
+            },
+            "publicationDate": "2025-12-12",
+            "proposalOpeningDate": "2025-12-26",
+            "homologationDeadline": "2026-02-07",
+            "vigenciaAnterior": "2025-10-25"
+        },
         "responsibleInternal": "2º Sgt Octávio",
         "responsibleExternal": "3º Sgt Carvalho",
         "biPublication": "PREGOEIRO FAVOR CONFERIR  A PUBLICAÇÃO EM BI, SE ESTIVER PUBLICADO",
@@ -137,39 +138,57 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90023-2025-4",
-        "uasg": "122456",
+        "id": "tender-90023-2025",
+        "uasg": "160136",
         "number": "90023/2025",
         "description": "Aquisição de material de consumo - PASA",
         "department": "18º B Trnp",
         "openingDate": "2025-12-26T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
-        "hasIssues": true,
+        "hasIssues": false,
         "isGCALC": true,
         "coord": "CAF",
-        "responsibleInternal": "S Ten L Alves",
-        "responsibleExternal": "2º Sgt Octávio",
-        "biPublication": "PREGOEIRO FAVOR CONFERIR  A PUBLICAÇÃO EM BI, SE ESTIVER PUBLICADO",
-        "intercurrences": "",
-        "optimizationNotes": "Encaminhado para ser publicado no dia 12, não tem o que possa fazer para reduzir prazo.",
-        "nextDeadline": "Sem prazo\nHomologado",
-        "nextActivity": "8 Adjudicação e Homologação",
+        "coordinator": "CAF",
+        "nup": "999999999999999991",
+        "commitment": "GCALC",
+        "verificationStatus": "OK",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-06-25",
+                "executed": "2025-09-09"
+            },
+            "publicationDate": "2025-12-12",
+            "proposalOpeningDate": "2025-12-26"
+        },
         "updates": [],
         "observations": []
     },
     {
-        "id": "tender-90018-2025-5",
-        "uasg": "122456",
+        "id": "tender-90018-2025",
+        "uasg": "160136",
         "number": "90018/2025",
         "description": "Aqs de material de saúde (medicamentos e odonto) - Classe VIII",
         "department": "9º B Sup",
         "openingDate": "2026-01-26T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "8 Adjudicação e Homologação",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "✔️",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-08-18",
+                "executed": "2025-08-14"
+            },
+            "publicationDate": "2025-12-31",
+            "proposalOpeningDate": "2026-01-26",
+            "homologationForecast": "2026-04-06",
+            "homologationDeadline": "2026-02-28",
+            "vigenciaAnterior": "2026-02-10"
+        },
         "responsibleInternal": "S Ten L Alves",
         "responsibleExternal": "S Ten Cunha",
         "biPublication": "",
@@ -181,17 +200,29 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90021-2025-6",
-        "uasg": "122456",
+        "id": "tender-90021-2025-17",
+        "uasg": "160136",
         "number": "90021/2025",
         "description": "Aqs QS 1ª Provisão 2026",
         "department": "9º B Sup",
         "openingDate": "2026-01-08T09:00:00",
-        "status": "HOMOLOGADO",
-        "currentStage": "Edital Publicado",
+        "status": "completed",
+        "currentStage": "7.2 Resposta a Recurso",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "✔️",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-08-15",
+                "executed": "2025-08-21"
+            },
+            "publicationDate": "2026-12-24",
+            "proposalOpeningDate": "2026-01-08",
+            "homologationDeadline": "2026-01-30",
+            "vigenciaAnterior": "2026-08-20"
+        },
         "responsibleInternal": "S Ten Cunha",
         "responsibleExternal": "S Ten L Alves",
         "biPublication": "BI nr 157, de 27/08/25",
@@ -203,17 +234,32 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90001-2026-7",
-        "uasg": "122456",
+        "id": "tender-90001-2026-18",
+        "uasg": "160136",
         "number": "90001/2026",
         "description": "Aqs Material Elétrico 2026",
         "department": "Cmdo 9º Gpt",
         "openingDate": "2026-04-30T09:00:00",
-        "status": "HOMOLOGADO",
-        "currentStage": "Edital Publicado",
+        "status": "completed",
+        "currentStage": "3. Envio para CJU",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "15/03/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-12-23",
+                "executed": "2026-01-05"
+            },
+            "cjuSendDeadline": "2026-01-20",
+            "publicationAdjustmentsDeadline": "2026-03-15",
+            "publicationDate": "2026-03-15",
+            "proposalOpeningDate": "2026-04-30",
+            "homologationForecast": "2026-06-15",
+            "homologationDeadline": "2025-07-01",
+            "vigenciaAnterior": "2026-07-24"
+        },
         "responsibleInternal": "3º Sgt Belarmino",
         "responsibleExternal": "3º Sgt Dainy",
         "biPublication": "BELARMINO FAVOR RETIFICAR PUBLICAÇÃO DESTE E DO PREGÃO DO CARVALHO",
@@ -225,17 +271,27 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-001-2025-8",
-        "uasg": "122456",
+        "id": "tender-001-2025-19",
+        "uasg": "160136",
         "number": "001/2025",
         "description": "Leilão (Alienação de Cl IX)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "4.1 Regresso da CONJUR",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-07-21",
+                "executed": "2025-07-25"
+            },
+            "publicationDate": "2026-02-27",
+            "homologationDeadline": "2025-11-20"
+        },
         "responsibleInternal": "S Ten L Alves",
         "responsibleExternal": "Leiloeiro",
         "biPublication": "MARCO FAVOR CONSTAR AQUI A PUBLICAÇAO RESPECTIVA, FALAR COM O ALVES POR FAVOR",
@@ -247,17 +303,30 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-002-2025-9",
-        "uasg": "122456",
+        "id": "tender-002-2025-20",
+        "uasg": "160136",
         "number": "002/2025",
         "description": "Leilão (Alienação de Cl VI) 65345.004465/2025-41",
         "department": "9º B Mnt",
         "openingDate": "2026-02-15T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "5. Ajuste para publicação na OMDS",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "30/1/26",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-07-21",
+                "executed": "2025-07-25"
+            },
+            "publicationAdjustmentsDeadline": "2026-01-30",
+            "publicationDate": "2026-01-30",
+            "proposalOpeningDate": "2026-02-15",
+            "homologationForecast": "2026-02-28",
+            "homologationDeadline": "2025-11-20"
+        },
         "responsibleInternal": "S Ten L Alves",
         "responsibleExternal": "Leiloeiro",
         "biPublication": "MARCO FAVOR CONSTAR AQUI A PUBLICAÇAO RESPECTIVA, FALAR COM O ALVES POR FAVOR",
@@ -269,17 +338,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-10",
-        "uasg": "122456",
+        "id": "tender-A-definir-21",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aqs de Pçs Mnt de Vtr Bld (Classe IX) NUP: 65345.000650/2025-66 \n(apelido \"pregão de dois mil itens\")",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "5. Ajuste para publicação na OMDS",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "✝️Verificar se é possível publicar até 30 JAN, abordar na reunião de comando. A OM consegue ajustar até 15 JAN? Vamos precisar atualizar preços? Qual impacto disso para atividade fim da OM?",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-02-28",
+                "executed": "2025-03-07"
+            },
+            "homologationDeadline": "2025-06-30"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "Fabio Silva",
         "biPublication": "",
@@ -291,17 +369,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-11",
-        "uasg": "122456",
+        "id": "tender-A-definir-22",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Sv Mnt Vtr Bld (Classe IX) NUP 65345.005212/2024-11",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "9 Abandonado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "✝️Verificar se é possível publicar é 30 JAN, abordar na reunião de comando. A OM consegue ajustar até 15 JAN? Vamos precisar atualizar preços? Qual impacto disso para atividade fim da OM?",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2024-11-22"
+            },
+            "homologationDeadline": "2025-02-28"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "A definir",
         "biPublication": "",
@@ -313,21 +399,29 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-12",
-        "uasg": "122456",
+        "id": "tender-A-definir-23",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Sv de instalação de ponte rolante com Cap 20 Ton (Pel Mnt Vtr Bld) 65345.000226/2026-01",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "1.1 Solicitação de PRO pelo Set Req",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-04-30"
+            },
+            "homologationDeadline": "2025-08-29"
+        },
         "responsibleInternal": "3º Sgt Carvalho",
         "responsibleExternal": "2º Sgt Octávio",
         "biPublication": "BI Nr 23, de 4 Fev 26",
-        "intercurrences": "Fase Int\r\nSt Req (OM info prev de envio em 30/08, não ocorreu)",
+        "intercurrences": "Fase Int\nSt Req (OM info prev de envio em 30/08, não ocorreu)",
         "optimizationNotes": "Morreu pela manobra. Verificar com o Cmt BMNT se pode ser apagado",
         "nextDeadline": "30/01/2026",
         "nextActivity": "1.1 Solicitação de PRO pelo Set Req",
@@ -335,17 +429,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-13",
-        "uasg": "122456",
+        "id": "tender-A-definir-24",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aqs de cabine de pintura para a Seção de Lanternagem e Pintura 65345.000227/2026-47",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "1. Entrada do TR pelo Set Req",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-03-31",
+                "executed": "2026-01-26"
+            },
+            "homologationDeadline": "2025-07-30"
+        },
         "responsibleInternal": "3º Sgt Caldeira",
         "responsibleExternal": "3º Sgt Carvalho",
         "biPublication": "BI Nr 23, de 4 Fev 26",
@@ -357,17 +460,32 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90022-2025-14",
-        "uasg": "122456",
+        "id": "tender-90022-2025-25",
+        "uasg": "160136",
         "number": "90022/2025",
         "description": "Aqs de insumos para oficinas (Armamento, correaria, carpintaria, tornearia, Lanternagem e pintura)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-30T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "6. Publicação do Aviso de Licitação",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "15/01/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-08-20",
+                "executed": "2025-11-25"
+            },
+            "cjuSendDeadline": "2026-01-28",
+            "publicationAdjustmentsDeadline": "2026-01-15",
+            "publicationDate": "2026-01-15",
+            "proposalOpeningDate": "2026-01-30",
+            "homologationForecast": "2026-02-28",
+            "homologationDeadline": "2026-02-30",
+            "vigenciaAnterior": "2026-02-28"
+        },
         "responsibleInternal": "S Ten Cunha",
         "responsibleExternal": "A definir",
         "biPublication": "",
@@ -379,17 +497,29 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90016-2025-15",
-        "uasg": "122456",
+        "id": "tender-90016-2025-26",
+        "uasg": "160136",
         "number": "90016/2025",
         "description": "Aqs de insumos Cl IX Baterias e Óleos",
         "department": "9º B Mnt",
         "openingDate": "2025-12-11T09:00:00",
-        "status": "HOMOLOGADO",
-        "currentStage": "Edital Publicado",
+        "status": "completed",
+        "currentStage": "8 Adjudicação e Homologação",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "✔️",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-10-28",
+                "executed": "2025-07-16"
+            },
+            "proposalOpeningDate": "2025-12-11",
+            "homologationForecast": "2026-01-20",
+            "homologationDeadline": "2026-01-15",
+            "vigenciaAnterior": "2026-04-29"
+        },
         "responsibleInternal": "S Ten Cunha",
         "responsibleExternal": "S Ten L Alves",
         "biPublication": "",
@@ -401,17 +531,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-16",
-        "uasg": "122456",
+        "id": "tender-A-definir-27",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Sv Mnt Vtr Bld (Classe IX) NUP 65345.003175/2025-80",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "5. Ajuste para publicação na OMDS",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "🔒30 JAN",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-09-29"
+            },
+            "homologationDeadline": "2026-02-28"
+        },
         "responsibleInternal": "2º Sgt Lobo (desligado)",
         "responsibleExternal": "A definir",
         "biPublication": "",
@@ -423,17 +561,33 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90024-2025-17",
-        "uasg": "122456",
+        "id": "tender-90024-2025-28",
+        "uasg": "160136",
         "number": "90024/2025",
         "description": "Sv Mnt Mat Eng (Classe VI) - NUP 65345.005019/2025-53",
         "department": "9º B Mnt",
         "openingDate": "2026-02-26T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "5.1 Ajuste para publicação na SAL",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "16/02/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-09-29",
+                "executed": "2026-01-09"
+            },
+            "cjuSendDeadline": "2026-02-03",
+            "cjuReturnDate": "2026-01-29",
+            "publicationAdjustmentsDeadline": "2026-02-16",
+            "publicationDate": "2026-02-16",
+            "proposalOpeningDate": "2026-02-26",
+            "homologationForecast": "2026-02-26",
+            "homologationDeadline": "2026-01-28",
+            "vigenciaAnterior": "2026-01-20"
+        },
         "responsibleInternal": "3º Sgt Caldeira",
         "responsibleExternal": "3º Sgt Carvalho",
         "biPublication": "BI nº242/ 2025",
@@ -445,17 +599,30 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-18",
-        "uasg": "122456",
+        "id": "tender-A-definir-29",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aqs de insumos e pç para Mnt Mat Eng",
         "department": "9º B Mnt",
         "openingDate": "2026-08-10T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "1. Entrada do TR pelo Set Req",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "15/07/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {},
+            "cjuSendDeadline": "2026-05-15",
+            "cjuReturnDate": "2026-06-15",
+            "publicationAdjustmentsDeadline": "2026-07-15",
+            "publicationDate": "2026-07-15",
+            "proposalOpeningDate": "2026-08-10",
+            "homologationForecast": "2026-09-10",
+            "homologationDeadline": "2026-09-18",
+            "vigenciaAnterior": "2026-09-18"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "A definir",
         "biPublication": "",
@@ -467,17 +634,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender---19",
-        "uasg": "122456",
+        "id": "tender---30",
+        "uasg": "160136",
         "number": "-",
         "description": "Aquisição de QR - GLP (2026) - 2ª Licitação",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "🚧",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-11-10"
+            },
+            "homologationDeadline": "2026-08-27",
+            "vigenciaAnterior": "2026-08-27"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "A cargo do 9º B Sup",
         "biPublication": "",
@@ -489,17 +665,30 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90001-2026-20",
-        "uasg": "122456",
+        "id": "tender-90001-2026-31",
+        "uasg": "160136",
         "number": "90001/2026",
         "description": "Aquisição de QR - Padaria",
         "department": "9º B Sup",
         "openingDate": "2026-02-24T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "10/02/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-06-02"
+            },
+            "cjuReturnDate": "2026-02-04",
+            "publicationAdjustmentsDeadline": "2026-02-10",
+            "publicationDate": "2026-02-10",
+            "proposalOpeningDate": "2026-02-24",
+            "homologationDeadline": "2026-05-19",
+            "vigenciaAnterior": "2026-05-19"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "A cargo do 9º B Sup",
         "biPublication": "",
@@ -511,17 +700,29 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90002-2026-21",
-        "uasg": "122456",
+        "id": "tender-90002-2026-32",
+        "uasg": "160136",
         "number": "90002/2026",
         "description": "Aquisição de QR - Hortifruti - 2ª Licitação",
         "department": "9º B Sup",
         "openingDate": "2026-03-02T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "18/02/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {},
+            "cjuSendDeadline": "2026-01-20",
+            "cjuReturnDate": "2026-02-10",
+            "publicationAdjustmentsDeadline": "2026-02-18",
+            "publicationDate": "2026-02-18",
+            "proposalOpeningDate": "2026-03-02",
+            "homologationDeadline": "2025-12-09",
+            "vigenciaAnterior": "2025-12-09"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "A cargo do 9º B Sup",
         "biPublication": "",
@@ -533,17 +734,31 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90003-2026-22",
-        "uasg": "122456",
+        "id": "tender-90003-2026-33",
+        "uasg": "160136",
         "number": "90003/2026",
         "description": "Aquisição de QR - Enalatados e Embutidos - 2ª Licitação",
         "department": "9º B Sup",
         "openingDate": "2026-03-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "20/03/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-11-20"
+            },
+            "cjuSendDeadline": "2026-02-24",
+            "cjuReturnDate": "2026-03-17",
+            "publicationAdjustmentsDeadline": "2026-03-20",
+            "publicationDate": "2026-03-20",
+            "proposalOpeningDate": "2026-03-01",
+            "homologationDeadline": "2025-12-08",
+            "vigenciaAnterior": "2025-12-08"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "A cargo do 9º B Sup",
         "biPublication": "",
@@ -555,17 +770,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender---23",
-        "uasg": "122456",
+        "id": "tender---34",
+        "uasg": "160136",
         "number": "-",
         "description": "Sv Mnt Prev e Corr Câmaras Frigoríficas",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-01-04"
+            },
+            "homologationDeadline": "2026-01-29",
+            "vigenciaAnterior": "2026-01-29"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "A cargo do 9º B Sup",
         "biPublication": "",
@@ -577,17 +801,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender---24",
-        "uasg": "122456",
+        "id": "tender---35",
+        "uasg": "160136",
         "number": "-",
         "description": "Aquisição de QR - Chamada Pública",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "✔️",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-07-03"
+            },
+            "homologationDeadline": "2026-01-15",
+            "vigenciaAnterior": "2026-04-04"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "A cargo do 9º B Sup",
         "biPublication": "",
@@ -599,17 +832,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-25",
-        "uasg": "122456",
+        "id": "tender-A-definir-36",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Chamada pública da Coleta Seletiva",
         "department": "Cmdo 9º Gpt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "3. Envio para CJU",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "16/2",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "3º Sgt Dainy",
         "responsibleExternal": "3º Sgt Dainy",
         "biPublication": "",
@@ -621,17 +859,30 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-26",
-        "uasg": "122456",
+        "id": "tender-A-definir-37",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Telhado da Cia de Transporte do 18º B Trnp NUP 64136.003328/2025-91",
         "department": "18º B Trnp",
         "openingDate": "2026-04-30T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "3. Envio para CJU",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "15/04/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-01-19"
+            },
+            "cjuSendDeadline": "2026-02-15",
+            "cjuReturnDate": "2026-03-15",
+            "publicationAdjustmentsDeadline": "2026-04-15",
+            "publicationDate": "2026-04-15",
+            "proposalOpeningDate": "2026-04-30",
+            "homologationForecast": "2026-05-30"
+        },
         "responsibleInternal": "3º Sgt Belarmino",
         "responsibleExternal": "S Ten L Alves",
         "biPublication": "",
@@ -643,17 +894,31 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-27",
-        "uasg": "122456",
+        "id": "tender-A-definir-38",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Sv Mnt Vtr Não-Blindadas NUP 65345.005020/2025-88",
         "department": "9º B Mnt",
         "openingDate": "2026-02-26T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "1. Entrada do TR pelo Set Req",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "16/02/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-12-24",
+                "executed": "2025-12-19"
+            },
+            "cjuSendDeadline": "2026-01-15",
+            "cjuReturnDate": "2026-01-29",
+            "publicationAdjustmentsDeadline": "2026-02-16",
+            "publicationDate": "2026-02-16",
+            "proposalOpeningDate": "2026-02-26",
+            "homologationForecast": "2026-02-28"
+        },
         "responsibleInternal": "3º Sgt Carvalho",
         "responsibleExternal": "3º Sgt Caldeira",
         "biPublication": "",
@@ -665,17 +930,28 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-28",
-        "uasg": "122456",
+        "id": "tender-A-definir-39",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Inexigibilidade TUSD (Energia Elétrica) NUP 65297.014405/2025-59",
         "department": "Cmdo 9º Gpt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "7. Fase  Externa",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "16/02/2026",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "executed": "2025-12-19"
+            },
+            "cjuSendDeadline": "2026-01-15",
+            "cjuReturnDate": "2026-01-29",
+            "publicationAdjustmentsDeadline": "2026-02-16",
+            "homologationForecast": "2025-02-16"
+        },
         "responsibleInternal": "3º Sgt Reinaldo",
         "responsibleExternal": "3º Sgt Reinaldo",
         "biPublication": "",
@@ -687,17 +963,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-29",
-        "uasg": "122456",
+        "id": "tender-A-definir-40",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de QS",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-08-28"
+            },
+            "homologationDeadline": "2026-07-30",
+            "vigenciaAnterior": "2026-12-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -709,17 +994,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-30",
-        "uasg": "122456",
+        "id": "tender-A-definir-41",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de material de consumo - PASA",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-08-20"
+            },
+            "homologationDeadline": "2026-12-30",
+            "vigenciaAnterior": "2027-01-15"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -731,17 +1025,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-31",
-        "uasg": "122456",
+        "id": "tender-A-definir-42",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviços - PASA",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-08-20"
+            },
+            "homologationDeadline": "2026-12-23",
+            "vigenciaAnterior": "2026-12-23"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -753,17 +1056,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-32",
-        "uasg": "122456",
+        "id": "tender-A-definir-43",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de material permanente - PASA",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-08-28"
+            },
+            "homologationDeadline": "2026-12-30",
+            "vigenciaAnterior": "2027-01-29"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -775,17 +1087,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-33",
-        "uasg": "122456",
+        "id": "tender-A-definir-44",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de ração canina (1) e equina (2), alfafa, aveia e feno",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-08-10"
+            },
+            "homologationDeadline": "2026-12-10",
+            "vigenciaAnterior": "2026-12-10"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -797,17 +1118,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-34",
-        "uasg": "122456",
+        "id": "tender-A-definir-45",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de peças de Vtr - AUDATEX",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-06-27"
+            },
+            "homologationDeadline": "2026-10-27",
+            "vigenciaAnterior": "2026-10-27"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -819,17 +1149,24 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-35",
-        "uasg": "122456",
+        "id": "tender-A-definir-46",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de QR Enlatados e Embutidos",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {},
+            "homologationDeadline": "2026-05-29",
+            "vigenciaAnterior": "2026-01-29"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -841,17 +1178,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-36",
-        "uasg": "122456",
+        "id": "tender-A-definir-47",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de colchões, armários, beliches, cama, mesa e banho.",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "A Cargo do 9 BSUP",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-01-02"
+            },
+            "homologationDeadline": "2026-06-30",
+            "vigenciaAnterior": "2026-07-30"
+        },
         "responsibleInternal": "A Cargo do 9 BSUP",
         "responsibleExternal": "",
         "biPublication": "",
@@ -863,17 +1209,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-37",
-        "uasg": "122456",
+        "id": "tender-A-definir-48",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de Material Elétrico",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "A Cargo do 9 BSUP",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-01-02"
+            },
+            "homologationDeadline": "2026-07-01"
+        },
         "responsibleInternal": "A Cargo do 9 BSUP",
         "responsibleExternal": "",
         "biPublication": "",
@@ -885,17 +1239,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-38",
-        "uasg": "122456",
+        "id": "tender-A-definir-49",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Uniformes especiais e históricos, bandeiras e insígnias",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "A Cargo do 9 BSUP",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-06-20"
+            },
+            "homologationDeadline": "2026-10-20"
+        },
         "responsibleInternal": "A Cargo do 9 BSUP",
         "responsibleExternal": "",
         "biPublication": "",
@@ -907,17 +1269,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-39",
-        "uasg": "122456",
+        "id": "tender-A-definir-50",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviços de manutenção preventiva e corretiva de câmaras frigoríficas",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "A Cargo do 9 BSUP",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-03-26"
+            },
+            "homologationDeadline": "2026-04-26"
+        },
         "responsibleInternal": "A Cargo do 9 BSUP",
         "responsibleExternal": "",
         "biPublication": "",
@@ -929,17 +1299,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-40",
-        "uasg": "122456",
+        "id": "tender-A-definir-51",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de QR - Chamada pública",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "✔️",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-09-15"
+            },
+            "homologationDeadline": "2026-01-15",
+            "vigenciaAnterior": "2026-01-15"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -951,17 +1330,23 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-41",
-        "uasg": "122456",
+        "id": "tender-A-definir-52",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de gorro de selva",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {},
+            "vigenciaAnterior": "2026-07-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -973,17 +1358,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-42",
-        "uasg": "122456",
+        "id": "tender-A-definir-53",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de peças para manutenção de material de engenharia - Embarcações, motores de popa e geradores (Classe VI)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-06-18"
+            },
+            "homologationDeadline": "2026-09-18",
+            "vigenciaAnterior": "2026-09-18"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -995,17 +1389,24 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-43",
-        "uasg": "122456",
+        "id": "tender-A-definir-54",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviços de manutenção de Vtr Bld - Serviços não continuados (Classe IX)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {},
+            "homologationDeadline": "2026-02-28",
+            "vigenciaAnterior": "2026-02-28"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1017,17 +1418,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-44",
-        "uasg": "122456",
+        "id": "tender-A-definir-55",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de geradores e equipamentos de ar condicionados - H Cmp",
         "department": "9º B Sau",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-02-20"
+            },
+            "homologationDeadline": "2026-06-20"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1039,17 +1448,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-45",
-        "uasg": "122456",
+        "id": "tender-A-definir-56",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de insumos Classe IX - Baterias, óleos, filtros e graxas",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-07-31"
+            },
+            "homologationDeadline": "2026-04-29",
+            "vigenciaAnterior": "2026-04-29"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1061,17 +1479,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-46",
-        "uasg": "122456",
+        "id": "tender-A-definir-57",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviços Mnt de Vtr - AUDATEX (Classe IX)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-03-10"
+            },
+            "homologationDeadline": "2026-06-10",
+            "vigenciaAnterior": "2026-06-10"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1083,17 +1510,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-47",
-        "uasg": "122456",
+        "id": "tender-A-definir-58",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviços de análise e tratamento de água - poços artesianos do Forte Logístico - 5 meses (Dispensa de Licitação)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-03-11"
+            },
+            "homologationDeadline": "2026-05-11"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1105,17 +1540,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-48",
-        "uasg": "122456",
+        "id": "tender-A-definir-59",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviço de coleta de resíduo hospitalar \n(Dispensa de licitação)",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-03-27"
+            },
+            "homologationDeadline": "2026-05-27"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1127,17 +1570,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-49",
-        "uasg": "122456",
+        "id": "tender-A-definir-60",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de ferramental para oficinas e máquina de costura para correaria",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-05-13"
+            },
+            "homologationDeadline": "2026-08-13",
+            "vigenciaAnterior": "2026-08-13"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1149,17 +1601,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-50",
-        "uasg": "122456",
+        "id": "tender-A-definir-61",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de QS - Chamada Pública",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-05-24"
+            },
+            "homologationDeadline": "2026-09-24",
+            "vigenciaAnterior": "2026-09-24"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1171,17 +1632,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-51",
-        "uasg": "122456",
+        "id": "tender-A-definir-62",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de peças para manutenção de viaturas blindadas (Classe IX)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-02-28"
+            },
+            "homologationDeadline": "2026-04-29"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1193,17 +1662,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-52",
-        "uasg": "122456",
+        "id": "tender-A-definir-63",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de cabine de pintura para a Seção de Lanternagem e Pintura",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-02-27"
+            },
+            "homologationDeadline": "2026-05-27"
+        },
         "responsibleInternal": "3º Sgt Caldeira",
         "responsibleExternal": "3º Sgt Carvalho",
         "biPublication": "Previsão BI Nr 23, de 4 Fev 26.",
@@ -1215,17 +1692,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-53",
-        "uasg": "122456",
+        "id": "tender-A-definir-64",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Serviço de instalação de ponte rolante com capacidade de 20 Ton para adequação do Pel Mnt Vtr Bld",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-03-16",
+                "executed": "2026-01-26"
+            },
+            "homologationDeadline": "2026-06-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1237,17 +1723,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-54",
-        "uasg": "122456",
+        "id": "tender-A-definir-65",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de insumos Classe IX – Pneus",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-07-24"
+            },
+            "homologationDeadline": "2026-11-24",
+            "vigenciaAnterior": "2026-11-24"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1259,17 +1754,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-55",
-        "uasg": "122456",
+        "id": "tender-A-definir-66",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Alienação de bens móveis – Leilão (Classe VI)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-04-15"
+            },
+            "homologationDeadline": "2026-11-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1281,17 +1784,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-56",
-        "uasg": "122456",
+        "id": "tender-A-definir-67",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Alienação de bens móveis – Leilão (Classe IX)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-04-15"
+            },
+            "homologationDeadline": "2026-11-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1303,17 +1814,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-57",
-        "uasg": "122456",
+        "id": "tender-A-definir-68",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de insumos para oficinas (armamento, correaria, carpintaria, tornearia e lanternagem e pintura)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-05-13"
+            },
+            "homologationDeadline": "2026-08-13",
+            "vigenciaAnterior": "2026-08-13"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1325,17 +1845,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-58",
-        "uasg": "122456",
+        "id": "tender-A-definir-69",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviços para manutenção de material de engenharia - Embarcações, motores de popa e geradores (Classe VI)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-10-15"
+            },
+            "homologationDeadline": "2026-01-31",
+            "vigenciaAnterior": "2026-01-31"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1347,17 +1876,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-59",
-        "uasg": "122456",
+        "id": "tender-A-definir-70",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de peças para manutenção de material de engenharia - Embarcações, motores de popa e geradores (Classe VI)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-06-18"
+            },
+            "homologationDeadline": "2026-09-18",
+            "vigenciaAnterior": "2026-09-18"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1369,17 +1907,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-60",
-        "uasg": "122456",
+        "id": "tender-A-definir-71",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviços de manutenção de Vtr Bld - Serviços não continuados (Classe IX)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-09-29"
+            },
+            "homologationDeadline": "2027-02-28",
+            "vigenciaAnterior": "2027-02-28"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1391,17 +1938,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-61",
-        "uasg": "122456",
+        "id": "tender-A-definir-72",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de Leiloeiro",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-09-15"
+            },
+            "homologationDeadline": "2026-12-30",
+            "vigenciaAnterior": "2026-12-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1413,17 +1969,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-62",
-        "uasg": "122456",
+        "id": "tender-A-definir-73",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Cessão de uso de imóvel para funcionamento de Serviços Financeiros",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-03-15"
+            },
+            "homologationDeadline": "2026-06-30",
+            "vigenciaAnterior": "2026-06-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1435,17 +2000,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-63",
-        "uasg": "122456",
+        "id": "tender-A-definir-74",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Cessão de uso de imóvel para funcionamento de Cantina",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-05-30"
+            },
+            "homologationDeadline": "2026-09-30",
+            "vigenciaAnterior": "2026-09-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1457,17 +2031,26 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-64",
-        "uasg": "122456",
+        "id": "tender-A-definir-75",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Serviço de Internet dados móveis",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-01-16"
+            },
+            "homologationDeadline": "2026-04-30",
+            "vigenciaAnterior": "2026-04-30"
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1479,17 +2062,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-65",
-        "uasg": "122456",
+        "id": "tender-A-definir-76",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Contratação de serviço para reforma/substituição da rede interna de esgoto do 18º B Trnp",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1501,17 +2089,27 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-66",
-        "uasg": "122456",
+        "id": "tender-A-definir-77",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Cl IX- aquisição de viatura para o Centro de Formação de Motorista Militar (CFMM)  64136.000261/2026-14",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "1. Entrada do TR pelo Set Req",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "A definir",
+        "coordinator": "A definir",
+        "nup": "não vai (inf 1 milhão)",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "executed": "2026-02-02"
+            },
+            "cjuSendDeadline": "2026-02-27",
+            "publicationDate": "2026-04-17",
+            "homologationDeadline": "2026-05-27"
+        },
         "responsibleInternal": "2º Sgt Octávio",
         "responsibleExternal": "3º Sgt Carvalho",
         "biPublication": "BI Nr 22, de 3 Fev 26",
@@ -1523,17 +2121,24 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-67",
-        "uasg": "122456",
+        "id": "tender-A-definir-78",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Solicitação : 202209000179 - Reparação / Alvenaria / Reserva de Material\nReserva de Material / Reserva de Material, DEF e Permissionário / 18º B\nTrnp  (DISPENSA ELETRÔNICA R$ 15.685,63)",
         "department": "Cia C",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "0. DIEx com alerta de prazo para OMDS 5 dias antes",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "Cia C",
+        "coordinator": "A definir",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-01-22"
+            }
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1545,17 +2150,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-68",
-        "uasg": "122456",
+        "id": "tender-A-definir-79",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de peças para PALL",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1567,17 +2177,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-69",
-        "uasg": "122456",
+        "id": "tender-A-definir-80",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de peças para PALL",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1589,17 +2204,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-70",
-        "uasg": "122456",
+        "id": "tender-A-definir-81",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de Serviço para manutenção de PALL",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1611,17 +2231,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-71",
-        "uasg": "122456",
+        "id": "tender-A-definir-82",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Aquisição de Pneus para viaturas blindadas e não-blindadas",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1633,17 +2258,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-72",
-        "uasg": "122456",
+        "id": "tender-A-definir-83",
+        "uasg": "160136",
         "number": "A definir",
         "description": "OLG (óleos, graxas, lubrificantes e ARLA) e afins para viaturas Bld, nãoBlindadas, Armamento, Motocicletas e Material de Engenharia (Embarcações eEquipamentos de Eng)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1655,17 +2285,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-73",
-        "uasg": "122456",
+        "id": "tender-A-definir-84",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Baterias para Vtr Bld, não Blindada, Motocicleta, embarcações, geradores eEquipamento de Engenharia.",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1677,17 +2312,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-74",
-        "uasg": "122456",
+        "id": "tender-A-definir-85",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Tintas e afins para Vtr blindadas, não blindadas, armamentos, embarcações,geradores e Equipamento de Eng",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1699,17 +2339,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-75",
-        "uasg": "122456",
+        "id": "tender-A-definir-86",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Serviços de viaturas não blindada e motocicleta das seguintes marcas: (Honda,Yamaha, MBB - ônibus/caminhões, Volkswagen - Caminhões/ônibus, Agrale, Toyota, Nissan, Mitsubishi, Renaut - Ambulâncias/Van, Iveco - CavMec/caminhões/Van, Scania - Cav Mec, Volvo - Cav Mec/Caminhões/ônibus, DAF- CavMec)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1721,17 +2366,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-76",
-        "uasg": "122456",
+        "id": "tender-A-definir-87",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Peças de viaturas não blindada e motocicleta das seguintes marcas: (Honda,Yamaha, MBB - ônibus/caminhões, Volkswagen - Caminhões/ônibus, Agrale, Toyota, Nissan, Mitsubishi, Renaut - Ambulâncias/Van, Iveco - CavMec/caminhões/Van, Scania - Cav Mec, Volvo - Cav Mec/Caminhões/ônibus, DAF- CavMec)",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1743,17 +2393,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-77",
-        "uasg": "122456",
+        "id": "tender-TBD-88",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Peças de viaturas blindadas: Cascavel; Guarani; M60 A3TTS e M113BR",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1765,17 +2420,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-78",
-        "uasg": "122456",
+        "id": "tender-TBD-89",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Serviços de viatura blindadas: Cascavel; Guarani; M60 A3TTS e M113BR",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1787,17 +2447,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-79",
-        "uasg": "122456",
+        "id": "tender-TBD-90",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Peças e Serviço de manutenção em VSRE Prancha e VSRNE Graneleiro",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1809,17 +2474,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-80",
-        "uasg": "122456",
+        "id": "tender-TBD-91",
+        "uasg": "160136",
         "number": "A definir",
         "description": "Peças e Serviço de manutenção em VTE Frigorífico, VSRE Frigorífico, ContainerFrigorífico.",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1831,17 +2501,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-81",
+        "id": "tender-TBD-92",
         "uasg": "122456",
         "number": "A definir",
         "description": "Aluguel de VTE para salvamento e evacuação: VSRE Pranchas e VTTNE CavaloMecânico, VTE Socorro Leve e Pesado",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1853,17 +2528,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-82",
+        "id": "tender-TBD-93",
         "uasg": "122456",
         "number": "A definir",
         "description": "Pregão de Insumos para oficinas (Latão, bronze, ferro redondo e tarugo, lixas de váriasgranulometrias, buchas mecânicas em geral, madeiras em geral, compensado naval,courvin, napa, lona encerada e tecidos para capotaria, metalão, ferro chato, canteirasdiversas, pregos, parafusos diversos, lixas em geral, cabos de aços revestidos emgeral, dobradiças, aldrabas, grampos de aços diversos e lacres com cabo de açonumerado diversos",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1875,17 +2555,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-83",
+        "id": "tender-TBD-94",
         "uasg": "122456",
         "number": "A definir",
         "description": "Pregão de ferramental, materiais permanentes, paletes plásticos e metálicos, canastrapara transporte de armamento, paleteiras, máquina de embalagem para arquear fitaplástica e metálica",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1897,17 +2582,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-84",
+        "id": "tender-TBD-95",
         "uasg": "122456",
         "number": "A definir",
         "description": "Aquisição de container não refrigerado de 20 e 40 pés para transporte earmazenamento de material e container de 20 e 40 Pés para armazenamento etransporte de material Cl III (OLG), V (Armt) e IX (Moto e Bld)",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1919,17 +2609,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-85",
+        "id": "tender-TBD-96",
         "uasg": "122456",
         "number": "A definir",
         "description": "Aquisição de Peças e Serviços de manutenção de geradores",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1941,17 +2636,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-86",
+        "id": "tender-TBD-97",
         "uasg": "122456",
         "number": "A definir",
         "description": "Aquisição de Peças e Serviços de manutenção de embarcações",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1963,17 +2663,22 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-TBD-87",
+        "id": "tender-TBD-98",
         "uasg": "122456",
         "number": "A definir",
         "description": "Aquisição de Peças e Serviços de manutenção de equipamentos de outrasClasses: Cl X",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {}
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -1985,17 +2690,27 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-88",
+        "id": "tender-A-definir-99",
         "uasg": "122456",
         "number": "A definir",
         "description": "Aquisição de acessórios, insumos epeças para\n manutenção de viaturas não blindadas do Comando Militar do Oeste - 2026.2.\nAqs Pç Mnt Vtr - AUDATEX (\"Preguinho\") 65345.000068/2026-81",
         "department": "9º B Mnt",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
-        "currentStage": "Edital Publicado",
+        "status": "FASE INTERNA NA OMDS",
+        "currentStage": "1. Entrada do TR pelo Set Req",
         "hasIssues": true,
         "isGCALC": true,
         "coord": "CCOL",
+        "coordinator": "CCOL",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2026-02-15",
+                "executed": "2026-02-28"
+            },
+            "cjuSendDeadline": "2026-03-30",
+            "vigenciaAnterior": "2025-10-25"
+        },
         "responsibleInternal": "S Ten Cunha",
         "responsibleExternal": "2º Sgt Octávio",
         "biPublication": "BI Nr 8, de 14/01/2026",
@@ -2007,17 +2722,28 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender---89",
+        "id": "tender---100",
         "uasg": "122456",
         "number": "-",
         "description": "Chamada Pública Agricultura  Familiar QR",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": false,
         "isGCALC": true,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-10-01",
+                "executed": "2025-10-13"
+            },
+            "publicationDate": "2025-11-06",
+            "minutesSignatureDeadline": "2025-12-22",
+            "vigenciaAnterior": "2026-12-22"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -2029,17 +2755,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90013-25-90",
+        "id": "tender-90013-25-101",
         "uasg": "122456",
         "number": "90013/25",
         "description": "Contratação de Sv de Mat Instalações e Mnt Equipamentos",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": false,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-11-11"
+            },
+            "homologationDeadline": "2026-02-15"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -2051,17 +2785,25 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90014-25-91",
+        "id": "tender-90014-25-102",
         "uasg": "122456",
         "number": "90014/25",
         "description": "Aqs Mat Consumo",
         "department": "9º B Sup",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": false,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-11-11"
+            },
+            "homologationDeadline": "2026-02-15"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -2073,17 +2815,28 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90015-25-92",
+        "id": "tender-90015-25-103",
         "uasg": "122456",
         "number": "90015/25",
         "description": "Aquisição de Material Permanente",
         "department": "9º B Sup",
         "openingDate": "2025-12-15T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": false,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-11-03",
+                "executed": "2025-11-26"
+            },
+            "publicationDate": "2025-12-02",
+            "proposalOpeningDate": "2025-12-15",
+            "homologationDeadline": "2026-02-15"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -2095,17 +2848,28 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-90016-25-93",
+        "id": "tender-90016-25-104",
         "uasg": "122456",
         "number": "90016/25",
         "description": "Aqs Material de Engenharia e Cartografia",
         "department": "9º B Sup",
         "openingDate": "2025-12-15T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": false,
         "isGCALC": false,
         "coord": "9º B Sup",
+        "coordinator": "9º B Sup",
+        "nup": "-",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "defined": "2025-11-03",
+                "executed": "2025-11-26"
+            },
+            "publicationDate": "2025-12-02",
+            "proposalOpeningDate": "2025-12-15",
+            "homologationDeadline": "2026-02-15"
+        },
         "responsibleInternal": "",
         "responsibleExternal": "",
         "biPublication": "",
@@ -2117,17 +2881,24 @@ export const tenders: Tender[] = [
         "observations": []
     },
     {
-        "id": "tender-A-definir-94",
+        "id": "tender-A-definir-105",
         "uasg": "122456",
         "number": "A definir",
         "description": "Contratação do Projeto Soldado Cidadão",
         "department": "18º B Trnp",
         "openingDate": "2026-01-01T09:00:00",
-        "status": "FASE EXTERNA",
+        "status": "FASE INTERNA NA OMDS",
         "currentStage": "Edital Publicado",
         "hasIssues": true,
         "isGCALC": false,
         "coord": "CAF",
+        "coordinator": "CAF",
+        "nup": "",
+        "dates": {
+            "protocoloSetorRequisitante": {
+                "executed": "2026-02-13"
+            }
+        },
         "responsibleInternal": "A definir",
         "responsibleExternal": "A definir",
         "biPublication": "",

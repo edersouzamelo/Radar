@@ -1,10 +1,30 @@
 "use client"
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useTenders } from "@/contexts/tenders-context";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Eye, Filter, Search, Download } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+    Eye, Filter, Search, Download, RefreshCw, Check,
+    AlertTriangle,
+    Save,
+    Trash2,
+    Plus,
+    Undo2,
+    StickyNote,
+    Truck,
+    Clock,
+    FileText,
+    Gavel,
+    Trophy,
+    XCircle,
+    Database,
+    X,
+    Info,
+    LocateFixed
+} from "lucide-react";
 import { EditTenderModal } from "@/components/edit-tender-modal";
 import {
     DropdownMenu,
@@ -22,11 +42,580 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useUser } from "@/contexts/user-context";
+import { cn } from "@/lib/utils";
+import React, { memo, useState, useEffect } from "react";
+
+// Componente de linha memoizado para performance
+const TenderRow = memo(({
+    tender,
+    index,
+    role,
+    editorName,
+    updateTender,
+    refreshTender,
+    showConferenceColumn,
+    conferenceStatuses,
+    setConferenceStatus,
+    dateChecks,
+    toggleDateCheck,
+    deleteTender,
+    addTenderBelow,
+    isHighlighted,
+    pregoeiros
+}: {
+    tender: any,
+    index: number,
+    role: string,
+    editorName: string,
+    updateTender: any,
+    refreshTender: any,
+    showConferenceColumn: boolean,
+    conferenceStatuses: any,
+    setConferenceStatus: any,
+    dateChecks: Record<string, Record<string, boolean>>,
+    toggleDateCheck: (tenderId: string, dateKey: string) => void,
+    deleteTender: (id: string) => void,
+    addTenderBelow: (id: string) => void,
+    isHighlighted?: boolean,
+    pregoeiros: any[]
+}) => {
+    // Estados locais para inputs para evitar re-renders globais ao digitar
+    const [localNumber, setLocalNumber] = useState(tender.number);
+    const [localUasg, setLocalUasg] = useState(tender.uasg);
+    const [localDescription, setLocalDescription] = useState(tender.description);
+    const [localNup, setLocalNup] = useState(tender.nup || '');
+    const [localNote, setLocalNote] = useState(tender.quickNotes || '');
+
+    // Sincronizar estados locais quando os dados externos mudarem (ex: refresh ou import)
+    useEffect(() => {
+        setLocalNumber(tender.number);
+        setLocalUasg(tender.uasg);
+        setLocalDescription(tender.description);
+        setLocalNup(tender.nup || '');
+        setLocalNote(tender.quickNotes || '');
+    }, [tender.number, tender.uasg, tender.description, tender.nup, tender.quickNotes]);
+
+    const handleBlur = (field: string, value: string) => {
+        if (tender[field] !== value) {
+            updateTender(tender.id, { [field]: value }, editorName);
+        }
+    };
+
+    // Helper para cor do Status (Degradê solicitado)
+    const getStatusStyles = (status: string) => {
+        if (status.startsWith('CANCELADO')) return "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-500";
+        if (status === 'FASE INTERNA NA OMDS' || status === 'FASE INTERNA NA SAL') return "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400";
+        if (status === 'FASE INTERNA - IRP' || status === 'FASE INTERNA NA CJU' || status === 'FASE INTERNA - CORREÇÕES PARA PUBLICAÇÃO') return "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400";
+        if (status.startsWith('FASE EXTERNA')) return "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 font-bold";
+        if (status === 'HOMOLOGADO') return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 font-extrabold shadow-sm";
+        return "bg-white dark:bg-slate-900";
+    };
+
+    // Componente visual de Pista de Corrida / Tabuleiro
+    const ProgressRaceTrack = ({ currentStatus }: { currentStatus: string }) => {
+        const stages = [
+            { id: 'interna', label: 'Interna', icon: Clock, color: 'text-rose-500', match: (s: string) => s.includes('INTERNA') },
+            { id: 'pub', label: 'Publicado', icon: FileText, color: 'text-amber-500', match: (s: string) => s.includes('EDITAL PUBLICADO') },
+            { id: 'externa', label: 'Sessão', icon: Gavel, color: 'text-blue-500', match: (s: string) => s.includes('EXTERNA') && !s.includes('EDITAL') },
+            { id: 'final', label: 'Homologado', icon: Trophy, color: 'text-emerald-500', match: (s: string) => s === 'HOMOLOGADO' }
+        ];
+
+        const isCancelled = currentStatus.startsWith('CANCELADO');
+
+        return (
+            <div className="flex items-center gap-1.5">
+                {stages.map((stage, i) => {
+                    const isActive = stage.match(currentStatus);
+                    const isPast = stages.findIndex(s => s.match(currentStatus)) > i;
+
+                    return (
+                        <div key={stage.id} className="flex items-center">
+                            <div
+                                className={cn(
+                                    "p-1 rounded-full border transition-all duration-300",
+                                    isCancelled ? "bg-slate-200 border-slate-500 text-slate-800 opacity-60" :
+                                        isActive ? `bg-white shadow-md scale-110 border-current ring-2 ring-offset-1 ${stage.color}` :
+                                            isPast ? `${stage.color} opacity-40 border-current bg-current/10` :
+                                                "bg-slate-50 border-slate-200 text-slate-300 opacity-20"
+                                )}
+                                title={stage.label}
+                            >
+                                <stage.icon className="w-3 h-3" />
+                            </div>
+                            {i < stages.length - 1 && (
+                                <div className={cn(
+                                    "w-2 h-[1px]",
+                                    isCancelled ? "bg-slate-300" :
+                                        isPast ? "bg-current opacity-30" : "bg-slate-100"
+                                )} />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    const handleDateChange = (field: string, subField: string | null, value: string) => {
+        if (subField) {
+            const currentVal = tender.dates?.[field]?.[subField];
+            if (currentVal !== value) {
+                updateTender(tender.id, {
+                    dates: {
+                        ...tender.dates,
+                        [field]: {
+                            ...tender.dates?.[field],
+                            [subField]: value
+                        }
+                    }
+                }, editorName);
+            }
+        } else {
+            const currentVal = tender.dates?.[field];
+            if (currentVal !== value) {
+                updateTender(tender.id, {
+                    dates: {
+                        ...tender.dates,
+                        [field]: value
+                    }
+                }, editorName);
+            }
+        }
+    };
+
+    // Helper para cor da data
+    const getDateColor = (dateStr: string, isChecked: boolean, isCancelled: boolean) => {
+        if (isCancelled) return "text-slate-400/60 dark:text-slate-500/60 font-normal";
+        if (isChecked) return "text-gray-400 dark:text-gray-600 font-medium opacity-60";
+        if (!dateStr) return "";
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const targetDate = new Date(dateStr);
+        if (isNaN(targetDate.getTime())) return "";
+
+        return targetDate < today
+            ? "text-red-500 font-bold dark:text-red-400"
+            : "text-green-600 font-bold dark:text-green-400";
+    };
+
+    // Helper para renderizar input de data com check
+    const renderDateInput = (field: string, subField: string | null = null) => {
+        const val = subField ? tender.dates?.[field]?.[subField] : tender.dates?.[field];
+        const dateKey = subField ? `${field}.${subField}` : field;
+        const isChecked = dateChecks[tender.id]?.[dateKey] || false;
+
+        return (
+            <div className="flex items-center gap-1 group relative">
+                <input
+                    type="date"
+                    className={cn(
+                        "bg-transparent border-none focus:ring-0 p-0 text-sm w-full disabled:opacity-50 transition-colors",
+                        getDateColor(val, isChecked, isCancelled)
+                    )}
+                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    value={val || ''}
+                    onChange={(e) => handleDateChange(field, subField, e.target.value)}
+                />
+                <button
+                    onClick={() => toggleDateCheck(tender.id, dateKey)}
+                    className={cn(
+                        "p-0.5 rounded-full transition-all active:scale-90 flex-shrink-0",
+                        isChecked
+                            ? "bg-green-500 text-white shadow-sm"
+                            : "bg-gray-100 text-gray-400 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100"
+                    )}
+                    title={isChecked ? "Etapa concluída" : "Marcar como concluído"}
+                >
+                    <Check className="w-3 h-3" />
+                </button>
+            </div>
+        );
+    };
+
+    const isCancelled = tender.status.startsWith('CANCELADO');
+
+    return (
+        <tr
+            id={`tender-row-${tender.id}`}
+            className={cn(
+                "border-b hover:bg-slate-50/80 transition-colors group",
+                isHighlighted && "bg-amber-50/50 ring-2 ring-radar-gold ring-inset animate-pulse-subtle",
+                isCancelled && "line-through text-slate-400 opacity-60 dark:text-slate-500"
+            )}
+        >
+            <td className="px-3 py-2 text-center font-medium text-muted-foreground w-8">
+                {index + 1}
+            </td>
+            <td className="px-3 py-2 whitespace-nowrap">
+                <div className="flex items-center gap-1">
+                    <div className="flex flex-col">
+                        {tender.lastUpdatedAt ? (
+                            <span className="text-xs font-medium text-foreground">
+                                {new Date(tender.lastUpdatedAt).toLocaleDateString('pt-BR')}
+                            </span>
+                        ) : (
+                            <span className="text-[10px] text-muted-foreground italic">Sem registro</span>
+                        )}
+                        {tender.lastUpdatedBy && (
+                            <span className="text-[10px] text-muted-foreground">{tender.lastUpdatedBy}</span>
+                        )}
+                    </div>
+                    <button
+                        title="Registrar atualização agora"
+                        onClick={() => refreshTender(tender.id, editorName)}
+                        className="ml-1 p-1 rounded hover:bg-radar-dark/10 text-radar-dark transition-colors"
+                    >
+                        <RefreshCw className="w-3 h-3" />
+                    </button>
+                </div>
+            </td>
+            {showConferenceColumn && (
+                <td className="px-3 py-2 text-center">
+                    <div className="flex items-center justify-center">
+                        <button
+                            onClick={() => setConferenceStatus(tender.id, conferenceStatuses[tender.id] === 'OK' ? 'Pendente' : 'OK')}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase transition-all shadow-sm active:scale-95 ${conferenceStatuses[tender.id] === 'OK'
+                                ? 'bg-green-500 text-white hover:bg-green-600'
+                                : 'bg-gray-200 text-gray-500 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400'
+                                }`}
+                        >
+                            {conferenceStatuses[tender.id] === 'OK' ? (
+                                <>
+                                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                                    OK
+                                </>
+                            ) : (
+                                'Pendente'
+                            )}
+                        </button>
+                    </div>
+                </td>
+            )}
+            <td className={cn("px-3 py-2 font-medium whitespace-nowrap", isCancelled ? "text-slate-400" : "text-foreground")}>
+                <div className="flex flex-col gap-1">
+                    {role === 'Chefe da Seção de Licitações' ? (
+                        <>
+                            <input
+                                type="text"
+                                className={cn(
+                                    "bg-transparent border-none focus:ring-1 focus:ring-radar-dark/30 rounded p-0 text-xs font-bold w-[110px] dark:text-gray-200",
+                                    isCancelled && "line-through"
+                                )}
+                                value={localNumber}
+                                onChange={(e) => setLocalNumber(e.target.value)}
+                                onBlur={(e) => handleBlur('number', e.target.value)}
+                            />
+                            <div className="flex items-center">
+                                <span className="text-[9px] text-muted-foreground uppercase mr-1">UASG</span>
+                                <input
+                                    type="text"
+                                    className={cn(
+                                        "bg-transparent border-none focus:ring-1 focus:ring-radar-dark/30 rounded p-0 text-[10px] text-muted-foreground w-[60px]",
+                                        isCancelled && "line-through"
+                                    )}
+                                    value={localUasg}
+                                    onChange={(e) => setLocalUasg(e.target.value)}
+                                    onBlur={(e) => handleBlur('uasg', e.target.value)}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <span className={cn("font-bold", isCancelled && "line-through")}>{tender.number}</span>
+                            <span className="text-[10px] text-muted-foreground">UASG {tender.uasg}</span>
+                        </>
+                    )}
+                </div>
+            </td>
+            <td className="px-3 py-2 min-w-[320px] max-w-[500px]">
+                {role === 'Chefe da Seção de Licitações' ? (
+                    <textarea
+                        className={cn(
+                            "bg-transparent border-none focus:ring-1 focus:ring-radar-dark/30 rounded p-0 text-sm font-semibold w-full text-foreground dark:text-gray-100 resize-none overflow-hidden min-h-[1.5rem]",
+                            isCancelled && "line-through text-slate-400/70 dark:text-slate-500 font-normal"
+                        )}
+                        rows={tender.description.length > 50 ? 2 : 1}
+                        value={localDescription}
+                        onChange={(e) => {
+                            setLocalDescription(e.target.value);
+                            // Auto-ajuste de altura simples
+                            e.target.style.height = 'auto';
+                            e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
+                        onBlur={(e) => handleBlur('description', e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.currentTarget.blur();
+                            }
+                        }}
+                    />
+                ) : (
+                    <span className="text-sm font-semibold text-foreground break-words whitespace-normal block">
+                        {tender.description}
+                    </span>
+                )}
+            </td>
+            <td className="px-3 py-2 w-[50px] text-center">
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <button
+                            disabled={role !== 'Chefe da Seção de Licitações'}
+                            className={`p-1.5 rounded-full transition-all ${tender.quickNotes ? 'bg-amber-100 text-amber-600 border border-amber-200 shadow-sm' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'}`}
+                            title={tender.quickNotes || "Adicionar anotação rápida"}
+                        >
+                            <StickyNote className={`w-4 h-4 ${tender.quickNotes ? 'fill-amber-400' : ''}`} />
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-3 bg-white dark:bg-slate-900 border-radar-gold shadow-xl z-[10000]">
+                        <div className="space-y-2">
+                            <h4 className="font-semibold text-sm flex items-center gap-2">
+                                <StickyNote className="w-4 h-4 text-amber-500" />
+                                Anotações do Objeto
+                            </h4>
+                            <textarea
+                                className="w-full h-32 p-2 text-sm bg-amber-50/30 dark:bg-amber-900/10 border-amber-200/50 rounded-md focus:ring-amber-500/30 resize-none placeholder:text-slate-400 placeholder:italic"
+                                placeholder="Insira observações rápidas aqui..."
+                                value={localNote}
+                                onChange={(e) => setLocalNote(e.target.value)}
+                            />
+                            <div className="flex justify-between items-center pt-1">
+                                <button
+                                    onClick={() => {
+                                        setLocalNote('');
+                                        updateTender(tender.id, { quickNotes: '' }, editorName);
+                                    }}
+                                    className="text-[10px] text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                                >
+                                    Apagar Nota
+                                </button>
+                                <div className="flex gap-2">
+                                    <p className="text-[9px] text-slate-400 italic self-center">SALC Only</p>
+                                    <button
+                                        onClick={() => {
+                                            updateTender(tender.id, { quickNotes: localNote }, editorName);
+                                        }}
+                                        className="text-[10px] bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1 rounded shadow-sm transition-all"
+                                    >
+                                        Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </td>
+            <td className="px-3 py-2">
+                <input
+                    type="text"
+                    className="bg-transparent border-none focus:ring-0 p-0 text-xs w-[130px] dark:text-gray-300 disabled:opacity-50"
+                    placeholder="NUP..."
+                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    value={localNup}
+                    onChange={(e) => setLocalNup(e.target.value)}
+                    onBlur={(e) => handleBlur('nup', e.target.value)}
+                    maxLength={25}
+                />
+            </td>
+            <td className="px-3 py-2">
+                <Select
+                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    value={tender.commitment || 'Outros'}
+                    onValueChange={(value) => updateTender(tender.id, { commitment: value as any }, editorName)}
+                >
+                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
+                        <SelectValue placeholder="Selecione" className="text-left" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
+                        <SelectItem value="GCALC">GCALC</SelectItem>
+                        <SelectItem value="PCA da OM">PCA da OM</SelectItem>
+                        <SelectItem value="Operação Perseu">Operação Perseu</SelectItem>
+                        <SelectItem value="Outros">Outros</SelectItem>
+                    </SelectContent>
+                </Select>
+            </td>
+            <td className="px-3 py-2">
+                <Select
+                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    value={tender.coordinator || 'A definir'}
+                    onValueChange={(value) => updateTender(tender.id, { coordinator: value as any }, editorName)}
+                >
+                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
+                        <SelectValue placeholder="Selecione" className="text-left" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
+                        <SelectItem value="CAF">CAF</SelectItem>
+                        <SelectItem value="CCOL">CCOL</SelectItem>
+                        <SelectItem value="9º B Sup">9º B Sup</SelectItem>
+                        <SelectItem value="A definir">A definir</SelectItem>
+                    </SelectContent>
+                </Select>
+            </td>
+            <td className="px-3 py-2">
+                <Select
+                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    value={tender.requesterSector || 'A definir'}
+                    onValueChange={(value) => updateTender(tender.id, { requesterSector: value as any }, editorName)}
+                >
+                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
+                        <SelectValue placeholder="Selecione" className="text-left" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
+                        <SelectItem value="9º B Mnt">9º B Mnt</SelectItem>
+                        <SelectItem value="9º B Sup">9º B Sup</SelectItem>
+                        <SelectItem value="18º B Trnp">18º B Trnp</SelectItem>
+                        <SelectItem value="Cia Cmdo">Cia Cmdo</SelectItem>
+                        <SelectItem value="9º B Sau">9º B Sau</SelectItem>
+                        <SelectItem value="Cmdo 9º Gpt">Cmdo 9º Gpt</SelectItem>
+                        <SelectItem value="A definir">A definir</SelectItem>
+                    </SelectContent>
+                </Select>
+            </td>
+
+            <td className="px-3 py-2">
+                {renderDateInput('protocoloSetorRequisitante', 'defined')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('protocoloSetorRequisitante', 'executed')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('cjuSendDeadline')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('cjuReturnDate')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('publicationAdjustmentsDeadline')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('publicationDate')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('proposalOpeningDate')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('homologationForecast')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('homologationDeadline')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('minutesSignatureDeadline')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('vigenciaAnterior')}
+            </td>
+            <td className="px-3 py-2">
+                {renderDateInput('prazoGCALC')}
+            </td>
+            <td className="px-3 py-2">
+                <Select
+                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    value={tender.pregoeiroFaseInternaId || 'none'}
+                    onValueChange={(value) => updateTender(tender.id, { pregoeiroFaseInternaId: value === 'none' ? undefined : value }, editorName)}
+                >
+                    <SelectTrigger className="w-[150px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20">
+                        <SelectValue placeholder="A definir" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
+                        <SelectItem value="none">A definir</SelectItem>
+                        {pregoeiros.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </td>
+            <td className="px-3 py-2">
+                <Select
+                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    value={tender.pregoeiroFaseExternaId || 'none'}
+                    onValueChange={(value) => updateTender(tender.id, { pregoeiroFaseExternaId: value === 'none' ? undefined : value }, editorName)}
+                >
+                    <SelectTrigger className="w-[150px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20">
+                        <SelectValue placeholder="A definir" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
+                        <SelectItem value="none">A definir</SelectItem>
+                        {pregoeiros.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </td>
+            <td className="px-3 py-2">
+                <div className="flex items-center gap-3">
+                    <Select
+                        disabled={role !== 'Chefe da Seção de Licitações'}
+                        value={tender.status}
+                        onValueChange={(value) => updateTender(tender.id, { status: value as any }, editorName)}
+                    >
+                        <SelectTrigger className={cn(
+                            "w-[240px] h-auto min-h-[2.2rem] text-[10px] leading-tight border transition-all shadow-sm text-left justify-start px-3 py-1.5 rounded-lg",
+                            getStatusStyles(tender.status)
+                        )}>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
+                            <SelectItem value="CANCELADO POR ABANDONO">CANCELADO POR ABANDONO</SelectItem>
+                            <SelectItem value="CANCELADO POR REVOGAÇÃO">CANCELADO POR REVOGAÇÃO</SelectItem>
+                            <SelectItem value="CANCELADO POR DUPLICIDADE DE OBJETO">CANCELADO POR DUPLICIDADE DE OBJETO</SelectItem>
+                            <SelectItem value="FASE INTERNA NA OMDS">FASE INTERNA NA OMDS</SelectItem>
+                            <SelectItem value="FASE INTERNA NA SAL">FASE INTERNA NA SAL</SelectItem>
+                            <SelectItem value="FASE INTERNA - IRP">FASE INTERNA - IRP</SelectItem>
+                            <SelectItem value="FASE INTERNA NA CJU">FASE INTERNA NA CJU</SelectItem>
+                            <SelectItem value="FASE INTERNA - CORREÇÕES PARA PUBLICAÇÃO">FASE INTERNA - CORREÇÕES PARA PUBLICAÇÃO</SelectItem>
+                            <SelectItem value="FASE EXTERNA - EDITAL PUBLICADO">FASE EXTERNA - EDITAL PUBLICADO</SelectItem>
+                            <SelectItem value="FASE EXTERNA - ABERTURA E JULGAMENTO DAS PROPOSTAS">FASE EXTERNA - ABERTURA E JULGAMENTO DAS PROPOSTAS</SelectItem>
+                            <SelectItem value="FASE EXTERNA - LANCES">FASE EXTERNA - LANCES</SelectItem>
+                            <SelectItem value="FASE EXTERNA - RECURSOS E JULGAMENTO DE ADMISSIBILIDADE">FASE EXTERNA - RECURSOS E JULGAMENTO DE ADMISSIBILIDADE</SelectItem>
+                            <SelectItem value="FASE EXTERNA - PARCIALMENTE HOMOLOGADO">FASE EXTERNA - PARCIALMENTE HOMOLOGADO</SelectItem>
+                            <SelectItem value="HOMOLOGADO">HOMOLOGADO</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <ProgressRaceTrack currentStatus={tender.status} />
+                </div>
+            </td>
+            <td className="px-3 py-2 flex items-center space-x-3">
+                <Link
+                    href={`/tenders/${tender.id}`}
+                    className="font-medium text-blue-600 hover:underline flex items-center"
+                >
+                    <Eye className="w-4 h-4 mr-1" />
+                    Detalhes
+                </Link>
+                {role === 'Chefe da Seção de Licitações' && (
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => addTenderBelow(tender.id)}
+                            className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                            title="Inserir licitação abaixo"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => deleteTender(tender.id)}
+                            className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                            title="Excluir Pregão"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+            </td>
+        </tr>
+    );
+});
+
+// Nome para depuração no React DevTools
+TenderRow.displayName = "TenderRow";
+
 export default function TendersPage() {
     const {
         tenders,
         searchQuery,
+        setSearchQuery, // Added setSearchQuery
         statusFilter,
         setStatusFilter,
         nupFilter,
@@ -37,39 +626,115 @@ export default function TendersPage() {
         setCoordinatorFilter,
         requesterSectorFilter,
         setRequesterSectorFilter,
-        updateTender
+        updateTender,
+        refreshTender,
+        showConferenceColumn,
+        toggleConferenceColumn,
+        conferenceStatuses,
+        setConferenceStatus,
+        bulkSetConferenceStatus,
+        dateChecks,
+        toggleDateCheck,
+        deleteTender,
+        addTenderBelow,
+        undo,
+        canUndo,
+        resetToOriginalData,
+        historyCount,
+        objectFilter,
+        setObjectFilter,
+        highlightId,
+        setHighlightId,
+        pregoeiros
     } = useTenders();
-    const { role } = useUser();
+    const { role, user } = useUser();
+    const editorName = user?.name || role || 'Usuário';
+
+    const searchParams = useSearchParams();
+    const tableContainerRef = React.useRef<HTMLDivElement>(null);
+
+    // Sincronizar highlightId da URL com o contexto
+    useEffect(() => {
+        const urlHighlightId = searchParams.get('highlightId');
+        if (urlHighlightId) {
+            setHighlightId(urlHighlightId);
+        }
+    }, [searchParams, setHighlightId]);
+
+    // Rolar até o item destacado
+    useEffect(() => {
+        if (highlightId && tableContainerRef.current) {
+            const element = document.getElementById(`tender-row-${highlightId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [highlightId]);
+
+    const syncWithDatabase = () => {
+        alert("🔄 Solicitação de Sincronia enviada ao Antigravity!\n\nEu vou ler seus dados atuais e atualizar o arquivo 'data.ts' agora mesmo para tornar suas mudanças permanentes.");
+        console.log("SYNC_REQUEST_DATA:", JSON.stringify(tenders));
+    };
 
     const handleExport = () => {
         const headers = [
-            'ID', 'Número', 'UASG', 'Descrição', 'Status', 'NUP',
-            'Compromisso', 'Coordenador', 'Setor Requisitante',
-            'Abertura', 'Valor Estimado'
+            'ID', 'Número', 'UASG', 'NUP', 'Descrição', 'Status',
+            'Compromisso', 'Coordenador', 'Requisitante', 'Quick Notes',
+            'Conferência Geral',
+            'SAL (Prazo)', 'SAL (OK)',
+            'Envio CJU', 'Regresso CJU',
+            'Publicação (Prazo)', 'Publicação (Efetiva)', 'Publicação (OK)',
+            'Sessão Pública', 'Sessão Pública (OK)',
+            'Homologação (Prev)', 'Homologação (Prazo)', 'Homologação (OK)',
+            'Assinatura Atas', 'Vigência Anterior', 'Prazo GCALC',
+            'Última Atualização', 'Atualizado Por'
         ];
 
         const csvContent = [
             headers.join(','),
-            ...tenders.map(t => [
-                t.id,
-                t.number,
-                t.uasg,
-                `"${t.description.replace(/"/g, '""')}"`, // Escape quotes
-                t.status,
-                t.nup || '',
-                t.commitment || '',
-                t.coordinator || '',
-                t.requesterSector || '',
-                t.openingDate,
-                t.estimatedValue || ''
-            ].join(','))
+            ...tenders.map(t => {
+                const confStatus = conferenceStatuses[t.id] || 'Pendente';
+                const checks = dateChecks[t.id] || {};
+
+                return [
+                    t.id,
+                    t.number,
+                    t.uasg,
+                    t.nup || '',
+                    `"${(t.description || '').replace(/"/g, '""')}"`,
+                    t.status,
+                    t.commitment || '',
+                    t.coordinator || '',
+                    t.requesterSector || '',
+                    `"${(t.quickNotes || '').replace(/"/g, '""')}"`,
+                    confStatus,
+                    // Datas e seus respectivos Checks (OK/Pendente)
+                    t.dates?.protocoloSetorRequisitante?.defined || '',
+                    checks['protocoloSetorRequisitante'] ? 'OK' : 'Pendente',
+                    t.dates?.cjuSendDeadline || '',
+                    t.dates?.cjuReturnDate || '',
+                    t.dates?.publicationAdjustmentsDeadline || '',
+                    t.dates?.publicationDate || '',
+                    checks['publicationDate'] ? 'OK' : 'Pendente',
+                    t.dates?.proposalOpeningDate || '',
+                    checks['proposalOpeningDate'] ? 'OK' : 'Pendente',
+                    t.dates?.homologationForecast || '',
+                    t.dates?.homologationDeadline || '',
+                    checks['homologationDeadline'] ? 'OK' : 'Pendente',
+                    t.dates?.minutesSignatureDeadline || '',
+                    t.dates?.vigenciaAnterior || '',
+                    t.dates?.prazoGCALC || '',
+                    t.lastUpdatedAt || '',
+                    t.lastUpdatedBy || ''
+                ].join(',');
+            })
         ].join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', 'pregoes_radar.csv');
+        link.setAttribute('download', `radar_backup_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -83,11 +748,12 @@ export default function TendersPage() {
 
         const matchesStatus = statusFilter === "all" || tender.status === statusFilter;
         const matchesNup = nupFilter === "" || (tender.nup && tender.nup.includes(nupFilter));
+        const matchesObject = objectFilter === "" || (tender.description && tender.description.toLowerCase().includes(objectFilter.toLowerCase()));
         const matchesCommitment = commitmentFilter === "all" || tender.commitment === commitmentFilter;
         const matchesCoordinator = coordinatorFilter === "all" || tender.coordinator === coordinatorFilter;
         const matchesRequesterSector = requesterSectorFilter === "all" || tender.requesterSector === requesterSectorFilter;
 
-        return matchesSearch && matchesStatus && matchesNup && matchesCommitment && matchesCoordinator && matchesRequesterSector;
+        return matchesSearch && matchesStatus && matchesNup && matchesObject && matchesCommitment && matchesCoordinator && matchesRequesterSector;
     });
 
     return (
@@ -96,120 +762,233 @@ export default function TendersPage() {
                 <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold tracking-tight text-foreground mr-4">Pregões em Monitoramento</h1>
 
-                    {/* NUP Filter */}
-                    <div className="flex items-center space-x-2">
-                        <Search className="w-4 h-4 text-muted-foreground" />
-                        <input
-                            type="text"
-                            placeholder="Filtrar NUP..."
-                            className="h-8 text-xs border rounded px-2 bg-background"
-                            value={nupFilter}
-                            onChange={(e) => setNupFilter(e.target.value)}
-                        />
+                    <div className="flex flex-wrap items-center gap-2 mb-6">
+                        <div className="flex items-center gap-2 mr-auto">
+                            {/* Busca global movida para o cabeçalho Pregão / UASG */}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2 text-green-700 border-green-200 hover:bg-green-50"
+                                onClick={handleExport}
+                            >
+                                <Download className="w-4 h-4" />
+                                Extrair Planilha
+                            </Button>
+
+                            <div className="h-6 w-[1px] bg-border mx-1" />
+
+                            <Button
+                                onClick={undo}
+                                variant="outline"
+                                size="sm"
+                                disabled={!canUndo}
+                                className={cn(
+                                    "border-amber-200 text-amber-700 hover:bg-amber-50 gap-2 font-bold",
+                                    canUndo ? "animate-in fade-in slide-in-from-right-2" : "opacity-50 grayscale cursor-not-allowed border-dashed"
+                                )}
+                                title={canUndo ? `Desfazer última ação (${historyCount} disponível)` : "Nada para desfazer"}
+                            >
+                                <Undo2 className="w-4 h-4" />
+                                Desfazer
+                            </Button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {/* Filtros removidos daqui e movidos para o cabeçalho da tabela */}
+
+                            {/* Filtros removidos daqui e movidos para o cabeçalho da tabela */}
+
+                            <div className="h-6 w-[1px] bg-border mx-1" />
+
+                            {/* Conference Controls */}
+                            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-md border">
+                                <Button
+                                    variant={showConferenceColumn ? "default" : "outline"}
+                                    size="sm"
+                                    className="h-7 text-[10px] px-2"
+                                    onClick={toggleConferenceColumn}
+                                >
+                                    {showConferenceColumn ? "Ocultar Conferência" : "Conferência"}
+                                </Button>
+                                {showConferenceColumn && (
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-[10px] px-2 border-green-600 text-green-600 hover:bg-green-50"
+                                            onClick={() => bulkSetConferenceStatus('OK')}
+                                        >
+                                            Todos OK
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-[10px] px-2 border-gray-500 text-gray-500 hover:bg-gray-50"
+                                            onClick={() => bulkSetConferenceStatus('Pendente')}
+                                        >
+                                            Todos Pendente
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="h-6 w-[1px] bg-border mx-1" />
+
+                            <Button
+                                variant="default"
+                                size="sm"
+                                className="h-8 text-[10px] bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={syncWithDatabase}
+                                title="Salva suas alterações locais permanentemente no arquivo data.ts"
+                            >
+                                <Save className="mr-1 h-3 w-3" />
+                                Sincronizar Oficial
+                            </Button>
+                        </div>
                     </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {/* Export Button */}
-                    <Button
-                        variant="outline"
-                        className="h-8 text-xs border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                        onClick={handleExport}
-                    >
-                        <Download className="mr-2 h-3 w-3" />
-                        Extrair Planilha
-                    </Button>
-
-                    {/* Commitment Filter */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 text-xs border-dashed">
-                                Compromisso: {commitmentFilter === "all" ? "Todos" : commitmentFilter}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-white dark:bg-slate-950">
-                            <DropdownMenuItem onClick={() => setCommitmentFilter("all")}>Todos</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setCommitmentFilter("GCALC")}>GCALC</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setCommitmentFilter("PCA da OM")}>PCA da OM</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setCommitmentFilter("Operação Perseu")}>Operação Perseu</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setCommitmentFilter("Outros")}>Outros</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Coordinator Filter */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 text-xs border-dashed">
-                                Coord: {coordinatorFilter === "all" ? "Todos" : coordinatorFilter}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-white dark:bg-slate-950">
-                            <DropdownMenuItem onClick={() => setCoordinatorFilter("all")}>Todos</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setCoordinatorFilter("CAF")}>CAF</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setCoordinatorFilter("CCOL")}>CCOL</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setCoordinatorFilter("9º B Sup")}>9º B Sup</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setCoordinatorFilter("A definir")}>A definir</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Requester Sector Filter */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 text-xs border-dashed">
-                                Setor: {requesterSectorFilter === "all" ? "Todos" : requesterSectorFilter}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-white dark:bg-slate-950">
-                            <DropdownMenuItem onClick={() => setRequesterSectorFilter("all")}>Todos</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setRequesterSectorFilter("9º B Mnt")}>9º B Mnt</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setRequesterSectorFilter("9º B Sup")}>9º B Sup</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setRequesterSectorFilter("18º B Trnp")}>18º B Trnp</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setRequesterSectorFilter("Cia Cmdo")}>Cia Cmdo</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setRequesterSectorFilter("9º B Sau")}>9º B Sau</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setRequesterSectorFilter("Cmdo 9º Gpt")}>Cmdo 9º Gpt</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setRequesterSectorFilter("A definir")}>A definir</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Status Filter */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 text-xs border-radar-dark text-radar-dark hover:bg-radar-dark/5">
-                                <Filter className="mr-2 h-3 w-3" />
-                                Status: {statusFilter === "all" ? "Todos" : statusFilter}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-white dark:bg-slate-950 border-radar-gold w-56">
-                            <DropdownMenuLabel>Filtrar por Status</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setStatusFilter("all")}>Todos</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter("FASE INTERNA NA OMDS")}>FASE INTERNA NA OMDS</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter("FASE INTERNA NA SAL")}>FASE INTERNA NA SAL</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter("FASE INTERNA NA CJU")}>FASE INTERNA NA CJU</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter("CORREÇÕES PARA PUBLICAÇÃO")}>CORREÇÕES PARA PUBLICAÇÃO</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter("EDITAL PUBLICADO")}>EDITAL PUBLICADO</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter("FASE EXTERNA")}>FASE EXTERNA</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatusFilter("HOMOLOGADO")}>HOMOLOGADO</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
             </div>
 
-            <Card className="flex flex-col flex-1 overflow-hidden">
+            {highlightId && (
+                <div className="flex items-center justify-between p-3 bg-radar-gold/10 border border-radar-gold rounded-lg animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-radar-gold rounded-full">
+                            <LocateFixed className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-radar-dark">Visão de Foco Ativa</p>
+                            <p className="text-xs text-slate-600">Localizamos o processo vindo da sua Agenda. O item está destacado abaixo.</p>
+                        </div>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setHighlightId(null)}
+                        className="bg-white hover:bg-radar-gold hover:text-white border-radar-gold text-radar-gold transition-all"
+                    >
+                        <X className="w-4 h-4 mr-2" />
+                        Ver Todos os Processos (Limpar Destaque)
+                    </Button>
+                </div>
+            )}
+
+            <Card className="flex flex-col flex-1 overflow-hidden border-none shadow-sm dark:bg-slate-900/50">
                 <CardHeader className="shrink-0">
                     <CardTitle>Todos os Processos</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 p-0 relative min-h-0">
-                    <div className="absolute inset-0 overflow-auto force-scrollbar border rounded-lg">
+                    <div
+                        ref={tableContainerRef}
+                        className="absolute inset-0 overflow-auto force-scrollbar border rounded-lg"
+                    >
                         <table className="w-full text-xs text-left text-gray-500 min-w-[2000px]">
                             <thead className="text-[10px] text-muted-foreground uppercase bg-white dark:bg-gray-950 border-b sticky top-0 z-50 shadow-sm">
                                 <tr>
-                                    <th scope="col" className="px-3 py-2">Pregão / UASG</th>
-                                    <th scope="col" className="px-3 py-2">Objeto</th>
-                                    <th scope="col" className="px-3 py-2">NUP</th>
-                                    <th scope="col" className="px-3 py-2">Compromisso</th>
-                                    <th scope="col" className="px-3 py-2">Coordenador</th>
-                                    <th scope="col" className="px-3 py-2">Setor Requisitante</th>
+                                    <th scope="col" className="px-3 py-2 text-center w-8">Nº</th>
+                                    <th scope="col" className="px-3 py-2 whitespace-nowrap">Atualização</th>
+                                    {showConferenceColumn && (
+                                        <th scope="col" className="px-3 py-2 text-center w-24">Conferência</th>
+                                    )}
+                                    <th scope="col" className="px-3 py-2 min-w-[200px]">
+                                        <div className="flex flex-col gap-1">
+                                            <span>Pregão / UASG</span>
+                                            <div className="relative">
+                                                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                                                <input
+                                                    type="text"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    placeholder="Buscar nº ou UASG..."
+                                                    className="w-full pl-6 pr-2 py-1 text-[9px] font-normal border rounded bg-white/50 focus:bg-white outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th scope="col" className="px-3 py-2 min-w-[320px]">
+                                        <div className="flex flex-col gap-1">
+                                            <span>Objeto</span>
+                                            <div className="relative">
+                                                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                                                <input
+                                                    type="text"
+                                                    value={objectFilter}
+                                                    onChange={(e) => setObjectFilter(e.target.value)}
+                                                    placeholder="Filtrar objeto..."
+                                                    className="w-full pl-6 pr-2 py-1 text-[9px] font-normal border rounded bg-white/50 focus:bg-white outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th scope="col" className="px-3 py-2 text-center w-8">OBS</th>
+                                    <th scope="col" className="px-3 py-2 min-w-[150px]">
+                                        <div className="flex flex-col gap-1">
+                                            <span>NUP</span>
+                                            <div className="relative">
+                                                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                                                <input
+                                                    type="text"
+                                                    value={nupFilter}
+                                                    onChange={(e) => setNupFilter(e.target.value)}
+                                                    placeholder="Filtrar NUP..."
+                                                    className="w-full pl-6 pr-2 py-1 text-[9px] font-normal border rounded bg-white/50 focus:bg-white outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th scope="col" className="px-3 py-2 min-w-[140px]">
+                                        <div className="flex flex-col gap-1">
+                                            <span>Compromisso</span>
+                                            <Select value={commitmentFilter} onValueChange={setCommitmentFilter}>
+                                                <SelectTrigger className="h-7 text-[9px] font-normal bg-white/50 border-dashed">
+                                                    <SelectValue placeholder="Todos" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white dark:bg-slate-950">
+                                                    <SelectItem value="all">Todos</SelectItem>
+                                                    <SelectItem value="GCALC">GCALC</SelectItem>
+                                                    <SelectItem value="PCA da OM">PCA da OM</SelectItem>
+                                                    <SelectItem value="Operação Perseu">Operação Perseu</SelectItem>
+                                                    <SelectItem value="Outros">Outros</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </th>
+                                    <th scope="col" className="px-3 py-2 min-w-[140px]">
+                                        <div className="flex flex-col gap-1">
+                                            <span>Coordenador</span>
+                                            <Select value={coordinatorFilter} onValueChange={setCoordinatorFilter}>
+                                                <SelectTrigger className="h-7 text-[9px] font-normal bg-white/50 border-dashed text-left">
+                                                    <SelectValue placeholder="Todos" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white dark:bg-slate-950">
+                                                    <SelectItem value="all">Todos</SelectItem>
+                                                    <SelectItem value="CAF">CAF</SelectItem>
+                                                    <SelectItem value="CCOL">CCOL</SelectItem>
+                                                    <SelectItem value="9º B Sup">9º B Sup</SelectItem>
+                                                    <SelectItem value="A definir">A definir</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </th>
+                                    <th scope="col" className="px-3 py-2 min-w-[140px]">
+                                        <div className="flex flex-col gap-1">
+                                            <span>Requisitante</span>
+                                            <Select value={requesterSectorFilter} onValueChange={setRequesterSectorFilter}>
+                                                <SelectTrigger className="h-7 text-[9px] font-normal bg-white/50 border-dashed">
+                                                    <SelectValue placeholder="Todos" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white dark:bg-slate-950">
+                                                    <SelectItem value="all">Todos</SelectItem>
+                                                    <SelectItem value="9º B Mnt">9º B Mnt</SelectItem>
+                                                    <SelectItem value="9º B Sup">9º B Sup</SelectItem>
+                                                    <SelectItem value="18º B Trnp">18º B Trnp</SelectItem>
+                                                    <SelectItem value="Cia Cmdo">Cia Cmdo</SelectItem>
+                                                    <SelectItem value="9º B Sau">9º B Sau</SelectItem>
+                                                    <SelectItem value="Cmdo 9º Gpt">Cmdo 9º Gpt</SelectItem>
+                                                    <SelectItem value="A definir">A definir</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </th>
                                     <th scope="col" className="px-3 py-2">Prazo de envio à SAL</th>
                                     <th scope="col" className="px-3 py-2">Data de entrega efetiva na SAL</th>
                                     <th scope="col" className="px-3 py-2">Prazo de envio à CJU</th>
@@ -222,261 +1001,70 @@ export default function TendersPage() {
                                     <th scope="col" className="px-3 py-2">Prazo de assinatura das atas</th>
                                     <th scope="col" className="px-3 py-2">Vigência do último certame</th>
                                     <th scope="col" className="px-3 py-2">Prazo do GCALC</th>
-                                    <th scope="col" className="px-3 py-2">Status</th>
+                                    <th scope="col" className="px-3 py-2 text-radar-gold font-bold bg-radar-gold/5">Pregoeiro (Interna)</th>
+                                    <th scope="col" className="px-3 py-2 text-radar-gold font-bold bg-radar-gold/5">Pregoeiro (Externa)</th>
+                                    <th scope="col" className="px-3 py-2 min-w-[250px]">
+                                        <div className="flex flex-col gap-1">
+                                            <span>Status</span>
+                                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                                <SelectTrigger className="h-7 text-[9px] font-normal bg-white text-radar-dark border-radar-dark/30">
+                                                    <div className="flex items-center">
+                                                        <Filter className="mr-1 h-2 w-2" />
+                                                        <SelectValue placeholder="Status" />
+                                                    </div>
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white dark:bg-slate-950 border-radar-gold w-[260px]">
+                                                    <DropdownMenuLabel className="text-[10px]">Filtrar por Status</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    <SelectItem value="all">Todos</SelectItem>
+                                                    <SelectItem value="CANCELADO POR ABANDONO">CANCELADO POR ABANDONO</SelectItem>
+                                                    <SelectItem value="CANCELADO POR REVOGAÇÃO">CANCELADO POR REVOGAÇÃO</SelectItem>
+                                                    <SelectItem value="CANCELADO POR DUPLICIDADE DE OBJETO">CANCELADO POR DUPLICIDADE DE OBJETO</SelectItem>
+                                                    <SelectItem value="FASE INTERNA NA OMDS">FASE INTERNA NA OMDS</SelectItem>
+                                                    <SelectItem value="FASE INTERNA NA SAL">FASE INTERNA NA SAL</SelectItem>
+                                                    <SelectItem value="FASE INTERNA - IRP">FASE INTERNA - IRP</SelectItem>
+                                                    <SelectItem value="FASE INTERNA NA CJU">FASE INTERNA NA CJU</SelectItem>
+                                                    <SelectItem value="FASE INTERNA - CORREÇÕES PARA PUBLICAÇÃO">FASE INTERNA - CORREÇÕES PARA PUBLICAÇÃO</SelectItem>
+                                                    <SelectItem value="FASE EXTERNA - EDITAL PUBLICADO">FASE EXTERNA - EDITAL PUBLICADO</SelectItem>
+                                                    <SelectItem value="FASE EXTERNA - ABERTURA E JULGAMENTO DAS PROPOSTAS">FASE EXTERNA - ABERTURA E JULGAMENTO DAS PROPOSTAS</SelectItem>
+                                                    <SelectItem value="FASE EXTERNA - LANCES">FASE EXTERNA - LANCES</SelectItem>
+                                                    <SelectItem value="FASE EXTERNA - RECURSOS E JULGAMENTO DE ADMISSIBILIDADE">FASE EXTERNA - RECURSOS E JULGAMENTO DE ADMISSIBILIDADE</SelectItem>
+                                                    <SelectItem value="FASE EXTERNA - PARCIALMENTE HOMOLOGADO">FASE EXTERNA - PARCIALMENTE HOMOLOGADO</SelectItem>
+                                                    <SelectItem value="HOMOLOGADO">HOMOLOGADO</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </th>
 
                                     <th scope="col" className="px-3 py-2">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredTenders.map((tender) => (
-                                    <tr key={tender.id} className="bg-card border-b hover:bg-muted/50 transition-colors">
-                                        <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap">
-                                            {tender.number}
-                                            <br />
-                                            <span className="text-[10px] text-muted-foreground">UASG {tender.uasg}</span>
-                                        </td>
-                                        <td className="px-3 py-2 max-w-xs truncate" title={tender.description}>
-                                            {tender.description}
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="text"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-xs w-[130px] dark:text-gray-300 disabled:opacity-50"
-                                                placeholder="NUP..."
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.nup || ''}
-                                                onChange={(e) => {
-                                                    // Allow only numbers and typical NUP characters if desired, but user said "editá-los" freely.
-                                                    // Let's keep it open text for now or simple restriction if needed.
-                                                    // User said "17 algarismos", let's suggest max length but not strict mask yet unless requested.
-                                                    updateTender(tender.id, { nup: e.target.value })
-                                                }}
-                                                maxLength={25} // Enough for formatting
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <Select
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.commitment || 'Outros'}
-                                                onValueChange={(value) => updateTender(tender.id, { commitment: value as any })}
-                                            >
-                                                <SelectTrigger className="w-[160px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
-                                                    <SelectValue placeholder="Selecione" className="text-left" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
-                                                    <SelectItem value="GCALC">GCALC</SelectItem>
-                                                    <SelectItem value="PCA da OM">PCA da OM</SelectItem>
-                                                    <SelectItem value="Operação Perseu">Operação Perseu</SelectItem>
-                                                    <SelectItem value="Outros">Outros</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <Select
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.coordinator || 'A definir'}
-                                                onValueChange={(value) => updateTender(tender.id, { coordinator: value as any })}
-                                            >
-                                                <SelectTrigger className="w-[120px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
-                                                    <SelectValue placeholder="Selecione" className="text-left" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
-                                                    <SelectItem value="CAF">CAF</SelectItem>
-                                                    <SelectItem value="CCOL">CCOL</SelectItem>
-                                                    <SelectItem value="9º B Sup">9º B Sup</SelectItem>
-                                                    <SelectItem value="A definir">A definir</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <Select
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.requesterSector || 'A definir'}
-                                                onValueChange={(value) => updateTender(tender.id, { requesterSector: value as any })}
-                                            >
-                                                <SelectTrigger className="w-[120px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
-                                                    <SelectValue placeholder="Selecione" className="text-left" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
-                                                    <SelectItem value="9º B Mnt">9º B Mnt</SelectItem>
-                                                    <SelectItem value="9º B Sup">9º B Sup</SelectItem>
-                                                    <SelectItem value="18º B Trnp">18º B Trnp</SelectItem>
-                                                    <SelectItem value="Cia Cmdo">Cia Cmdo</SelectItem>
-                                                    <SelectItem value="9º B Sau">9º B Sau</SelectItem>
-                                                    <SelectItem value="Cmdo 9º Gpt">Cmdo 9º Gpt</SelectItem>
-                                                    <SelectItem value="A definir">A definir</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </td>
-
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.protocoloSetorRequisitante?.defined || ''}
-                                                onChange={(e) => updateTender(tender.id, {
-                                                    dates: {
-                                                        ...tender.dates,
-                                                        protocoloSetorRequisitante: {
-                                                            ...tender.dates?.protocoloSetorRequisitante,
-                                                            defined: e.target.value
-                                                        }
-                                                    }
-                                                })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.protocoloSetorRequisitante?.executed || ''}
-                                                onChange={(e) => updateTender(tender.id, {
-                                                    dates: {
-                                                        ...tender.dates,
-                                                        protocoloSetorRequisitante: {
-                                                            ...tender.dates?.protocoloSetorRequisitante,
-                                                            executed: e.target.value
-                                                        }
-                                                    }
-                                                })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.cjuSendDeadline || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, cjuSendDeadline: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.cjuReturnDate || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, cjuReturnDate: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.publicationAdjustmentsDeadline || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, publicationAdjustmentsDeadline: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.publicationDate || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, publicationDate: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.proposalOpeningDate || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, proposalOpeningDate: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.homologationForecast || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, homologationForecast: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.homologationDeadline || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, homologationDeadline: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.minutesSignatureDeadline || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, minutesSignatureDeadline: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.vigenciaAnterior || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, vigenciaAnterior: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <input
-                                                type="date"
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full dark:text-gray-300 disabled:opacity-50"
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.dates?.prazoGCALC || ''}
-                                                onChange={(e) => updateTender(tender.id, { dates: { ...tender.dates, prazoGCALC: e.target.value } })}
-                                            />
-                                        </td>
-                                        <td className="px-3 py-2">
-
-                                            <Select
-                                                disabled={role !== 'Chefe da Seção de Licitações'}
-                                                value={tender.status}
-                                                onValueChange={(value) => updateTender(tender.id, { status: value as any })}
-                                            >
-                                                <SelectTrigger className={`w-[180px] h-8 text-xs border-radar-dark/20 text-left justify-start px-2 ${tender.status === 'HOMOLOGADO' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                    tender.status === 'FASE EXTERNA' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                                                        tender.status === 'CORREÇÕES PARA PUBLICAÇÃO' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                            'bg-white dark:bg-slate-900'
-                                                    }`}>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
-                                                    <SelectItem value="FASE INTERNA NA OMDS">FASE INTERNA NA OMDS</SelectItem>
-                                                    <SelectItem value="FASE INTERNA NA SAL">FASE INTERNA NA SAL</SelectItem>
-                                                    <SelectItem value="FASE INTERNA NA CJU">FASE INTERNA NA CJU</SelectItem>
-                                                    <SelectItem value="CORREÇÕES PARA PUBLICAÇÃO">CORREÇÕES PARA PUBLICAÇÃO</SelectItem>
-                                                    <SelectItem value="EDITAL PUBLICADO">EDITAL PUBLICADO</SelectItem>
-                                                    <SelectItem value="FASE EXTERNA">FASE EXTERNA</SelectItem>
-                                                    <SelectItem value="HOMOLOGADO">HOMOLOGADO</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-
-                                        </td>
-
-                                        <td className="px-3 py-2 flex items-center space-x-3">
-                                            <Link
-                                                href={`/tenders/${tender.id}`}
-                                                className="font-medium text-blue-600 hover:underline flex items-center"
-                                            >
-                                                <Eye className="w-4 h-4 mr-1" />
-                                                Detalhes
-                                            </Link>
-                                            <EditTenderModal tender={tender} />
-                                        </td>
-                                    </tr>
+                                {filteredTenders.map((tender, index) => (
+                                    <TenderRow
+                                        key={tender.id}
+                                        tender={tender}
+                                        index={index}
+                                        role={role}
+                                        editorName={editorName}
+                                        updateTender={updateTender}
+                                        refreshTender={refreshTender}
+                                        showConferenceColumn={showConferenceColumn}
+                                        conferenceStatuses={conferenceStatuses}
+                                        setConferenceStatus={setConferenceStatus}
+                                        dateChecks={dateChecks}
+                                        toggleDateCheck={toggleDateCheck}
+                                        deleteTender={deleteTender}
+                                        addTenderBelow={addTenderBelow}
+                                        isHighlighted={highlightId === tender.id}
+                                        pregoeiros={pregoeiros}
+                                    />
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </div >
     );
 }

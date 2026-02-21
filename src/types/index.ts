@@ -1,11 +1,19 @@
 export type TenderStatus =
+    | 'CANCELADO POR ABANDONO'
+    | 'CANCELADO POR REVOGAÇÃO'
+    | 'CANCELADO POR DUPLICIDADE DE OBJETO'
     | 'FASE INTERNA NA OMDS'
     | 'FASE INTERNA NA SAL'
+    | 'FASE INTERNA - IRP'
     | 'FASE INTERNA NA CJU'
-    | 'CORREÇÕES PARA PUBLICAÇÃO'
-    | 'EDITAL PUBLICADO'
-    | 'FASE EXTERNA'
-    | 'HOMOLOGADO';
+    | 'FASE INTERNA - CORREÇÕES PARA PUBLICAÇÃO'
+    | 'FASE EXTERNA - EDITAL PUBLICADO'
+    | 'FASE EXTERNA - ABERTURA E JULGAMENTO DAS PROPOSTAS'
+    | 'FASE EXTERNA - LANCES'
+    | 'FASE EXTERNA - RECURSOS E JULGAMENTO DE ADMISSIBILIDADE'
+    | 'FASE EXTERNA - PARCIALMENTE HOMOLOGADO'
+    | 'HOMOLOGADO'
+    | 'ABANDONADO';
 
 export type TenderStage =
     | 'Edital Publicado'
@@ -15,7 +23,19 @@ export type TenderStage =
     | 'Julgamento'
     | 'Habilitação'
     | 'Adjudicação'
-    | 'Homologação';
+    | 'Homologação'
+    | '8. Adjudicação e Homologação'
+    | '7.2 Resposta a Recurso'
+    | '3. Envio para CJU'
+    | '4.1 Regresso da CONJUR'
+    | '5. Ajuste para publicação na OMDS'
+    | '9. Abandonado'
+    | '1.2 Nomeação da Equipe de Planejamento'
+    | '1. Entrada do TR pelo Set Req'
+    | '1. Entrada do TR na SAL'
+    | '6. Publicação do Aviso de Licitação'
+    | '5.1 Ajuste para publicação na SAL'
+    | 'A cargo do 9º B Sup';
 
 export interface TenderUpdate {
     id: string;
@@ -115,6 +135,23 @@ export interface NotificationLog {
     status: 'sent' | 'failed';
 }
 
+export interface Person {
+    id: string;
+    name: string;
+    role: string;
+    whatsapp: string;
+    email: string;
+    sector: string; // Setor Requisitante vinculado
+}
+
+export interface Pregoeiro {
+    id: string;
+    name: string;
+    role: string;
+    whatsapp: string;
+    email: string;
+}
+
 export interface Tender {
     id: string;
     uasg: string;
@@ -146,4 +183,13 @@ export interface Tender {
     commitment?: 'GCALC' | 'PCA da OM' | 'Operação Perseu' | 'Outros';
     requesterSector?: '9º B Mnt' | '9º B Sup' | '18º B Trnp' | 'Cia Cmdo' | '9º B Sau' | 'Cmdo 9º Gpt' | 'A definir';
     coordinator?: 'CAF' | 'CCOL' | '9º B Sup' | 'A definir';
+
+    // Controle de auditoria
+    lastUpdatedAt?: string; // ISO date string
+    lastUpdatedBy?: string; // Nome do perfil que fez a última edição
+    verificationStatus?: 'OK' | 'Pendente';
+    quickNotes?: string;
+    assignedPregoeiroId?: string; // ID do pregoeiro vinculado (Geral)
+    pregoeiroFaseInternaId?: string; // ID do pregoeiro na Fase Interna
+    pregoeiroFaseExternaId?: string; // ID do pregoeiro na Fase Externa
 }

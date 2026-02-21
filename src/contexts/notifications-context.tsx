@@ -15,9 +15,10 @@ interface NotificationsContextType {
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
 
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
-    const { tenders } = useTenders();
+    const { tenders, people, pregoeiros } = useTenders();
     const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
     const [logs, setLogs] = useState<NotificationLog[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     // Carregar dados salvos
     useEffect(() => {
@@ -27,29 +28,66 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         if (savedSubs) {
             setSubscribers(JSON.parse(savedSubs));
         } else {
-            // Mock inicial apenas se não houver nada
-            setSubscribers([{
-                id: '1',
-                name: 'Maj Silva',
-                email: 'silva@eb.mil.br',
-                phone: '67999999999',
-                department: 'Ordenador de Despesas',
-                preferences: { email: true, whatsapp: true, sms: false },
-                createdAt: new Date().toISOString()
-            }]);
+            // Mock inicial removido em favor da sincronização automática
+            setSubscribers([]);
         }
 
         if (savedLogs) {
             setLogs(JSON.parse(savedLogs));
         }
+        setIsLoaded(true);
     }, []);
+
+    // SINCRONIZAÇÃO AUTOMÁTICA: Vínculos -> Alertas
+    useEffect(() => {
+        if (!isLoaded) return;
+
+        setSubscribers(prev => {
+            // 1. Filtrar inscritos manuais (os que NÃO começam com 'sync-')
+            const manualSubscribers = prev.filter(s => !s.id.startsWith('sync-'));
+
+            // 2. Criar lista de inscritos sincronizados a partir de people e pregoeiros
+            const syncedSubscribers: Subscriber[] = [
+                ...people.map(p => {
+                    const id = `sync-person-${p.id}`;
+                    const existing = prev.find(s => s.id === id);
+                    return {
+                        id,
+                        name: p.name,
+                        email: p.email,
+                        phone: p.whatsapp,
+                        department: p.sector || 'Integrante',
+                        // Preserva preferências se já existirem, senão usa padrão
+                        preferences: existing?.preferences || { email: true, whatsapp: true, sms: false },
+                        createdAt: existing?.createdAt || new Date().toISOString()
+                    };
+                }),
+                ...pregoeiros.map(p => {
+                    const id = `sync-pregoeiro-${p.id}`;
+                    const existing = prev.find(s => s.id === id);
+                    return {
+                        id,
+                        name: p.name,
+                        email: p.email,
+                        phone: p.whatsapp,
+                        department: 'Pregoeiro',
+                        preferences: existing?.preferences || { email: true, whatsapp: true, sms: false },
+                        createdAt: existing?.createdAt || new Date().toISOString()
+                    };
+                })
+            ];
+
+            // Reconciliação: preservamos os manuais e injetamos a lista atual de synced (com prefs preservadas)
+            return [...manualSubscribers, ...syncedSubscribers];
+        });
+    }, [people, pregoeiros, isLoaded]);
 
     // Salvar mudanças
     useEffect(() => {
-        if (subscribers.length > 0) {
+        if (isLoaded) {
             localStorage.setItem('radar_subscribers', JSON.stringify(subscribers));
         }
-    }, [subscribers]);
+    }, [subscribers, isLoaded]);
 
     useEffect(() => {
         if (logs.length > 0) {

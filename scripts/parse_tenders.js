@@ -7,38 +7,63 @@ const outputPath = path.join(__dirname, '../src/lib/data.ts');
 const content = fs.readFileSync(csvPath, 'utf8');
 
 function splitCSV(content) {
+    const lines = content.split(/\r?\n/);
     const result = [];
-    let row = [];
-    let cell = '';
+    let currentRow = [];
+    let currentCell = '';
     let inQuotes = false;
 
-    for (let i = 0; i < content.length; i++) {
-        const char = content[i];
-        const nextChar = content[i + 1];
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
 
-        if (char === '"') {
-            if (inQuotes && nextChar === '"') {
-                cell += '"';
-                i++;
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            row.push(cell.trim());
-            cell = '';
-        } else if ((char === '\r' || char === '\n') && !inQuotes) {
-            if (char === '\r' && nextChar === '\n') i++;
-            row.push(cell.trim());
-            if (row.length > 0) result.push(row);
-            row = [];
-            cell = '';
-        } else {
-            cell += char;
+        // HEURÍSTICA: Se a linha começa com um padrão de pregão, força o fechamento da linha anterior
+        // Padrões: 900012/2025, 001/2025, A definir, - (seguido de vírgula)
+        const isNewTender = /^\d{3,6}\/202\d/.test(line) || /^A definir/.test(line) || /^-[, ]/.test(line);
+
+        if (isNewTender && i > 0 && !inQuotes) {
+            // Se já tínhamos uma célula sendo formada, fecha ela e a linha
+            // (Mas aqui o split por \n já quebrou, então precisamos ver se a linha anterior estava "aberta")
         }
-    }
-    if (row.length > 0 || cell) {
-        row.push(cell.trim());
-        result.push(row);
+
+        // Se a linha anterior terminou com aspas abertas, o split por \n pode ter quebrado o campo.
+        // Mas se a NOVA linha parece um pregão, as aspas anteriores provavelmente estavam mal formadas.
+        if (isNewTender && inQuotes) {
+            inQuotes = false;
+            // Se inQuotes mudou forçadamente, a currentRow anterior estava incompleta ou terminada
+            if (currentRow.length > 0) {
+                result.push(currentRow);
+                currentRow = [];
+            }
+        }
+
+        // Processamento simples por vírgula e aspas na linha
+        let chars = line.split('');
+        for (let j = 0; j < chars.length; j++) {
+            const char = chars[j];
+            if (char === '"') {
+                if (inQuotes && chars[j + 1] === '"') {
+                    currentCell += '"';
+                    j++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                currentRow.push(currentCell.trim());
+                currentCell = '';
+            } else {
+                currentCell += char;
+            }
+        }
+
+        if (!inQuotes) {
+            currentRow.push(currentCell.trim());
+            if (currentRow.length > 0) result.push(currentRow);
+            currentRow = [];
+            currentCell = '';
+        } else {
+            // Se ainda está em aspas, adiciona a quebra de linha que o split removeu
+            currentCell += '\n';
+        }
     }
     return result;
 }
@@ -66,29 +91,56 @@ const tenders = dataRows.map((row, idx) => {
     const description = row[1];
 
     // Ignore rows that are clearly not tenders (too short or empty description)
-    if (!description || description.length < 5) return null;
+    if (!description || description.length < 5) {
+        return null;
+    }
 
     // Skip header-like rows or empty rows
-    if (description.includes('CONTROLE DE LICITAÇÕES') || description.includes('Objeto')) return null;
+    if (description.includes('CONTROLE DE LICITAÇÕES') || description.includes('Objeto')) {
+        return null;
+    }
 
     const uasg = "122456";
     const isGCALC = (row[2] || '').toLowerCase().includes('sim');
     const coord = row[3];
     const department = row[4];
+    const nup = row[10] || ''; // Ajustado conforme análise visual da planilha (Col K - 10) - Espera-se que seja o NUP se presente em alguma coluna
+
+    // Mapeamento de Datas (Colunas do CSV baseadas na linha 3)
+    const dates = {
+        protocoloSetorRequisitante: {
+            defined: parseDate(row[5]),
+            executed: parseDate(row[6])
+        },
+        cjuSendDeadline: parseDate(row[8]),
+        cjuReturnDate: parseDate(row[9]),
+        publicationAdjustmentsDeadline: parseDate(row[10]),
+        publicationDate: parseDate(row[11]),
+        proposalOpeningDate: parseDate(row[12]),
+        homologationForecast: parseDate(row[15]),
+        homologationDeadline: parseDate(row[16]),
+        minutesSignatureDeadline: parseDate(row[17]),
+        vigenciaAnterior: parseDate(row[18]),
+        prazoGCALC: parseDate(row[20]) // Verificando coluna 20 na linha 3
+    };
 
     const openingDateStr = row[12];
-    const openingDate = parseDate(openingDateStr) || '2026-01-01T09:00:00';
+    const openingDate = parseDate(openingDateStr) || '2026-01-01';
 
     const obs = row[14] || '';
-    const status = obs.includes('Homologado') || obs.includes('Concluído') ? 'completed' :
-        obs.includes('Suspenso') || obs.includes('Cancelado') || obs.includes('Abandonado') ? 'suspended' : 'active';
 
+    // Status mapping more robust
+    let status = 'active';
+    if (obs.includes('Homologado') || obs.includes('Concluído')) status = 'completed';
+    else if (obs.includes('Suspenso') || obs.includes('Cancelado') || obs.includes('Abandonado')) status = 'suspended';
+
+    // Stage mapping based on obs and other hints
     let currentStage = 'Edital Publicado';
-    if (obs.includes('Homologação')) currentStage = 'Homologação';
+    if (row[27]) currentStage = row[27]; // Use a última coluna se preenchida
+    else if (obs.includes('Homologação')) currentStage = 'Homologação';
     else if (obs.includes('Habilitação')) currentStage = 'Habilitação';
     else if (obs.includes('Julgamento')) currentStage = 'Julgamento';
     else if (obs.includes('Disputa') || obs.includes('Seção')) currentStage = 'Disputa';
-    else if (obs.includes('Fase Interna')) currentStage = 'Edital Publicado';
 
     const responsibleInternal = row[21];
     const responsibleExternal = row[22];
@@ -104,12 +156,15 @@ const tenders = dataRows.map((row, idx) => {
         number: number || "A definir",
         description,
         department,
-        openingDate: openingDate.includes('T') ? openingDate : `${openingDate}T09:00:00`,
+        openingDate: `${openingDate}T09:00:00`,
         status,
         currentStage,
         hasIssues: obs.includes('!') || obs.toLowerCase().includes('problema') || obs.toLowerCase().includes('atraso') || obs.includes('🆕'),
         isGCALC,
         coord,
+        coordinator: coord, // Adicionando campo coordinator se esperado
+        nup,
+        dates,
         responsibleInternal,
         responsibleExternal,
         biPublication,
