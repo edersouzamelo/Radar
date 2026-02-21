@@ -46,7 +46,7 @@ interface TendersContextType {
     addPregoeiro: (pregoeiro: Omit<Pregoeiro, 'id'>) => void;
     updatePregoeiro: (id: string, updates: Partial<Pregoeiro>) => void;
     deletePregoeiro: (id: string) => void;
-    assignTenderToPregoeiro: (tenderId: string, pregoeiroId: string) => void;
+    assignTenderToPregoeiro: (tenderId: string, pregoeiroId: string, phase: 'interna' | 'externa') => void;
     highlightId: string | null;
     setHighlightId: (id: string | null) => void;
 }
@@ -311,10 +311,15 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const assignTenderToPregoeiro = useCallback((tenderId: string, pregoeiroId: string) => {
+    const assignTenderToPregoeiro = useCallback((tenderId: string, pregoeiroId: string, phase: 'interna' | 'externa') => {
         saveHistory();
         setTenders(prev => prev.map(t =>
-            t.id === tenderId ? { ...t, assignedPregoeiroId: pregoeiroId === 'none' ? undefined : pregoeiroId } : t
+            t.id === tenderId
+                ? {
+                    ...t,
+                    [phase === 'interna' ? 'pregoeiroFaseInternaId' : 'pregoeiroFaseExternaId']: pregoeiroId === 'none' ? undefined : pregoeiroId
+                }
+                : t
         ));
     }, [saveHistory]);
 

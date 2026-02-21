@@ -54,12 +54,13 @@ export default function LinksPage() {
         if (!destination) return;
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-        // O draggableId é o tender.id
-        // O destination.droppableId é o pregoeiro.id ou 'none'
         const tenderId = draggableId;
-        const newPregoeiroId = destination.droppableId;
+        // O droppableId agora tem o formato "fase:pregoeiroId" (ex: "interna:pregoeiro-1")
+        const [phase, pregoeiroId] = destination.droppableId.split(':');
 
-        assignTenderToPregoeiro(tenderId, newPregoeiroId);
+        if (phase === 'interna' || phase === 'externa') {
+            assignTenderToPregoeiro(tenderId, pregoeiroId, phase as 'interna' | 'externa');
+        }
     };
 
 
@@ -340,115 +341,47 @@ export default function LinksPage() {
                             </DialogContent>
                         </Dialog>
                     </div>
-                    <div className="flex-1 relative min-h-0">
-                        <DragDropContext onDragEnd={onDragEnd}>
-                            <div className="absolute inset-0 overflow-x-auto overflow-y-hidden custom-kanban-scroll rounded-2xl border border-slate-200 bg-slate-50/50">
-                                <style jsx global>{`
-                                    .custom-kanban-scroll::-webkit-scrollbar {
-                                        height: 16px !important;
-                                        display: block !important;
-                                    }
-                                    .custom-kanban-scroll::-webkit-scrollbar-track {
-                                        background: #f1f5f9 !important;
-                                    }
-                                    .custom-kanban-scroll::-webkit-scrollbar-thumb {
-                                        background-color: #475569 !important;
-                                        border-radius: 8px !important;
-                                        border: 3px solid #f1f5f9 !important;
-                                    }
-                                `}</style>
-                                <div className="flex flex-row gap-4 p-4 h-full">
-                                    {/* Coluna "A Definir" */}
-                                    <div className="flex flex-col gap-3 w-[300px] shrink-0 h-full">
-                                        <div className="flex items-center justify-between px-3 py-2 bg-slate-100 rounded-lg border-2 border-slate-200 sticky top-0 z-10 shadow-sm">
-                                            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-600 uppercase">SEM PREGOEIRO</h3>
-                                            <Badge variant="secondary" className="text-[10px] h-5 min-w-5 flex justify-center bg-slate-200">{tenders.filter(t => !t.assignedPregoeiroId).length}</Badge>
-                                        </div>
-                                        <Droppable droppableId="none" type="TENDER">
-                                            {(provided) => (
-                                                <div
-                                                    {...provided.droppableProps}
-                                                    ref={provided.innerRef}
-                                                    className="flex flex-col gap-2 flex-1 overflow-y-auto p-2 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30"
-                                                >
-                                                    {tenders.filter(t => !t.assignedPregoeiroId && (
-                                                        t.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                        t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                        t.uasg.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                        (t.nup && t.nup.toLowerCase().includes(searchQuery.toLowerCase()))
-                                                    )).map((tender, index) => (
-                                                        <Draggable key={tender.id} draggableId={tender.id} index={index}>
-                                                            {(provided, snapshot) => (
-                                                                <TenderCard
-                                                                    tender={tender}
-                                                                    onAssign={assignTenderToPregoeiro}
-                                                                    pregoeiros={pregoeiros}
-                                                                    provided={provided}
-                                                                    isDragging={snapshot.isDragging}
-                                                                />
-                                                            )}
-                                                        </Draggable>
-                                                    ))}
-                                                    {provided.placeholder}
-                                                </div>
-                                            )}
-                                        </Droppable>
-                                    </div>
-
-                                    {/* Colunas dos Pregoeiros */}
-                                    {pregoeiros.map(pregoeiro => (
-                                        <div key={pregoeiro.id} className="flex flex-col gap-3 w-[300px] shrink-0 h-full group">
-                                            <div className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border-b-4 border-b-blue-600 shadow-sm sticky top-0 z-10">
-                                                <div className="flex items-center gap-2 flex-1">
-                                                    <UserCircle2 className="w-4 h-4 text-blue-600" />
-                                                    <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-800 truncate">{pregoeiro.name}</h3>
-                                                    <button onClick={() => handleEditPregoeiro(pregoeiro)} className="p-1 hover:bg-slate-100 rounded text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Edit2 className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                                <Badge className="text-[10px] h-5 min-w-5 flex justify-center bg-blue-600">{tenders.filter(t => t.assignedPregoeiroId === pregoeiro.id).length}</Badge>
-                                            </div>
-                                            <Droppable droppableId={pregoeiro.id} type="TENDER">
-                                                {(provided) => (
-                                                    <div
-                                                        {...provided.droppableProps}
-                                                        ref={provided.innerRef}
-                                                        className="flex-1 flex flex-col gap-2 overflow-y-auto p-2 rounded-2xl bg-blue-50/20 border border-blue-100/50 group-hover:bg-blue-50/40 transition-colors"
-                                                    >
-                                                        {tenders.filter(t => t.assignedPregoeiroId === pregoeiro.id && (
-                                                            t.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                            t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                            t.uasg.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                            (t.nup && t.nup.toLowerCase().includes(searchQuery.toLowerCase()))
-                                                        )).map((tender, index) => (
-                                                            <Draggable key={tender.id} draggableId={tender.id} index={index}>
-                                                                {(provided, snapshot) => (
-                                                                    <TenderCard
-                                                                        tender={tender}
-                                                                        onAssign={assignTenderToPregoeiro}
-                                                                        pregoeiros={pregoeiros}
-                                                                        currentPregoeiroId={pregoeiro.id}
-                                                                        provided={provided}
-                                                                        isDragging={snapshot.isDragging}
-                                                                    />
-                                                                )}
-                                                            </Draggable>
-                                                        ))}
-                                                        {provided.placeholder}
-                                                        {tenders.filter(t => t.assignedPregoeiroId === pregoeiro.id).length === 0 && (
-                                                            <div className="flex flex-col items-center justify-center h-full py-10 opacity-30 grayscale grayscale-0">
-                                                                <Gavel className="w-8 h-8 text-slate-300" />
-                                                                <p className="text-[9px] font-bold mt-2 uppercase">Sem carga</p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </Droppable>
-                                        </div>
-                                    ))}
-                                </div>
+                    <div className="flex-1 relative min-h-0 bg-slate-50/50 rounded-2xl border border-slate-200 overflow-hidden">
+                        <Tabs defaultValue="interna" className="h-full flex flex-col">
+                            <div className="px-4 pt-3 flex items-center justify-between border-b border-slate-200 bg-white">
+                                <TabsList className="grid w-fit grid-cols-3 bg-muted/50 p-1 mb-2">
+                                    <TabsTrigger value="interna" className="text-[10px] font-bold uppercase tracking-wider px-4">Fase Interna</TabsTrigger>
+                                    <TabsTrigger value="externa" className="text-[10px] font-bold uppercase tracking-wider px-4">Fase Externa</TabsTrigger>
+                                    <TabsTrigger value="tudo" className="text-[10px] font-bold uppercase tracking-wider px-4">Tudo</TabsTrigger>
+                                </TabsList>
+                                <Badge variant="outline" className="text-[10px] font-mono text-slate-500 mb-2">Total: {tenders.length} Processos</Badge>
                             </div>
-                        </DragDropContext>
+
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <TabsContent value="interna" className="flex-1 min-h-0 mt-0">
+                                    <KanbanBoard
+                                        phase="interna"
+                                        tenders={tenders}
+                                        pregoeiros={pregoeiros}
+                                        searchQuery={searchQuery}
+                                        onAssign={assignTenderToPregoeiro}
+                                    />
+                                </TabsContent>
+                                <TabsContent value="externa" className="flex-1 min-h-0 mt-0">
+                                    <KanbanBoard
+                                        phase="externa"
+                                        tenders={tenders}
+                                        pregoeiros={pregoeiros}
+                                        searchQuery={searchQuery}
+                                        onAssign={assignTenderToPregoeiro}
+                                    />
+                                </TabsContent>
+                                <TabsContent value="tudo" className="flex-1 min-h-0 mt-0">
+                                    <KanbanBoard
+                                        phase="tudo"
+                                        tenders={tenders}
+                                        pregoeiros={pregoeiros}
+                                        searchQuery={searchQuery}
+                                        onAssign={assignTenderToPregoeiro}
+                                    />
+                                </TabsContent>
+                            </DragDropContext>
+                        </Tabs>
                     </div>
                 </TabsContent>
             </Tabs>
@@ -456,33 +389,193 @@ export default function LinksPage() {
     )
 }
 
-function TenderCard({ tender, onAssign, pregoeiros, currentPregoeiroId, provided, isDragging }: {
+function KanbanBoard({ phase, tenders, pregoeiros, searchQuery, onAssign }: {
+    phase: 'interna' | 'externa' | 'tudo',
+    tenders: any[],
+    pregoeiros: any[],
+    searchQuery: string,
+    onAssign: (tid: string, pid: string, phase: 'interna' | 'externa') => void
+}) {
+    const getPhasePregoeiroId = (t: any) => {
+        if (phase === 'interna') return t.pregoeiroFaseInternaId;
+        if (phase === 'externa') return t.pregoeiroFaseExternaId;
+        return null; // A aba 'tudo' usa lógica customizada por coluna
+    };
+
+    const isUnassigned = (t: any) => {
+        if (phase === 'interna') return !t.pregoeiroFaseInternaId;
+        if (phase === 'externa') return !t.pregoeiroFaseExternaId;
+        // Na visão 'tudo', mostramos processos que não têm pregoeiro em NENHUMA das fases no dashboard de 'A definir'
+        return !t.pregoeiroFaseInternaId && !t.pregoeiroFaseExternaId;
+    };
+
+    return (
+        <div className="flex flex-row gap-4 p-4 h-full overflow-x-auto custom-kanban-scroll items-start">
+            <style jsx global>{`
+                .custom-kanban-scroll::-webkit-scrollbar {
+                    height: 8px !important;
+                    display: block !important;
+                }
+                .custom-kanban-scroll::-webkit-scrollbar-track {
+                    background: #f1f5f9 !important;
+                }
+                .custom-kanban-scroll::-webkit-scrollbar-thumb {
+                    background-color: #cbd5e1 !important;
+                    border-radius: 8px !important;
+                }
+            `}</style>
+
+            {/* Coluna "A Definir" */}
+            <div className="flex flex-col gap-3 w-[260px] shrink-0 h-full">
+                <div className="flex items-center justify-between px-3 py-2 bg-slate-100 rounded-lg border sticky top-0 z-10">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">SEM PREGOEIRO {phase !== 'tudo' && `(${phase})`}</h3>
+                    <Badge variant="secondary" className="text-[9px] h-4 min-w-4 flex justify-center bg-slate-200">
+                        {tenders.filter(t => isUnassigned(t)).length}
+                    </Badge>
+                </div>
+                <Droppable droppableId={`${phase}:none`} type="TENDER" isDropDisabled={phase === 'tudo'}>
+                    {(provided) => (
+                        <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className="flex flex-col gap-2 flex-1 overflow-y-auto p-2 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 min-h-[200px]"
+                        >
+                            {tenders.filter(t => isUnassigned(t) && (
+                                t.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                t.uasg.toLowerCase().includes(searchQuery.toLowerCase())
+                            )).map((tender, index) => (
+                                <Draggable key={`${phase}-${tender.id}`} draggableId={tender.id} index={index} isDragDisabled={phase === 'tudo'}>
+                                    {(provided, snapshot) => (
+                                        <TenderCard
+                                            tender={tender}
+                                            onAssign={onAssign}
+                                            pregoeiros={pregoeiros}
+                                            provided={provided}
+                                            isDragging={snapshot.isDragging}
+                                            phase={phase}
+                                        />
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </Droppable>
+            </div>
+
+            {/* Colunas dos Pregoeiros */}
+            {pregoeiros.map(pregoeiro => {
+                const getFilteredTenders = () => {
+                    if (phase === 'interna') return tenders.filter(t => t.pregoeiroFaseInternaId === pregoeiro.id);
+                    if (phase === 'externa') return tenders.filter(t => t.pregoeiroFaseExternaId === pregoeiro.id);
+                    // Na visão 'tudo', mostramos se for responsável por QUALQUER uma das fases
+                    return tenders.filter(t => t.pregoeiroFaseInternaId === pregoeiro.id || t.pregoeiroFaseExternaId === pregoeiro.id);
+                };
+
+                const filtered = getFilteredTenders().filter(t => (
+                    t.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    t.uasg.toLowerCase().includes(searchQuery.toLowerCase())
+                ));
+
+                return (
+                    <div key={pregoeiro.id} className="flex flex-col gap-3 w-[260px] shrink-0 h-full group">
+                        <div className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border-b-2 border-b-blue-500 shadow-sm sticky top-0 z-10">
+                            <div className="flex items-center gap-2 flex-1 truncate">
+                                <UserCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-800 truncate">{pregoeiro.name}</h3>
+                            </div>
+                            <Badge className="text-[9px] h-4 min-w-4 flex justify-center bg-blue-600">
+                                {filtered.length}
+                            </Badge>
+                        </div>
+                        <Droppable droppableId={`${phase}:${pregoeiro.id}`} type="TENDER" isDropDisabled={phase === 'tudo'}>
+                            {(provided) => (
+                                <div
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                    className="flex-1 flex flex-col gap-2 overflow-y-auto p-2 rounded-xl bg-blue-50/20 border border-blue-100/30 min-h-[200px]"
+                                >
+                                    {filtered.map((tender, index) => (
+                                        <Draggable key={`${phase}-${tender.id}`} draggableId={tender.id} index={index} isDragDisabled={phase === 'tudo'}>
+                                            {(provided, snapshot) => (
+                                                <TenderCard
+                                                    tender={tender}
+                                                    onAssign={onAssign}
+                                                    pregoeiros={pregoeiros}
+                                                    currentPregoeiroId={pregoeiro.id}
+                                                    provided={provided}
+                                                    isDragging={snapshot.isDragging}
+                                                    phase={phase}
+                                                />
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function TenderCard({ tender, onAssign, pregoeiros, currentPregoeiroId, provided, isDragging, phase }: {
     tender: any,
-    onAssign: (tid: string, pid: string) => void,
+    onAssign: (tid: string, pid: string, phase: 'interna' | 'externa') => void,
     pregoeiros: any[],
     currentPregoeiroId?: string,
     provided?: any,
-    isDragging?: boolean
+    isDragging?: boolean,
+    phase: 'interna' | 'externa' | 'tudo'
 }) {
+    const isInternal = phase === 'tudo' ? tender.pregoeiroFaseInternaId === currentPregoeiroId : phase === 'interna';
+    const isBoth = phase === 'tudo' && tender.pregoeiroFaseInternaId === currentPregoeiroId && tender.pregoeiroFaseExternaId === currentPregoeiroId;
+    const isExternal = phase === 'tudo' ? tender.pregoeiroFaseExternaId === currentPregoeiroId : phase === 'externa';
+
+    const getBorderColor = () => {
+        if (phase !== 'tudo') return "border-l-blue-500";
+        if (tender.pregoeiroFaseInternaId === currentPregoeiroId && tender.pregoeiroFaseExternaId === currentPregoeiroId) return "border-l-purple-500";
+        if (tender.pregoeiroFaseInternaId === currentPregoeiroId) return "border-l-amber-500";
+        if (tender.pregoeiroFaseExternaId === currentPregoeiroId) return "border-l-blue-500";
+        return "border-l-slate-400";
+    };
+
     return (
         <Card
             ref={provided?.innerRef}
             {...provided?.draggableProps}
             {...provided?.dragHandleProps}
             className={cn(
-                "p-2.5 shadow-sm hover:shadow-md transition-all group border-l-2 border-l-slate-400 hover:border-l-blue-500 bg-white relative cursor-grab active:cursor-grabbing",
-                isDragging && "shadow-xl ring-2 ring-blue-500/50 z-50 rotate-2 scale-105"
+                "p-2.5 shadow-sm hover:shadow-md transition-all group border-l-2 relative cursor-grab active:cursor-grabbing",
+                getBorderColor(),
+                isDragging && "shadow-xl ring-2 ring-blue-500/50 z-50 rotate-2 scale-105",
+                phase === 'tudo' && "cursor-default active:cursor-default"
             )}
         >
             <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-start gap-2">
                     <div className="flex items-center gap-1.5 flex-1">
-                        <div className="text-slate-300 hover:text-slate-500 p-0.5">
-                            <GripVertical className="w-3 h-3" />
-                        </div>
+                        {phase !== 'tudo' && (
+                            <div className="text-slate-300 hover:text-slate-500 p-0.5">
+                                <GripVertical className="w-3 h-3" />
+                            </div>
+                        )}
                         <span className="text-[10px] font-black text-slate-800 leading-none">{tender.number}</span>
                     </div>
                     <Badge variant="outline" className="text-[8px] h-3 px-1 border-slate-200 text-slate-500 font-mono tracking-tighter shrink-0">{tender.uasg}</Badge>
+                </div>
+
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                    {phase === 'tudo' && tender.pregoeiroFaseInternaId === currentPregoeiroId && (
+                        <Badge className="text-[7px] h-3 px-1 uppercase font-bold bg-amber-100 text-amber-700 border-amber-200">INTERNA</Badge>
+                    )}
+                    {phase === 'tudo' && tender.pregoeiroFaseExternaId === currentPregoeiroId && (
+                        <Badge className="text-[7px] h-3 px-1 uppercase font-bold bg-blue-100 text-blue-700 border-blue-200">EXTERNA</Badge>
+                    )}
                 </div>
 
                 <p className="text-[10px] font-medium text-slate-600 line-clamp-4 leading-snug min-h-[48px]">
@@ -504,40 +597,42 @@ function TenderCard({ tender, onAssign, pregoeiros, currentPregoeiroId, provided
                         {tender.status.split(' ')[0]}...
                     </Badge>
 
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-slate-100">
-                                <ArrowRightLeft className="w-3 h-3 text-slate-400 group-hover:text-blue-500" />
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[300px]">
-                            <DialogHeader>
-                                <DialogTitle className="text-sm">Mover Processo</DialogTitle>
-                            </DialogHeader>
-                            <div className="flex flex-col gap-2 py-4">
-                                <Label className="text-xs">Atribuir a:</Label>
-                                <div className="space-y-1">
-                                    <Button
-                                        variant={!currentPregoeiroId ? "secondary" : "ghost"}
-                                        className="w-full justify-start text-xs h-8"
-                                        onClick={() => onAssign(tender.id, 'none')}
-                                    >
-                                        Sem Pregoeiro
-                                    </Button>
-                                    {pregoeiros.map(p => (
+                    {phase !== 'tudo' && (
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-slate-100">
+                                    <ArrowRightLeft className="w-3 h-3 text-slate-400 group-hover:text-blue-500" />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[300px]">
+                                <DialogHeader>
+                                    <DialogTitle className="text-sm">Mover Processo</DialogTitle>
+                                </DialogHeader>
+                                <div className="flex flex-col gap-2 py-4">
+                                    <Label className="text-xs">Atribuir a:</Label>
+                                    <div className="space-y-1">
                                         <Button
-                                            key={p.id}
-                                            variant={currentPregoeiroId === p.id ? "secondary" : "ghost"}
+                                            variant={!currentPregoeiroId ? "secondary" : "ghost"}
                                             className="w-full justify-start text-xs h-8"
-                                            onClick={() => onAssign(tender.id, p.id)}
+                                            onClick={() => onAssign(tender.id, 'none', phase as any)}
                                         >
-                                            {p.name}
+                                            Sem Pregoeiro
                                         </Button>
-                                    ))}
+                                        {pregoeiros.map(p => (
+                                            <Button
+                                                key={p.id}
+                                                variant={currentPregoeiroId === p.id ? "secondary" : "ghost"}
+                                                className="w-full justify-start text-xs h-8"
+                                                onClick={() => onAssign(tender.id, p.id, phase as any)}
+                                            >
+                                                {p.name}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </div>
             </div>
         </Card>

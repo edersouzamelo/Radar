@@ -212,7 +212,7 @@ const TenderRow = memo(({
                 <input
                     type="date"
                     className={cn(
-                        "bg-transparent border-none focus:ring-0 p-0 text-sm w-full disabled:opacity-50 transition-colors",
+                        "bg-transparent border-none focus:ring-0 p-0 text-sm w-[110px] disabled:opacity-50 transition-colors",
                         getDateColor(val, isChecked, isCancelled)
                     )}
                     disabled={role !== 'Chefe da Seção de Licitações'}
@@ -1001,8 +1001,8 @@ export default function TendersPage() {
                                     <th scope="col" className="px-3 py-2">Prazo de assinatura das atas</th>
                                     <th scope="col" className="px-3 py-2">Vigência do último certame</th>
                                     <th scope="col" className="px-3 py-2">Prazo do GCALC</th>
-                                    <th scope="col" className="px-3 py-2 text-radar-gold font-bold bg-radar-gold/5">Pregoeiro (Interna)</th>
-                                    <th scope="col" className="px-3 py-2 text-radar-gold font-bold bg-radar-gold/5">Pregoeiro (Externa)</th>
+                                    <th scope="col" className="px-3 py-2 text-radar-gold font-bold bg-radar-gold/5 min-w-[170px]">PREGOEIRO (FASE INTERNA)</th>
+                                    <th scope="col" className="px-3 py-2 text-radar-gold font-bold bg-radar-gold/5 min-w-[170px]">PREGOEIRO (FASE EXTERNA)</th>
                                     <th scope="col" className="px-3 py-2 min-w-[250px]">
                                         <div className="flex flex-col gap-1">
                                             <span>Status</span>
