@@ -14,6 +14,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "RADAR - Monitoramento de Licitações",
   description: "Acompanhamento de pregões eletrônicos e licitações",
+  icons: {
+    icon: "/radar-logo.png",
+    shortcut: "/radar-logo.png",
+    apple: "/radar-logo.png",
+  },
 };
 
 export const viewport = {

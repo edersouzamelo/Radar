@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
-  const { tenders } = useTenders();
+  const { tenders, cloudStatus } = useTenders();
 
   // Cálculos de métricas dinâmicas
   const totalTenders = tenders.length;
@@ -49,9 +49,12 @@ export default function Dashboard() {
         </h1>
         <div className="flex items-center gap-4">
           <CreateTenderModal />
-          <div className="flex items-center space-x-2 text-sm text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            <span>Dados em Tempo Real</span>
+          <div className={`flex items-center space-x-2 text-sm ${cloudStatus.isConnected ? 'text-gray-500' : 'text-red-500'} bg-white px-3 py-1 rounded-full shadow-sm`}>
+            <span className={`w-2 h-2 rounded-full ${cloudStatus.status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+              cloudStatus.status === 'syncing' ? 'bg-blue-500 animate-pulse' :
+                'bg-red-400'
+              }`}></span>
+            <span>{cloudStatus.isConnected ? 'Dados em Tempo Real' : 'Modo Offline / Local'}</span>
           </div>
         </div>
       </div>

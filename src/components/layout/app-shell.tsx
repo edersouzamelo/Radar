@@ -64,12 +64,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Dialog>
 
             {/* Sidebar Desktop */}
-            <div className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 z-50 transition-all duration-300 ${isSidebarCollapsed ? 'md:w-20' : 'md:w-60'}`}>
+            <div className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 z-50 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'md:w-20' : 'md:w-60'}`}>
                 <Sidebar isCollapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
             </div>
 
             {/* Área principal */}
-            <div className={`flex flex-col flex-1 h-full transition-all duration-300 ${isSidebarCollapsed ? 'md:pl-20' : 'md:pl-60'}`}>
+            <div className={`flex flex-col flex-1 h-full transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'md:pl-20' : 'md:pl-60'}`}>
                 <Header onMenuOpen={() => setIsMobileMenuOpen(true)} />
                 <main className="flex-1 overflow-y-auto px-4 md:px-8 pb-8">
                     {children}

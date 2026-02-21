@@ -152,6 +152,15 @@ export interface Pregoeiro {
     email: string;
 }
 
+export interface Supervisor {
+    id: string;
+    name: string;
+    role: string;
+    whatsapp: string;
+    email: string;
+    organization: string; // Órgão de supervisão (ex: CGU, TCU, etc)
+}
+
 export interface Tender {
     id: string;
     uasg: string;

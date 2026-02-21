@@ -1,8 +1,9 @@
 "use client"
 
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { Tender, Person, Pregoeiro } from '@/types';
+import { Tender, Person, Pregoeiro, Supervisor } from '@/types';
 import { tenders as initialTenders, DATA_VERSION } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 
 interface TendersContextType {
     tenders: Tender[];
@@ -47,8 +48,21 @@ interface TendersContextType {
     updatePregoeiro: (id: string, updates: Partial<Pregoeiro>) => void;
     deletePregoeiro: (id: string) => void;
     assignTenderToPregoeiro: (tenderId: string, pregoeiroId: string, phase: 'interna' | 'externa') => void;
+    supervisors: Supervisor[];
+    addSupervisor: (supervisor: Omit<Supervisor, 'id'>) => void;
+    updateSupervisor: (id: string, updates: Partial<Supervisor>) => void;
+    deleteSupervisor: (id: string) => void;
     highlightId: string | null;
     setHighlightId: (id: string | null) => void;
+    // Monitoramento Cloud
+    cloudStatus: {
+        isConnected: boolean;
+        lastSync: Date | null;
+        totalRecords: number;
+        status: 'online' | 'offline' | 'syncing' | 'error';
+        message?: string;
+    };
+    forceCloudSync: () => Promise<void>;
 }
 
 const TendersContext = createContext<TendersContextType | undefined>(undefined);
@@ -82,6 +96,13 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         { id: 'pregoeiro-4', name: 'Ten Costa', role: 'Pregoeiro', whatsapp: '', email: '' },
         { id: 'pregoeiro-5', name: 'Cap Fernandes', role: 'Pregoeiro', whatsapp: '', email: '' }
     ]);
+    const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
+    const [cloudStatus, setCloudStatus] = useState<TendersContextType['cloudStatus']>({
+        isConnected: false,
+        lastSync: null,
+        totalRecords: 0,
+        status: 'offline'
+    });
 
     // Carregar do LocalStorage (APENAS UMA VEZ NA MONTAGEM)
     useEffect(() => {
@@ -171,8 +192,112 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             }
         }
 
+        const savedSupervisors = localStorage.getItem('radar_supervisors_data');
+        if (savedSupervisors) {
+            try {
+                setSupervisors(JSON.parse(savedSupervisors));
+            } catch (e) {
+                console.error("Erro ao carregar supervisores do localStorage", e);
+            }
+        }
+
         setIsLoaded(true);
     }, []);
+
+    // ---------------------------------------------------------
+    // LOGICA CLOUD (SUPABASE) v3.0.0
+    // ---------------------------------------------------------
+
+    const forceCloudSync = useCallback(async () => {
+        if (!supabase) return;
+
+        setCloudStatus(prev => ({ ...prev, status: 'syncing' }));
+
+        try {
+            // 1. Puxar dados para contar registros (Verificar conexão)
+            const { count, error: countError } = await supabase
+                .from('tenders')
+                .select('*', { count: 'exact', head: true });
+
+            if (countError) throw countError;
+
+            // 2. Preparar dados locais para Upload
+            // Mapeamos para bater com as colunas do PostgreSQL (supabase_init.sql)
+            const tendersToUpload = tenders.map(t => ({
+                id: t.id,
+                uasg: t.uasg,
+                number: t.number,
+                nup: t.nup,
+                description: t.description,
+                department: t.department,
+                opening_date: t.openingDate,
+                estimated_value: t.estimatedValue,
+                status: t.status,
+                current_stage: t.currentStage,
+                has_issues: t.hasIssues,
+                is_gcalc: t.isGCALC,
+                commitment: t.commitment,
+                requester_sector: t.requesterSector,
+                coordinator: t.coordinator,
+                coord: t.coord,
+                section: t.section,
+                responsible_internal: t.responsibleInternal,
+                responsible_external: t.responsibleExternal,
+                bi_publication: t.biPublication,
+                optimization_notes: t.optimizationNotes,
+                next_deadline: t.nextDeadline,
+                next_activity: t.nextActivity,
+                intercurrences: t.intercurrences,
+                last_updated_by: t.lastUpdatedBy,
+                verification_status: t.verificationStatus,
+                assigned_pregoeiro_id: t.assignedPregoeiroId,
+                pregoeiro_fase_interna_id: t.pregoeiroFaseInternaId,
+                pregoeiro_fase_externa_id: t.pregoeiroFaseExternaId,
+                dates: t.dates || {},
+                updates: t.updates || [],
+                observations: t.observations || []
+            }));
+
+            // 3. Executar Upsert (Insere se novo, atualiza se existir ID)
+            const { error: upsertError } = await supabase
+                .from('tenders')
+                .upsert(tendersToUpload);
+
+            if (upsertError) throw upsertError;
+
+            // 4. Sincronizar Membros da Equipe (Opcional por enquanto, mas bom manter)
+            const teamToUpload = [
+                ...pregoeiros.map(p => ({ ...p, type: 'pregoeiro' })),
+                ...supervisors.map(s => ({ ...s, type: 'supervisor' })),
+                ...people.map(p => ({ ...p, type: 'requisitante' }))
+            ];
+
+            await supabase.from('team_members').upsert(teamToUpload);
+
+            setCloudStatus({
+                isConnected: true,
+                lastSync: new Date(),
+                totalRecords: tenders.length,
+                status: 'online'
+            });
+
+        } catch (err: any) {
+            console.error("Erro na sincronia cloud:", err);
+            setCloudStatus(prev => ({
+                ...prev,
+                status: 'error',
+                isConnected: false,
+                message: err.message
+            }));
+        }
+    }, [tenders, pregoeiros, supervisors, people]);
+
+    // Sincronia Automática ao carregar
+    useEffect(() => {
+        if (isLoaded && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            forceCloudSync();
+        }
+    }, [isLoaded]);
 
     // Salvar Tenders no LocalStorage quando mudar (APENAS SE JÁ CARREGADO)
     useEffect(() => {
@@ -188,17 +313,18 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             localStorage.setItem('radar_date_checks', JSON.stringify(dateChecks));
             localStorage.setItem('radar_people_data', JSON.stringify(people));
             localStorage.setItem('radar_pregoeiros_data', JSON.stringify(pregoeiros));
+            localStorage.setItem('radar_supervisors_data', JSON.stringify(supervisors));
         }
-    }, [showConferenceColumn, conferenceStatuses, dateChecks, people, pregoeiros, isLoaded]);
+    }, [showConferenceColumn, conferenceStatuses, dateChecks, people, pregoeiros, supervisors, isLoaded]);
 
     // Sistema de Histórico (Undo)
     const saveHistory = useCallback(() => {
         setHistory(prev => {
             const newHistory = [
                 {
-                    tenders: JSON.parse(JSON.stringify(tenders)),
+                    tenders: [...tenders],
                     conferenceStatuses: { ...conferenceStatuses },
-                    dateChecks: JSON.parse(JSON.stringify(dateChecks))
+                    dateChecks: { ...dateChecks }
                 },
                 ...prev
             ];
@@ -353,6 +479,24 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    const addSupervisor = useCallback((data: Omit<Supervisor, 'id'>) => {
+        const newSupervisor: Supervisor = {
+            ...data,
+            id: `supervisor-${Date.now()}`
+        };
+        setSupervisors(prev => [...prev, newSupervisor]);
+    }, []);
+
+    const updateSupervisor = useCallback((id: string, updates: Partial<Supervisor>) => {
+        setSupervisors(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    }, []);
+
+    const deleteSupervisor = useCallback((id: string) => {
+        if (confirm("Deseja remover este supervisor?")) {
+            setSupervisors(prev => prev.filter(s => s.id !== id));
+        }
+    }, []);
+
     const resetToOriginalData = useCallback(() => {
         if (confirm("🚨 ATENÇÃO: Isso apagará TODAS as suas alterações manuais e voltará aos dados originais da planilha. Deseja continuar?")) {
             localStorage.removeItem('radar_tenders_data');
@@ -443,8 +587,14 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             updatePregoeiro,
             deletePregoeiro,
             assignTenderToPregoeiro,
+            supervisors,
+            addSupervisor,
+            updateSupervisor,
+            deleteSupervisor,
             highlightId,
-            setHighlightId
+            setHighlightId,
+            cloudStatus,
+            forceCloudSync
         }}>
             {children}
         </TendersContext.Provider>
