@@ -96,6 +96,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     });
 
     const hasPulledRef = useRef(false);
+    const autoSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Lógica Cloud (Supabase)
     const loadDataFromCloud = useCallback(async (skipGoldCheck: boolean = false) => {
@@ -224,6 +225,39 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         }
     }, [conferenceStatuses, dateChecks, people, pregoeiros, supervisors, isLoaded]);
 
+    // ====== AUTO-SYNC: qualquer edição (tenders, conferências, datas) dispara salvar no Supabase ======
+    // Debounce de 1.5s para não sobrecarregar o banco com cada tecla pressionada
+    useEffect(() => {
+        if (!isLoaded || !supabase || tenders.length === 0) return;
+        if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current);
+        autoSyncTimeoutRef.current = setTimeout(async () => {
+            try {
+                const allTeamIds = new Set([...pregoeiros.map(p => p.id), ...supervisors.map(s => s.id), ...people.map(p => p.id)]);
+                const getSafeId = (id: string | undefined | null) => (id && allTeamIds.has(id)) ? id : null;
+                const tendersToUpload = tenders.map(t => ({
+                    id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department,
+                    opening_date: t.openingDate, estimated_value: t.estimatedValue, status: t.status, current_stage: t.currentStage,
+                    has_issues: t.hasIssues, is_gcalc: t.isGCALC, commitment: t.commitment, requester_sector: t.requesterSector,
+                    coordinator: t.coordinator, coord: t.coord, section: t.section, responsible_internal: t.responsibleInternal,
+                    responsible_external: t.responsibleExternal, bi_publication: t.biPublication, optimization_notes: t.optimizationNotes,
+                    next_deadline: t.nextDeadline, next_activity: t.nextActivity, intercurrences: t.intercurrences,
+                    last_updated_by: t.lastUpdatedBy, quick_notes: t.quickNotes,
+                    verification_status: conferenceStatuses[t.id] || t.verificationStatus || 'Pendente',
+                    assigned_pregoeiro_id: getSafeId(t.assignedPregoeiroId),
+                    pregoeiro_fase_interna_id: getSafeId(t.pregoeiroFaseInternaId),
+                    pregoeiro_fase_externa_id: getSafeId(t.pregoeiroFaseExternaId),
+                    dates: t.dates || {}, date_checks: dateChecks[t.id] || {},
+                    updates: t.updates || [], observations: t.observations || []
+                }));
+                await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
+                setCloudStatus(prev => ({ ...prev, isConnected: true, lastSync: new Date(), status: 'online', totalRecords: tenders.length }));
+            } catch (err: any) {
+                console.error('[AutoSync] Erro ao sincronizar com Supabase:', err.message);
+            }
+        }, 1500);
+        return () => { if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current); };
+    }, [tenders, conferenceStatuses, dateChecks, isLoaded, pregoeiros, supervisors, people]);
+
     const forceCloudSync = useCallback(async () => {
         if (!supabase) return;
         setCloudStatus(prev => ({ ...prev, status: 'syncing' }));
@@ -283,6 +317,10 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         if (confirm("🚨 Excluir pregão?")) {
             saveHistory();
             setTenders(prev => prev.filter(t => t.id !== id));
+            // Deletar do Supabase imediatamente
+            if (supabase) supabase.from('tenders').delete().eq('id', id).then(({ error }) => {
+                if (error) console.error('[Delete] Erro ao deletar do Supabase:', error.message);
+            });
         }
     }, [saveHistory]);
 
