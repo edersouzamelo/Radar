@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Fix definitivo dark mode: Tailwind v4 usa media query por padrão.
+   Esta linha faz dark: responder à classe .dark no html (next-themes),
+   não ao prefers-color-scheme do sistema. Com forcedTheme="light" no
+   layout, .dark nunca é aplicada → todas as classes dark: ficam inativas. */
+@variant dark (&:is(.dark *));
+
 @layer base {
   :root {
     --background: #FDFBF7;
