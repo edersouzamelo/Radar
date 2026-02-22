@@ -23,7 +23,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [role, setRole] = useState<UserRole>('Agente Diretor');
+    const [role, setRole] = useState<UserRole>('Chefe da Seção de Licitações');
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [user, setUser] = useState<{ name: string; email: string; avatar?: string } | null>(null);
 

@@ -7,12 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
-    Eye, Filter, Search, Download, RefreshCw, Check,
+    Eye, Filter, Search,
     AlertTriangle,
     Save,
     Trash2,
     Plus,
     Undo2,
+    Upload,
+    CloudDownload,
+    Download,
+    RefreshCw, Check,
     StickyNote,
     Truck,
     Clock,
@@ -45,6 +49,7 @@ import {
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useUser } from "@/contexts/user-context";
 import { cn } from "@/lib/utils";
+import { exportTendersToCSV, parseCSVToTenders } from "@/lib/export-utils";
 import React, { memo, useState, useEffect } from "react";
 
 // Componente de linha memoizado para performance
@@ -645,7 +650,10 @@ export default function TendersPage() {
         setObjectFilter,
         highlightId,
         setHighlightId,
-        pregoeiros
+        pregoeiros,
+        forceCloudSync,
+        pullDataFromCloud,
+        importTendersFromCSV
     } = useTenders();
     const { role, user } = useUser();
     const editorName = user?.name || role || 'Usuário';
@@ -671,9 +679,30 @@ export default function TendersPage() {
         }
     }, [highlightId]);
 
-    const syncWithDatabase = () => {
-        alert("🔄 Solicitação de Sincronia enviada ao Antigravity!\n\nEu vou ler seus dados atuais e atualizar o arquivo 'data.ts' agora mesmo para tornar suas mudanças permanentes.");
-        console.log("SYNC_REQUEST_DATA:", JSON.stringify(tenders));
+    const syncWithDatabase = async () => {
+        const tendersWithNup = tenders.filter(t => t.nup && t.nup.trim().length > 5).length;
+        const totalTenders = tenders.length;
+
+        const confirmMsg = tendersWithNup > 0
+            ? `📊 AUDITORIA DE RESGATE:\n\nIdentificamos ${tendersWithNup} pregões com NUP preenchido neste navegador.\n\nDeseja ENVIAR esses dados agora para o servidor? Isso tornará seu trabalho manual permanente e acessível em qualquer lugar.`
+            : `⚠️ ALERTA DE SEGURANÇA:\n\nNão detectamos nenhum NUP preenchido (0 encontrados) neste navegador.\n\nNÃO CLIQUE EM OK se você estiver procurando seus dados manuais. Vá para o computador original onde você fez o preenchimento.`;
+
+        if (confirm(confirmMsg)) {
+            if (tendersWithNup === 0 && !confirm("Tem certeza absoluta? Você está prestes a salvar um estado sem NUPs na nuvem.")) {
+                return;
+            }
+            await forceCloudSync();
+            alert("✅ Sincronia concluída com sucesso! Seus dados estão salvos na nuvem.");
+            window.location.reload();
+        }
+    };
+
+    const pullFromDatabase = async () => {
+        if (confirm("🚨 ATENÇÃO: Deseja SUBSTITUIR tudo o que está na tela pelo que está salvo na nuvem?\n\nUse isso para recuperar os dados que você sincronizou às 17h. O que você está vendo agora será PERDIDO e trocado pela versão do servidor.")) {
+            await pullDataFromCloud(true); // Forçar bypass da trava Gold
+            alert("✅ Dados recuperados da nuvem com sucesso!");
+            window.location.reload();
+        }
     };
 
     const handleExport = () => {
@@ -835,11 +864,74 @@ export default function TendersPage() {
                             <div className="h-6 w-[1px] bg-border mx-1" />
 
                             <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-[10px] border-radar-dark/20 text-radar-dark hover:bg-slate-50"
+                                onClick={() => exportTendersToCSV(tenders, user?.name || "Usuário")}
+                                title="Gera um backup completo de todos os campos (NUP, Datas, Obs)"
+                            >
+                                <Download className="mr-1 h-3 w-3" />
+                                Exportar Backup
+                            </Button>
+
+                            {role === 'Chefe da Seção de Licitações' && (
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept=".csv"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+
+                                            try {
+                                                const text = await file.text();
+                                                const imported = await parseCSVToTenders(text);
+                                                if (imported.length > 0) {
+                                                    if (confirm(`🚨 RESTAURAÇÃO DE EMERGÊNCIA:\n\nDetectamos ${imported.length} registros no arquivo.\n\nDeseja substituir TUDO o que está na tela por este backup de sábado?`)) {
+                                                        importTendersFromCSV(imported);
+                                                    }
+                                                } else {
+                                                    alert("❌ O arquivo parece estar vazio ou em formato inválido.");
+                                                }
+                                            } catch (err) {
+                                                alert("❌ Erro ao processar o arquivo CSV.");
+                                            }
+                                            // Reset input
+                                            e.target.value = "";
+                                        }}
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 text-[10px] border-red-200 text-red-600 hover:bg-red-50"
+                                        title="Restaura dados a partir de um arquivo CSV de backup"
+                                    >
+                                        <Upload className="mr-1 h-3 w-3" />
+                                        Restaurar via CSV
+                                    </Button>
+                                </div>
+                            )}
+
+                            <div className="h-6 w-[1px] bg-border mx-1" />
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-[10px] border-blue-600 text-blue-600 hover:bg-blue-50"
+                                onClick={pullFromDatabase}
+                                title="Recupera os dados salvos no servidor (Pull)"
+                            >
+                                <RefreshCw className="mr-1 h-3 w-3" />
+                                Baixar da Nuvem
+                            </Button>
+
+                            <Button
                                 variant="default"
                                 size="sm"
                                 className="h-8 text-[10px] bg-blue-600 hover:bg-blue-700 text-white"
                                 onClick={syncWithDatabase}
-                                title="Salva suas alterações locais permanentemente no arquivo data.ts"
+                                title="Envia seus dados locais para o servidor (Push)"
                             >
                                 <Save className="mr-1 h-3 w-3" />
                                 Sincronizar Oficial
