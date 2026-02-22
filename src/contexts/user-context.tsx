@@ -1,5 +1,5 @@
-"use client"
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export type UserRole =
     | 'Ordenador de Despesas'
@@ -13,9 +13,10 @@ interface UserContextType {
     role: UserRole;
     setRole: (role: UserRole) => void;
     isAuthenticated: boolean;
-    user: { name: string; email: string } | null;
-    login: (role: UserRole, name: string, email: string) => void;
-    logout: () => void;
+    user: { name: string; email: string; avatar?: string } | null;
+    loginWithGoogle: () => Promise<void>;
+    login: (role: UserRole, name: string, email: string) => void; // Mantido para compatibilidade legado
+    logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -23,21 +24,57 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
     const [role, setRole] = useState<UserRole>('Agente Diretor');
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+    const [user, setUser] = useState<{ name: string; email: string; avatar?: string } | null>(null);
 
-    // Carregar dados de autenticação após montagem (evita erro de hidratação)
+    // Carregar dados de autenticação e monitorar mudanças de sessão
     useEffect(() => {
-        const savedAuth = localStorage.getItem('radar-auth') === 'true';
-        const savedRole = localStorage.getItem('radar-role') as UserRole;
-        const savedUser = localStorage.getItem('radar-user');
+        // 1. Checar sessão atual na montagem
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                updateUserFromSession(session);
+            }
+        });
 
-        if (savedAuth) {
-            setIsAuthenticated(true);
-            if (savedRole) setRole(savedRole);
-            if (savedUser) setUser(JSON.parse(savedUser));
-        }
+        // 2. Ouvir mudanças na autenticação
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session) {
+                updateUserFromSession(session);
+            } else {
+                setIsAuthenticated(false);
+                setUser(null);
+            }
+        });
+
+        // 3. Carregar Roles salvas (Persistência de Role independente do Auth)
+        const savedRole = localStorage.getItem('radar-role') as UserRole;
+        if (savedRole) setRole(savedRole);
+
+        return () => subscription.unsubscribe();
     }, []);
 
+    const updateUserFromSession = (session: any) => {
+        setIsAuthenticated(true);
+        setUser({
+            name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'Usuário',
+            email: session.user.email || '',
+            avatar: session.user.user_metadata.avatar_url
+        });
+    };
+
+    const loginWithGoogle = async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin
+            }
+        });
+        if (error) {
+            console.error("Erro no login com Google:", error.message);
+            throw error;
+        }
+    };
+
+    // Função de login legado (localStorage) – será gradualmente substituída
     const login = (role: UserRole, name: string, email: string) => {
         setIsAuthenticated(true);
         setRole(role);
@@ -47,7 +84,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('radar-user', JSON.stringify({ name, email }));
     };
 
-    const logout = () => {
+    const logout = async () => {
+        await supabase.auth.signOut();
         setIsAuthenticated(false);
         setUser(null);
         localStorage.removeItem('radar-auth');
@@ -65,6 +103,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             setRole: updateRole,
             isAuthenticated,
             user,
+            loginWithGoogle,
             login,
             logout
         }}>
