@@ -181,12 +181,10 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                 const newDateChecks: Record<string, Record<string, boolean>> = {};
                 cloudTenders.forEach(t => {
                     if (t.verification_status) newConfStatuses[t.id] = t.verification_status as 'OK' | 'Pendente';
-                    const backupChecks = t.dates?._audit_trail_checks || {};
-                    const finalChecks = (t.date_checks && Object.keys(t.date_checks).length > 0)
-                        ? t.date_checks
-                        : backupChecks;
-                    if (Object.keys(finalChecks).length > 0) {
-                        newDateChecks[t.id] = finalChecks;
+                    // Os checks ficam embutidos em dates._date_checks (JSONB confiável)
+                    const checks = t.dates?._date_checks || t.dates?._audit_trail_checks || t.date_checks || {};
+                    if (Object.keys(checks).length > 0) {
+                        newDateChecks[t.id] = checks;
                     }
                 });
 
@@ -246,11 +244,12 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     assigned_pregoeiro_id: getSafeId(t.assignedPregoeiroId),
                     pregoeiro_fase_interna_id: getSafeId(t.pregoeiroFaseInternaId),
                     pregoeiro_fase_externa_id: getSafeId(t.pregoeiroFaseExternaId),
-                    dates: t.dates || {},
+                    // Embutir date_checks dentro do JSONB dates (campo que existe e é lido no load)
+                    dates: { ...(t.dates || {}), _date_checks: dateChecks[t.id] || {} },
                     updates: t.updates || [], observations: t.observations || []
                 }));
                 await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
-                // Salvar date_checks separadamente na tabela própria
+                // Salvar date_checks separadamente na tabela própria também (backup)
                 for (const t of tenders) {
                     const checks = dateChecks[t.id];
                     if (checks && Object.keys(checks).length > 0) {
@@ -278,7 +277,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             const getSafeId = (id: string | undefined | null) => (id && allTeamIds.has(id)) ? id : null;
 
             const tendersToUpload = tenders.map(t => ({
-                id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department, opening_date: t.openingDate, estimated_value: t.estimatedValue, status: t.status, current_stage: t.currentStage, has_issues: t.hasIssues, is_gcalc: t.isGCALC, commitment: t.commitment, requester_sector: t.requesterSector, coordinator: t.coordinator, coord: t.coord, section: t.section, responsible_internal: t.responsibleInternal, responsible_external: t.responsibleExternal, bi_publication: t.biPublication, optimization_notes: t.optimizationNotes, next_deadline: t.nextDeadline, next_activity: t.nextActivity, intercurrences: t.intercurrences, last_updated_by: t.lastUpdatedBy, quick_notes: t.quickNotes, verification_status: conferenceStatuses[t.id] || t.verificationStatus || 'Pendente', assigned_pregoeiro_id: getSafeId(t.assignedPregoeiroId), pregoeiro_fase_interna_id: getSafeId(t.pregoeiroFaseInternaId), pregoeiro_fase_externa_id: getSafeId(t.pregoeiroFaseExternaId), dates: t.dates || {}, updates: t.updates || [], observations: t.observations || []
+                id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department, opening_date: t.openingDate, estimated_value: t.estimatedValue, status: t.status, current_stage: t.currentStage, has_issues: t.hasIssues, is_gcalc: t.isGCALC, commitment: t.commitment, requester_sector: t.requesterSector, coordinator: t.coordinator, coord: t.coord, section: t.section, responsible_internal: t.responsibleInternal, responsible_external: t.responsibleExternal, bi_publication: t.biPublication, optimization_notes: t.optimizationNotes, next_deadline: t.nextDeadline, next_activity: t.nextActivity, intercurrences: t.intercurrences, last_updated_by: t.lastUpdatedBy, quick_notes: t.quickNotes, verification_status: conferenceStatuses[t.id] || t.verificationStatus || 'Pendente', assigned_pregoeiro_id: getSafeId(t.assignedPregoeiroId), pregoeiro_fase_interna_id: getSafeId(t.pregoeiroFaseInternaId), pregoeiro_fase_externa_id: getSafeId(t.pregoeiroFaseExternaId), dates: { ...(t.dates || {}), _date_checks: dateChecks[t.id] || {} }, updates: t.updates || [], observations: t.observations || []
             }));
 
             const teamToUpload = [
