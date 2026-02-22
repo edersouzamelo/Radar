@@ -72,7 +72,7 @@ export default function LoginPage() {
                         <img
                             src="/radar-logo.png"
                             alt="RADAR"
-                            className="w-20 h-20 object-contain drop-shadow-xl"
+                            className="w-64 h-64 object-contain drop-shadow-2xl"
                         />
                     </div>
                     <CardTitle className="text-3xl font-black text-radar-dark dark:text-white tracking-tight">RADAR</CardTitle>
