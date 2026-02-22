@@ -247,9 +247,9 @@ const TenderRow = memo(({
         <tr
             id={`tender-row-${tender.id}`}
             className={cn(
-                "border-b hover:bg-slate-50/80 transition-colors group",
+                "border-b bg-white transition-colors group",
                 isHighlighted && "bg-amber-50/50 ring-2 ring-radar-gold ring-inset animate-pulse-subtle",
-                isCancelled && "line-through text-slate-400 opacity-60 dark:text-slate-500"
+                isCancelled && "line-through text-slate-400 opacity-60"
             )}
         >
             <td className="px-3 py-2 text-center font-medium text-muted-foreground w-8">

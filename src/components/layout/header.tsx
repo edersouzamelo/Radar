@@ -1,7 +1,6 @@
 "use client";
 import { Bell, Menu, RefreshCw } from "lucide-react";
 import { UserNav } from "@/components/user-nav";
-import { ModeToggle } from "@/components/mode-toggle";
 import { useTenders } from "@/contexts/tenders-context";
 import { useState } from "react";
 
@@ -67,10 +66,10 @@ export function Header({ onMenuOpen }: HeaderProps) {
 
                 {/* Indicador cloud — só desktop */}
                 <div className={`hidden lg:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${cloudStatus.status === 'online'
-                        ? 'bg-white dark:bg-slate-800 border-green-100 dark:border-green-900 text-gray-500 dark:text-gray-400'
-                        : cloudStatus.status === 'syncing'
-                            ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 text-blue-600 dark:text-blue-400'
-                            : 'bg-red-50 dark:bg-red-950 border-red-200 text-red-500 dark:text-red-400'
+                    ? 'bg-white dark:bg-slate-800 border-green-100 dark:border-green-900 text-gray-500 dark:text-gray-400'
+                    : cloudStatus.status === 'syncing'
+                        ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 text-blue-600 dark:text-blue-400'
+                        : 'bg-red-50 dark:bg-red-950 border-red-200 text-red-500 dark:text-red-400'
                     }`}>
                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot}`} />
                     <span className="font-medium whitespace-nowrap">
@@ -97,15 +96,14 @@ export function Header({ onMenuOpen }: HeaderProps) {
                 {/* Dot de status — só mobile (compacto) */}
                 <div className={`lg:hidden w-2 h-2 rounded-full flex-shrink-0 ${statusDot}`} title={cloudStatus.status} />
 
-                <ModeToggle />
 
-                <button type="button" className="p-2 text-gray-500 dark:text-gray-400 hover:text-radar-gold transition-colors relative flex-shrink-0">
+                <button type="button" className="p-2 text-gray-500 hover:text-radar-gold transition-colors relative flex-shrink-0">
                     <span className="sr-only">Ver notificações</span>
                     <Bell className="h-5 w-5" aria-hidden="true" />
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-radar-gold ring-2 ring-white dark:ring-slate-900"></span>
+                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-radar-gold ring-2 ring-white"></span>
                 </button>
 
-                <div className="flex items-center pl-2 border-l border-gray-200 dark:border-slate-700">
+                <div className="flex items-center pl-2 border-l border-gray-200">
                     <UserNav />
                 </div>
             </div>

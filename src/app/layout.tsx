@@ -38,8 +38,8 @@ export default function RootLayout({
       <body className={`${inter.className} h-full overflow-hidden bg-radar-cream`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          forcedTheme="light"
           disableTransitionOnChange
         >
           <UserProvider>
