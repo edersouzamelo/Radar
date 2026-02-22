@@ -2,17 +2,15 @@
 
 import { useTenders } from "@/contexts/tenders-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreateTenderModal } from "@/components/create-tender-modal";
 import {
   Gavel,
-  AlertTriangle,
   CheckCircle,
   Clock,
   XCircle
 } from "lucide-react";
 
 export default function Dashboard() {
-  const { tenders, cloudStatus } = useTenders();
+  const { tenders } = useTenders();
 
   // Cálculos de métricas dinâmicas
   const totalTenders = tenders.length;
@@ -47,16 +45,6 @@ export default function Dashboard() {
           Dashboard
           <span className="text-xs font-normal text-muted-foreground opacity-50">v1.3.0</span>
         </h1>
-        <div className="flex items-center gap-4">
-          <CreateTenderModal />
-          <div className={`flex items-center space-x-2 text-sm ${cloudStatus.isConnected ? 'text-gray-500' : 'text-red-500'} bg-white px-3 py-1 rounded-full shadow-sm`}>
-            <span className={`w-2 h-2 rounded-full ${cloudStatus.status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
-              cloudStatus.status === 'syncing' ? 'bg-blue-500 animate-pulse' :
-                'bg-red-400'
-              }`}></span>
-            <span>{cloudStatus.isConnected ? 'Dados em Tempo Real' : 'Modo Offline / Local'}</span>
-          </div>
-        </div>
       </div>
 
       {/* Cards de Métricas */}

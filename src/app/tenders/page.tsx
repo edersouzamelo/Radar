@@ -30,6 +30,7 @@ import {
     LocateFixed
 } from "lucide-react";
 import { EditTenderModal } from "@/components/edit-tender-modal";
+import { CreateTenderModal } from "@/components/create-tender-modal";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -788,6 +789,11 @@ export default function TendersPage() {
                     <h1 className="text-2xl font-bold tracking-tight text-foreground mr-4">Pregões em Monitoramento</h1>
 
                     <div className="flex items-center gap-1.5">
+                        {/* Botão Novo Pregão */}
+                        {role === 'Chefe da Seção de Licitações' && (
+                            <CreateTenderModal />
+                        )}
+                        <div className="h-5 w-px bg-slate-200 mx-0.5" />
                         {/* Grupo: Ações do documento */}
                         <Button
                             variant="outline"
