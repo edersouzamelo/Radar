@@ -863,7 +863,7 @@ export default function TendersPage() {
                                 variant="outline"
                                 size="sm"
                                 className="h-8 text-[10px] border-radar-dark/20 text-radar-dark hover:bg-slate-50"
-                                onClick={() => exportTendersToCSV(tenders, user?.name || "Usuário")}
+                                onClick={() => exportTendersToCSV(tenders, user?.name || "Usuário", dateChecks)}
                                 title="Gera um backup completo de todos os campos (NUP, Datas, Obs)"
                             >
                                 <Download className="mr-1 h-3 w-3" />

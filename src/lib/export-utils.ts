@@ -1,49 +1,84 @@
 import { Tender, TenderStatus, TenderStage } from "@/types";
 
-export function exportTendersToCSV(tenders: Tender[], userName: string) {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('pt-BR');
-    const timeStr = now.toLocaleTimeString('pt-BR');
+// Função auxiliar para formatar check como SIM/NÃO
+const chk = (val: boolean | undefined) => val ? "SIM" : "";
 
-    // Headers - Versão Completa 2.0
+export function exportTendersToCSV(
+    tenders: Tender[],
+    userName: string,
+    dateChecks: Record<string, Record<string, boolean>> = {}
+) {
+    const now = new Date();
+
     const headers = [
         "Número", "UASG", "NUP", "Objeto", "Status", "Fase Atual",
         "Compromisso", "Coordenador", "Setor Requisitante",
-        "Prazo CJU", "Retorno CJU", "Prazo Ajustes Pub", "Data Pub",
-        "Abertura/Julgamento", "Prev Homologação", "Prazo Homologação",
-        "Assinatura Atas", "Vigência Ant", "Prazo GCALC",
-        "Pregoeiro Interno", "Pregoeiro Externo", "Notas Rápidas",
-        "Observações", "Última Atualização", "Atualizado Por"
+        // Datas + checks
+        "Prazo CJU", "✓ Prazo CJU",
+        "Retorno CJU", "✓ Retorno CJU",
+        "Prazo Ajustes Pub", "✓ Prazo Ajustes Pub",
+        "Data Pub", "✓ Data Pub",
+        "Abertura/Julgamento", "✓ Abertura/Julgamento",
+        "Prev Homologação", "✓ Prev Homologação",
+        "Prazo Homologação", "✓ Prazo Homologação",
+        "Assinatura Atas", "✓ Assinatura Atas",
+        "Vigência Ant", "Prazo GCALC",
+        // Pregoeiros
+        "Pregoeiro Interno", "Pregoeiro Externo",
+        // Outros
+        "Notas Rápidas", "Observações",
+        "Última Atualização", "Atualizado Por"
     ];
 
-    // Data rows
-    const rows = tenders.map(t => [
-        t.number,
-        t.uasg,
-        t.nup || "",
-        `"${t.description.replace(/"/g, '""')}"`,
-        t.status,
-        t.currentStage,
-        t.commitment || "",
-        t.coordinator || "",
-        t.requesterSector || "",
-        t.dates?.cjuSendDeadline || "",
-        t.dates?.cjuReturnDate || "",
-        t.dates?.publicationAdjustmentsDeadline || "",
-        t.dates?.publicationDate || "",
-        t.dates?.proposalOpeningDate || "",
-        t.dates?.homologationForecast || "",
-        t.dates?.homologationDeadline || "",
-        t.dates?.minutesSignatureDeadline || "",
-        t.dates?.vigenciaAnterior || "",
-        t.dates?.prazoGCALC || "",
-        t.pregoeiroFaseInternaId || "", // Nota: Aqui salva o ID, pode ser melhor salvar o nome? Para import é melhor ID ou ambos
-        t.pregoeiroFaseExternaId || "",
-        `"${(t.quickNotes || "").replace(/"/g, '""')}"`,
-        `"${(t.observations || []).map(obs => `[${obs.date}] ${obs.author}: ${obs.content}`).join(" | ").replace(/"/g, '""')}"`,
-        t.lastUpdatedAt || "",
-        t.lastUpdatedBy || ""
-    ]);
+    const escapeCSV = (val: string) => `"${(val || "").replace(/"/g, '""')}"`;
+
+    const rows = tenders.map(t => {
+        const checks = dateChecks[t.id] || (t.dates as any)?._date_checks || {};
+        return [
+            t.number,
+            t.uasg,
+            t.nup || "",
+            escapeCSV(t.description),
+            t.status,
+            t.currentStage,
+            t.commitment || "",
+            t.coordinator || "",
+            t.requesterSector || "",
+            // Prazo CJU
+            t.dates?.cjuSendDeadline || "",
+            chk(checks["cjuSendDeadline"]),
+            // Retorno CJU
+            t.dates?.cjuReturnDate || "",
+            chk(checks["cjuReturnDate"]),
+            // Prazo Ajustes Pub
+            t.dates?.publicationAdjustmentsDeadline || "",
+            chk(checks["publicationAdjustmentsDeadline"]),
+            // Data Pub
+            t.dates?.publicationDate || "",
+            chk(checks["publicationDate"]),
+            // Abertura/Julgamento
+            t.dates?.proposalOpeningDate || "",
+            chk(checks["proposalOpeningDate"]),
+            // Prev Homologação
+            t.dates?.homologationForecast || "",
+            chk(checks["homologationForecast"]),
+            // Prazo Homologação
+            t.dates?.homologationDeadline || "",
+            chk(checks["homologationDeadline"]),
+            // Assinatura Atas
+            t.dates?.minutesSignatureDeadline || "",
+            chk(checks["minutesSignatureDeadline"]),
+            // Outros
+            t.dates?.vigenciaAnterior || "",
+            t.dates?.prazoGCALC || "",
+            t.pregoeiroFaseInternaId || "",
+            t.pregoeiroFaseExternaId || "",
+            escapeCSV(t.quickNotes || ""),
+            escapeCSV((t.observations || []).map(obs => `[${obs.date}] ${obs.author}: ${obs.content}`).join(" | ")),
+            t.lastUpdatedAt || "",
+            t.lastUpdatedBy || ""
+        ];
+    });
 
     const csvContent = [
         headers.join(","),
@@ -67,42 +102,10 @@ export async function parseCSVToTenders(csvText: string): Promise<Partial<Tender
 
     const headers = lines[0].split(',').map(h => h.trim().replace(/\r/g, ''));
 
-    // Mapeamento de cabeçalhos para suportar Planilha Google e Backup Radar
-    const headerMap: Record<string, string> = {
-        // Radar -> Google (ou variações)
-        "Número": "Número",
-        "UASG": "UASG",
-        "NUP": "NUP",
-        "Objeto": "Descrição",
-        "Descrição": "Descrição",
-        "Status": "Status",
-        "Fase Atual": "Fase Atual",
-        "Compromisso": "Compromisso",
-        "Coordenador": "Coordenador",
-        "Setor Requisitante": "Setor Requisitante",
-        "Prazo CJU": "SAL (Prazo)",
-        "Retorno CJU": "Regresso CJU",
-        "Prazo Ajustes Pub": "Publicação (Prazo)",
-        "Data Pub": "Publicação (Efetiva)",
-        "Abertura/Julgamento": "Sessão Pública",
-        "Sessão Pública": "Sessão Pública",
-        "Prev Homologação": "Homologação (Prev)",
-        "Prazo Homologação": "Homologação (Prazo)",
-        "Assinatura Atas": "Assinatura Atas",
-        "Vigência Ant": "Vigência Anterior",
-        "Prazo GCALC": "Prazo GCALC",
-        "Notas Rápidas": "Quick Notes",
-        "Quick Notes": "Quick Notes",
-        "Observações": "Observações",
-        "Última Atualização": "Última Atualização",
-        "Atualizado Por": "Atualizado Por"
-    };
-
     const results: Partial<Tender>[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-        // Regex para lidar com vírgulas dentro de aspas
-        const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+        const values = lines[i].match(/(\".*?\"|[^\",\s]+)(?=\s*,|\s*$)/g) || [];
         const cleanValues = values.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"').replace(/\r/g, ''));
 
         const row: any = {};
@@ -110,16 +113,7 @@ export async function parseCSVToTenders(csvText: string): Promise<Partial<Tender
             row[header] = cleanValues[index];
         });
 
-        // Função auxiliar para buscar valor por qualquer cabeçalho mapeado
-        const getValue = (targetKey: string) => {
-            // Tenta encontrar o valor usando o nome original do targetKey ou os mapeamentos dele
-            if (row[targetKey] !== undefined) return row[targetKey];
-            const mappedHeader = Object.keys(headerMap).find(key => key === targetKey);
-            if (mappedHeader && row[headerMap[mappedHeader]] !== undefined) {
-                return row[headerMap[mappedHeader]];
-            }
-            return undefined;
-        };
+        const getValue = (key: string) => row[key];
 
         const tender: Partial<Tender> = {
             number: getValue("Número"),
@@ -128,9 +122,9 @@ export async function parseCSVToTenders(csvText: string): Promise<Partial<Tender
             description: getValue("Objeto") || getValue("Descrição"),
             status: (getValue("Status") || "FASE INTERNA NA OMDS") as TenderStatus,
             currentStage: (getValue("Fase Atual") || "1. Entrada do TR na SAL") as TenderStage,
-            commitment: getValue("Compromisso"),
-            coordinator: getValue("Coordenador"),
-            requesterSector: getValue("Setor Requisitante"),
+            commitment: getValue("Compromisso") as any,
+            coordinator: getValue("Coordenador") as any,
+            requesterSector: getValue("Setor Requisitante") as any,
             dates: {
                 cjuSendDeadline: getValue("Prazo CJU"),
                 cjuReturnDate: getValue("Retorno CJU"),
@@ -149,19 +143,9 @@ export async function parseCSVToTenders(csvText: string): Promise<Partial<Tender
             observations: getValue("Observações") ? getValue("Observações").split(" | ").filter((obs: string) => obs.trim() !== "").map((obs: string, index: number) => {
                 const match = obs.match(/\[(.*?)\] (.*?): (.*)/);
                 if (match) {
-                    return {
-                        id: `imported-obs-${Date.now()}-${index}`,
-                        date: match[1],
-                        author: match[2],
-                        content: match[3]
-                    };
+                    return { id: `imported-obs-${Date.now()}-${index}`, date: match[1], author: match[2], content: match[3] };
                 }
-                return {
-                    id: `imported-obs-raw-${Date.now()}-${index}`,
-                    date: new Date().toISOString().split('T')[0],
-                    author: "Backup",
-                    content: obs
-                };
+                return { id: `imported-obs-raw-${Date.now()}-${index}`, date: new Date().toISOString().split('T')[0], author: "Backup", content: obs };
             }) : []
         };
 
@@ -172,4 +156,3 @@ export async function parseCSVToTenders(csvText: string): Promise<Partial<Tender
 
     return results;
 }
-
