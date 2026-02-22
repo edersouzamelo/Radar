@@ -787,152 +787,146 @@ export default function TendersPage() {
                 <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold tracking-tight text-foreground mr-4">Pregões em Monitoramento</h1>
 
-                    <div className="flex flex-wrap items-center gap-2 mb-6">
-                        <div className="flex items-center gap-2 mr-auto">
-                            {/* Busca global movida para o cabeçalho Pregão / UASG */}
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex items-center gap-2 text-green-700 border-green-200 hover:bg-green-50"
-                                onClick={handleExport}
-                            >
-                                <Download className="w-4 h-4" />
-                                Extrair Planilha
-                            </Button>
+                    <div className="flex items-center gap-1.5">
+                        {/* Grupo: Ações do documento */}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200"
+                            onClick={handleExport}
+                            title="Exportar tabela atual como planilha"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            Extrair Planilha
+                        </Button>
 
-                            <div className="h-6 w-[1px] bg-border mx-1" />
-
-                            <Button
-                                onClick={undo}
-                                variant="outline"
-                                size="sm"
-                                disabled={!canUndo}
-                                className={cn(
-                                    "border-amber-200 text-amber-700 hover:bg-amber-50 gap-2 font-bold",
-                                    canUndo ? "animate-in fade-in slide-in-from-right-2" : "opacity-50 grayscale cursor-not-allowed border-dashed"
-                                )}
-                                title={canUndo ? `Desfazer última ação (${historyCount} disponível)` : "Nada para desfazer"}
-                            >
-                                <Undo2 className="w-4 h-4" />
-                                Desfazer
-                            </Button>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            {/* Filtros removidos daqui e movidos para o cabeçalho da tabela */}
-
-                            {/* Filtros removidos daqui e movidos para o cabeçalho da tabela */}
-
-                            <div className="h-6 w-[1px] bg-border mx-1" />
-
-                            {/* Conference Controls */}
-                            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-md border">
-                                <Button
-                                    variant={showConferenceColumn ? "default" : "outline"}
-                                    size="sm"
-                                    className="h-7 text-[10px] px-2"
-                                    onClick={toggleConferenceColumn}
-                                >
-                                    {showConferenceColumn ? "Ocultar Conferência" : "Conferência"}
-                                </Button>
-                                {showConferenceColumn && (
-                                    <>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-7 text-[10px] px-2 border-green-600 text-green-600 hover:bg-green-50"
-                                            onClick={() => bulkSetConferenceStatus('OK')}
-                                        >
-                                            Todos OK
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-7 text-[10px] px-2 border-gray-500 text-gray-500 hover:bg-gray-50"
-                                            onClick={() => bulkSetConferenceStatus('Pendente')}
-                                        >
-                                            Todos Pendente
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="h-6 w-[1px] bg-border mx-1" />
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 text-[10px] border-radar-dark/20 text-radar-dark hover:bg-slate-50"
-                                onClick={() => exportTendersToCSV(tenders, user?.name || "Usuário", dateChecks)}
-                                title="Gera um backup completo de todos os campos (NUP, Datas, Obs)"
-                            >
-                                <Download className="mr-1 h-3 w-3" />
-                                Exportar Backup
-                            </Button>
-
-                            {role === 'Chefe da Seção de Licitações' && (
-                                <div className="relative">
-                                    <input
-                                        type="file"
-                                        accept=".csv"
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-
-                                            try {
-                                                const text = await file.text();
-                                                const imported = await parseCSVToTenders(text);
-                                                if (imported.length > 0) {
-                                                    if (confirm(`🚨 RESTAURAÇÃO DE EMERGÊNCIA:\n\nDetectamos ${imported.length} registros no arquivo.\n\nDeseja substituir TUDO o que está na tela por este backup de sábado?`)) {
-                                                        importTendersFromCSV(imported);
-                                                    }
-                                                } else {
-                                                    alert("❌ O arquivo parece estar vazio ou em formato inválido.");
-                                                }
-                                            } catch (err) {
-                                                alert("❌ Erro ao processar o arquivo CSV.");
-                                            }
-                                            // Reset input
-                                            e.target.value = "";
-                                        }}
-                                    />
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 text-[10px] border-red-200 text-red-600 hover:bg-red-50"
-                                        title="Restaura dados a partir de um arquivo CSV de backup"
-                                    >
-                                        <Upload className="mr-1 h-3 w-3" />
-                                        Restaurar via CSV
-                                    </Button>
-                                </div>
+                        <Button
+                            onClick={undo}
+                            variant="outline"
+                            size="sm"
+                            disabled={!canUndo}
+                            className={cn(
+                                "h-8 text-xs gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200",
+                                !canUndo && "opacity-40 cursor-not-allowed"
                             )}
+                            title={canUndo ? `Desfazer última ação (${historyCount} disponível)` : "Nada para desfazer"}
+                        >
+                            <Undo2 className="w-3.5 h-3.5" />
+                            Desfazer
+                        </Button>
 
-                            <div className="h-6 w-[1px] bg-border mx-1" />
+                        <div className="h-5 w-px bg-slate-200 mx-0.5" />
 
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 text-[10px] border-blue-600 text-blue-600 hover:bg-blue-50"
-                                onClick={pullFromDatabase}
-                                title="Recupera os dados salvos no servidor (Pull)"
-                            >
-                                <RefreshCw className="mr-1 h-3 w-3" />
-                                Baixar da Nuvem
-                            </Button>
+                        {/* Grupo: Conferência */}
+                        <Button
+                            variant={showConferenceColumn ? "secondary" : "outline"}
+                            size="sm"
+                            className={cn(
+                                "h-8 text-xs gap-1.5 border-slate-200",
+                                showConferenceColumn
+                                    ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            )}
+                            onClick={toggleConferenceColumn}
+                        >
+                            {showConferenceColumn ? "Ocultar Conferência" : "Conferência"}
+                        </Button>
 
-                            <Button
-                                variant="default"
-                                size="sm"
-                                className="h-8 text-[10px] bg-blue-600 hover:bg-blue-700 text-white"
-                                onClick={syncWithDatabase}
-                                title="Envia seus dados locais para o servidor (Push)"
-                            >
-                                <Save className="mr-1 h-3 w-3" />
-                                Sincronizar Oficial
-                            </Button>
-                        </div>
+                        {showConferenceColumn && (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200"
+                                    onClick={() => bulkSetConferenceStatus('OK')}
+                                >
+                                    Todos OK
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200"
+                                    onClick={() => bulkSetConferenceStatus('Pendente')}
+                                >
+                                    Todos Pendente
+                                </Button>
+                            </>
+                        )}
+
+                        <div className="h-5 w-px bg-slate-200 mx-0.5" />
+
+                        {/* Grupo: Backup / Restore */}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200"
+                            onClick={() => exportTendersToCSV(tenders, user?.name || "Usuário", dateChecks)}
+                            title="Gera um backup completo de todos os campos (NUP, Datas, Obs)"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            Exportar Backup
+                        </Button>
+
+                        {role === 'Chefe da Seção de Licitações' && (
+                            <div className="relative">
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        try {
+                                            const text = await file.text();
+                                            const imported = await parseCSVToTenders(text);
+                                            if (imported.length > 0) {
+                                                if (confirm(`🚨 RESTAURAÇÃO DE EMERGÊNCIA:\n\nDetectamos ${imported.length} registros no arquivo.\n\nDeseja substituir TUDO o que está na tela por este backup de sábado?`)) {
+                                                    importTendersFromCSV(imported);
+                                                }
+                                            } else {
+                                                alert("❌ O arquivo parece estar vazio ou em formato inválido.");
+                                            }
+                                        } catch (err) {
+                                            alert("❌ Erro ao processar o arquivo CSV.");
+                                        }
+                                        e.target.value = "";
+                                    }}
+                                />
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200"
+                                    title="Restaura dados a partir de um arquivo CSV de backup"
+                                >
+                                    <Upload className="w-3.5 h-3.5" />
+                                    Restaurar via CSV
+                                </Button>
+                            </div>
+                        )}
+
+                        <div className="h-5 w-px bg-slate-200 mx-0.5" />
+
+                        {/* Grupo: Nuvem — botões destaque */}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                            onClick={pullFromDatabase}
+                            title="Recupera os dados salvos no servidor (Pull)"
+                        >
+                            <CloudDownload className="w-3.5 h-3.5" />
+                            Baixar da Nuvem
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                            onClick={syncWithDatabase}
+                            title="Envia seus dados locais para o servidor (Push)"
+                        >
+                            <Save className="w-3.5 h-3.5" />
+                            Sincronizar Oficial
+                        </Button>
                     </div>
                 </div>
             </div>
