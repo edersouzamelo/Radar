@@ -19,7 +19,7 @@ import {
     ArrowLeft
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, type Variants } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
@@ -131,7 +131,7 @@ export default function AgendaPage() {
     const eventDays = useMemo(() => allEvents.map(e => e.date), [allEvents])
 
     // Variantes de animação
-    const containerVariants = {
+    const containerVariants: Variants = {
         hidden: { opacity: 0, y: 50, scale: 0.98 },
         visible: {
             opacity: 1,
@@ -147,7 +147,7 @@ export default function AgendaPage() {
         }
     }
 
-    const blindVariants = {
+    const blindVariants: Variants = {
         hidden: { height: 0, opacity: 0 },
         visible: {
             height: "auto",

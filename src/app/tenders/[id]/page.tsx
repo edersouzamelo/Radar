@@ -41,14 +41,12 @@ export default function TenderDetailsPage({ params }: { params: Promise<{ id: st
                         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
                             Pregão {tender.number}
                             <Badge variant={
-                                tender.status === 'active' ? 'info' :
-                                    tender.status === 'completed' ? 'success' :
-                                        tender.status === 'suspended' ? 'destructive' :
-                                            'secondary'
+                                tender.status === 'HOMOLOGADO' ? 'secondary' :
+                                    tender.status.startsWith('CANCELADO') || tender.status === 'ABANDONADO' ? 'destructive' :
+                                        'outline'
                             }>
-                                {tender.status === 'active' ? 'Ativo' :
-                                    tender.status === 'completed' ? 'Concluído' :
-                                        tender.status === 'suspended' ? 'Suspenso' : 'Pendente'}
+                                {tender.status === 'HOMOLOGADO' ? 'Homologado' :
+                                    tender.status.startsWith('CANCELADO') || tender.status === 'ABANDONADO' ? 'Encerrado' : 'Em Andamento'}
                             </Badge>
                             {tender.isGCALC && (
                                 <Badge variant="warning" className="bg-radar-gold text-radar-dark">

@@ -26,7 +26,7 @@ export default function ReportsPage() {
 
     const handleDownloadDiex = async () => {
         console.log("Iniciando geração de DIEx...");
-        const activeTenders = tenders.filter(t => t.status !== 'completed');
+        const activeTenders = tenders.filter(t => !['HOMOLOGADO', 'ABANDONADO', 'CANCELADO POR ABANDONO', 'CANCELADO POR REVOGAÇÃO', 'CANCELADO POR DUPLICIDADE DE OBJETO'].includes(t.status));
         console.log(`Pregões ativos encontrados: ${activeTenders.length}`);
 
         if (activeTenders.length === 0) {

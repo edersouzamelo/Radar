@@ -585,7 +585,7 @@ export default function LinksPage() {
     )
 }
 
-function KanbanBoard({ phase, tenders, pregoeiros, searchQuery, onAssign }: {
+function KanbanBoard({ phase, tenders, pregoeiros, searchQuery, onAssign, onEditPregoeiro }: {
     phase: 'interna' | 'externa' | 'tudo',
     tenders: any[],
     pregoeiros: any[],
