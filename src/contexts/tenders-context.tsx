@@ -165,8 +165,12 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     } as Tender;
                 });
 
-                // ORDENAÇÃO CIRÚRGICA: Prioriza os itens do initialTenders para manter "Ração" no topo
+                // ORDENAÇÃO: Prioriza itens do initialTenders; para os demais, ordena por row-N
                 const coreIds = initialTenders.map(it => it.id);
+                const getRowNum = (id: string) => {
+                    const m = id.match(/^row-(\d+)$/);
+                    return m ? parseInt(m[1], 10) : 99999;
+                };
                 const sortedTenders = [...mappedTenders].sort((a, b) => {
                     const idxA = coreIds.indexOf(a.id);
                     const idxB = coreIds.indexOf(b.id);
@@ -174,7 +178,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     if (idxA !== -1 && idxB !== -1) return idxA - idxB;
                     if (idxA !== -1) return -1;
                     if (idxB !== -1) return 1;
-                    return 0;
+                    return getRowNum(a.id) - getRowNum(b.id);
                 });
 
                 const newConfStatuses: Record<string, 'OK' | 'Pendente'> = {};
