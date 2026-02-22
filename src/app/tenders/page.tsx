@@ -681,19 +681,15 @@ export default function TendersPage() {
 
     const syncWithDatabase = async () => {
         const tendersWithNup = tenders.filter(t => t.nup && t.nup.trim().length > 5).length;
-        const totalTenders = tenders.length;
 
         const confirmMsg = tendersWithNup > 0
-            ? `📊 AUDITORIA DE RESGATE:\n\nIdentificamos ${tendersWithNup} pregões com NUP preenchido neste navegador.\n\nDeseja ENVIAR esses dados agora para o servidor? Isso tornará seu trabalho manual permanente e acessível em qualquer lugar.`
-            : `⚠️ ALERTA DE SEGURANÇA:\n\nNão detectamos nenhum NUP preenchido (0 encontrados) neste navegador.\n\nNÃO CLIQUE EM OK se você estiver procurando seus dados manuais. Vá para o computador original onde você fez o preenchimento.`;
+            ? `📊 SINCRONIZAR COM O BANCO:\n\n${tenders.length} pregões serão salvos no servidor.\n\nDeseja continuar?`
+            : `⚠️ Nenhum pregão tem NUP preenchido.\n\nDeseja salvar mesmo assim?`;
 
         if (confirm(confirmMsg)) {
-            if (tendersWithNup === 0 && !confirm("Tem certeza absoluta? Você está prestes a salvar um estado sem NUPs na nuvem.")) {
-                return;
-            }
             await forceCloudSync();
-            alert("✅ Sincronia concluída com sucesso! Seus dados estão salvos na nuvem.");
-            window.location.reload();
+            alert("✅ Dados salvos na nuvem com sucesso!");
+            // NÃO recarregar: reload sobrescreveria dados locais com versão antiga do banco
         }
     };
 
