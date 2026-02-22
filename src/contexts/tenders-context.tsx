@@ -188,14 +188,12 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     }
                 });
 
-                if (skipGoldCheck || sortedTenders.some(t => t.nup && t.nup.length > 5)) {
-                    setTenders(sortedTenders);
-                    setConferenceStatuses(newConfStatuses);
-                    setDateChecks(newDateChecks);
-                    if (cloudPregoeiros.length > 0) setPregoeiros(cloudPregoeiros);
-                    if (cloudSupervisors.length > 0) setSupervisors(cloudSupervisors);
-                    if (cloudPeople.length > 0) setPeople(cloudPeople);
-                }
+                setTenders(sortedTenders);
+                setConferenceStatuses(newConfStatuses);
+                setDateChecks(newDateChecks);
+                if (cloudPregoeiros.length > 0) setPregoeiros(cloudPregoeiros);
+                if (cloudSupervisors.length > 0) setSupervisors(cloudSupervisors);
+                if (cloudPeople.length > 0) setPeople(cloudPeople);
             }
             setCloudStatus(prev => ({ ...prev, isConnected: true, lastSync: new Date(), status: 'online', message: 'Sincronizado' }));
         } catch (err: any) {

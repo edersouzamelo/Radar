@@ -87,19 +87,19 @@ const TenderRow = memo(({
     pregoeiros: any[]
 }) => {
     // Estados locais para inputs para evitar re-renders globais ao digitar
-    const [localNumber, setLocalNumber] = useState(tender.number);
-    const [localUasg, setLocalUasg] = useState(tender.uasg);
-    const [localDescription, setLocalDescription] = useState(tender.description);
-    const [localNup, setLocalNup] = useState(tender.nup || '');
-    const [localNote, setLocalNote] = useState(tender.quickNotes || '');
+    const [localNumber, setLocalNumber] = useState(tender.number ?? '');
+    const [localUasg, setLocalUasg] = useState(tender.uasg ?? '');
+    const [localDescription, setLocalDescription] = useState(tender.description ?? '');
+    const [localNup, setLocalNup] = useState(tender.nup ?? '');
+    const [localNote, setLocalNote] = useState(tender.quickNotes ?? '');
 
     // Sincronizar estados locais quando os dados externos mudarem (ex: refresh ou import)
     useEffect(() => {
-        setLocalNumber(tender.number);
-        setLocalUasg(tender.uasg);
-        setLocalDescription(tender.description);
-        setLocalNup(tender.nup || '');
-        setLocalNote(tender.quickNotes || '');
+        setLocalNumber(tender.number ?? '');
+        setLocalUasg(tender.uasg ?? '');
+        setLocalDescription(tender.description ?? '');
+        setLocalNup(tender.nup ?? '');
+        setLocalNote(tender.quickNotes ?? '');
     }, [tender.number, tender.uasg, tender.description, tender.nup, tender.quickNotes]);
 
     const handleBlur = (field: string, value: string) => {
