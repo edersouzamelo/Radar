@@ -66,10 +66,10 @@ export function Header({ onMenuOpen }: HeaderProps) {
 
                 {/* Indicador cloud — Unificado e Responsivo */}
                 <div className={`flex items-center gap-1.5 text-xs px-2 py-1 md:px-2.5 md:py-1.5 rounded-full border ${cloudStatus.status === 'online'
-                        ? 'bg-white dark:bg-slate-800 border-green-100 dark:border-green-900 text-gray-500 dark:text-gray-400'
-                        : cloudStatus.status === 'syncing'
-                            ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 text-blue-600 dark:text-blue-400'
-                            : 'bg-red-50 dark:bg-red-950 border-red-200 text-red-500 dark:text-red-400'
+                    ? 'bg-white dark:bg-slate-800 border-green-100 dark:border-green-900 text-gray-500 dark:text-gray-400'
+                    : cloudStatus.status === 'syncing'
+                        ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 text-blue-600 dark:text-blue-400'
+                        : 'bg-red-50 dark:bg-red-950 border-red-200 text-red-500 dark:text-red-400'
                     }`}>
                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot}`} />
 
@@ -81,11 +81,11 @@ export function Header({ onMenuOpen }: HeaderProps) {
 
                         {cloudStatus.isConnected && (
                             <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] text-gray-400 dark:text-gray-500 border-t sm:border-t-0 sm:border-l border-gray-100 dark:border-gray-800 sm:pl-2 mt-0.5 sm:mt-0">
-                                <span title="Processos salvos">{cloudStatus.totalTenders}p</span>
+                                <span title="Processos salvos">{cloudStatus.totalTenders} processos</span>
                                 <span className="opacity-30">•</span>
-                                <span title="Prazos salvos">{cloudStatus.totalDates}d</span>
+                                <span title="Prazos salvos">{cloudStatus.totalDates} prazos</span>
                                 <span className="opacity-30">•</span>
-                                <span title="Agentes salvos">{cloudStatus.totalPeople}a</span>
+                                <span title="Agentes salvos">{cloudStatus.totalPeople} pessoas</span>
                             </div>
                         )}
                     </div>
