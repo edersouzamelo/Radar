@@ -55,6 +55,9 @@ interface TendersContextType {
         isConnected: boolean;
         lastSync: Date | null;
         totalRecords: number;
+        totalTenders: number;
+        totalDates: number;
+        totalPeople: number;
         status: 'online' | 'offline' | 'syncing' | 'error';
         message?: string;
     };
@@ -92,6 +95,9 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         isConnected: false,
         lastSync: null,
         totalRecords: 0,
+        totalTenders: 0,
+        totalDates: 0,
+        totalPeople: 0,
         status: 'offline'
     });
 
@@ -192,14 +198,27 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     }
                 });
 
+                const totalDates = Object.values(newDateChecks).reduce((acc, curr) => acc + Object.keys(curr).length, 0);
+
                 setTenders(sortedTenders);
                 setConferenceStatuses(newConfStatuses);
                 setDateChecks(newDateChecks);
                 if (cloudPregoeiros.length > 0) setPregoeiros(cloudPregoeiros);
                 if (cloudSupervisors.length > 0) setSupervisors(cloudSupervisors);
                 if (cloudPeople.length > 0) setPeople(cloudPeople);
+
+                setCloudStatus(prev => ({
+                    ...prev,
+                    isConnected: true,
+                    lastSync: new Date(),
+                    status: 'online',
+                    message: 'Sincronizado',
+                    totalTenders: sortedTenders.length,
+                    totalDates: totalDates,
+                    totalPeople: cloudPregoeiros.length + cloudSupervisors.length + cloudPeople.length,
+                    totalRecords: sortedTenders.length + cloudPregoeiros.length + cloudSupervisors.length + cloudPeople.length
+                }));
             }
-            setCloudStatus(prev => ({ ...prev, isConnected: true, lastSync: new Date(), status: 'online', message: 'Sincronizado' }));
         } catch (err: any) {
             setCloudStatus(prev => ({ ...prev, status: 'error', isConnected: false, message: err.message }));
         }
@@ -234,6 +253,18 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             try {
                 const allTeamIds = new Set([...pregoeiros.map(p => p.id), ...supervisors.map(s => s.id), ...people.map(p => p.id)]);
                 const getSafeId = (id: string | undefined | null) => (id && allTeamIds.has(id)) ? id : null;
+
+                // 1. Preparar e enviar membros da equipe (Vínculos)
+                const teamToUpload = [
+                    ...pregoeiros.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'pregoeiro', om: (p as any).om || "" })),
+                    ...supervisors.map(s => ({ id: s.id, name: s.name, email: s.email, whatsapp: s.whatsapp, role: s.role, type: 'supervisor', om: s.organization || "" })),
+                    ...people.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'requisitante', om: p.sector || "" }))
+                ];
+                if (teamToUpload.length > 0) {
+                    await supabase.from('team_members').upsert(teamToUpload);
+                }
+
+                // 2. Preparar e enviar pregões
                 const tendersToUpload = tenders.map(t => ({
                     id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department,
                     opening_date: t.openingDate, estimated_value: t.estimatedValue, status: t.status, current_stage: t.currentStage,
@@ -251,7 +282,8 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     updates: t.updates || [], observations: t.observations || []
                 }));
                 await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
-                // Salvar date_checks separadamente na tabela própria também (backup)
+
+                // 3. Salvar date_checks separadamente (backup)
                 for (const t of tenders) {
                     const checks = dateChecks[t.id];
                     if (checks && Object.keys(checks).length > 0) {
@@ -263,7 +295,18 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                         }
                     }
                 }
-                setCloudStatus(prev => ({ ...prev, isConnected: true, lastSync: new Date(), status: 'online', totalRecords: tenders.length }));
+                const totalDates = Object.values(dateChecks).reduce((acc, curr) => acc + Object.keys(curr).length, 0);
+
+                setCloudStatus(prev => ({
+                    ...prev,
+                    isConnected: true,
+                    lastSync: new Date(),
+                    status: 'online',
+                    totalTenders: tenders.length,
+                    totalDates: totalDates,
+                    totalPeople: teamToUpload.length,
+                    totalRecords: tenders.length + teamToUpload.length
+                }));
             } catch (err: any) {
                 console.error('[AutoSync] Erro ao sincronizar com Supabase:', err.message);
             }
@@ -289,7 +332,18 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             ];
             await supabase.from('team_members').upsert(teamToUpload);
             await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
-            setCloudStatus({ isConnected: true, lastSync: new Date(), totalRecords: tenders.length, status: 'online' });
+
+            const totalDates = Object.values(dateChecks).reduce((acc, curr) => acc + Object.keys(curr).length, 0);
+
+            setCloudStatus({
+                isConnected: true,
+                lastSync: new Date(),
+                totalTenders: tenders.length,
+                totalDates: totalDates,
+                totalPeople: teamToUpload.length,
+                totalRecords: tenders.length + teamToUpload.length,
+                status: 'online'
+            });
         } catch (err: any) {
             setCloudStatus(prev => ({ ...prev, status: 'error', isConnected: false, message: err.message }));
         }

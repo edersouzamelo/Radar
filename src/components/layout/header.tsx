@@ -64,21 +64,31 @@ export function Header({ onMenuOpen }: HeaderProps) {
             {/* Ações — direita */}
             <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0 ml-auto md:ml-2">
 
-                {/* Indicador cloud — só desktop */}
-                <div className={`hidden lg:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${cloudStatus.status === 'online'
-                    ? 'bg-white dark:bg-slate-800 border-green-100 dark:border-green-900 text-gray-500 dark:text-gray-400'
-                    : cloudStatus.status === 'syncing'
-                        ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 text-blue-600 dark:text-blue-400'
-                        : 'bg-red-50 dark:bg-red-950 border-red-200 text-red-500 dark:text-red-400'
+                {/* Indicador cloud — Unificado e Responsivo */}
+                <div className={`flex items-center gap-1.5 text-xs px-2 py-1 md:px-2.5 md:py-1.5 rounded-full border ${cloudStatus.status === 'online'
+                        ? 'bg-white dark:bg-slate-800 border-green-100 dark:border-green-900 text-gray-500 dark:text-gray-400'
+                        : cloudStatus.status === 'syncing'
+                            ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 text-blue-600 dark:text-blue-400'
+                            : 'bg-red-50 dark:bg-red-950 border-red-200 text-red-500 dark:text-red-400'
                     }`}>
                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot}`} />
-                    <span className="font-medium whitespace-nowrap">
-                        {cloudStatus.status === 'online' ? 'Tempo Real' :
-                            cloudStatus.status === 'syncing' ? 'Sincronizando…' : 'Offline'}
-                    </span>
-                    {cloudStatus.totalRecords > 0 && (
-                        <span className="text-gray-400 dark:text-gray-500">{cloudStatus.totalRecords}</span>
-                    )}
+
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-x-2 font-medium whitespace-nowrap">
+                        <span className="text-[10px] md:text-xs">
+                            {cloudStatus.status === 'online' ? 'Tempo Real' :
+                                cloudStatus.status === 'syncing' ? 'Sincronizando…' : 'Offline'}
+                        </span>
+
+                        {cloudStatus.isConnected && (
+                            <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] text-gray-400 dark:text-gray-500 border-t sm:border-t-0 sm:border-l border-gray-100 dark:border-gray-800 sm:pl-2 mt-0.5 sm:mt-0">
+                                <span title="Processos salvos">{cloudStatus.totalTenders}p</span>
+                                <span className="opacity-30">•</span>
+                                <span title="Prazos salvos">{cloudStatus.totalDates}d</span>
+                                <span className="opacity-30">•</span>
+                                <span title="Agentes salvos">{cloudStatus.totalPeople}a</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Botão Atualizar */}
@@ -87,15 +97,21 @@ export function Header({ onMenuOpen }: HeaderProps) {
                     onClick={handleRefresh}
                     disabled={isRefreshing}
                     title="Atualizar dados do servidor"
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold bg-radar-dark dark:bg-slate-700 text-radar-cream hover:bg-radar-gold hover:text-radar-dark dark:hover:bg-radar-gold dark:hover:text-radar-dark transition-all shadow-sm disabled:opacity-50"
+                    className="flex md:hidden items-center justify-center h-8 w-8 rounded-full bg-radar-dark text-radar-cream hover:bg-radar-gold transition-all shadow-sm disabled:opacity-50"
                 >
                     <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    <span className="hidden sm:inline">Atualizar</span>
                 </button>
 
-                {/* Dot de status — só mobile (compacto) */}
-                <div className={`lg:hidden w-2 h-2 rounded-full flex-shrink-0 ${statusDot}`} title={cloudStatus.status} />
-
+                <button
+                    type="button"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    title="Atualizar dados do servidor"
+                    className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold bg-radar-dark dark:bg-slate-700 text-radar-cream hover:bg-radar-gold hover:text-radar-dark dark:hover:bg-radar-gold dark:hover:text-radar-dark transition-all shadow-sm disabled:opacity-50"
+                >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    <span>Atualizar</span>
+                </button>
 
                 <button type="button" className="p-2 text-gray-500 hover:text-radar-gold transition-colors relative flex-shrink-0">
                     <span className="sr-only">Ver notificações</span>
