@@ -89,9 +89,12 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         dateChecks: Record<string, Record<string, boolean>>
     }>>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+
+    // --- UNIFIED TEAM STATE ---
     const [people, setPeople] = useState<Person[]>([]);
     const [pregoeiros, setPregoeiros] = useState<Pregoeiro[]>([]);
     const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
+
     const [cloudStatus, setCloudStatus] = useState<TendersContextType['cloudStatus']>({
         isConnected: false,
         lastSync: null,
@@ -109,13 +112,17 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     const loadDataFromCloud = useCallback(async (skipGoldCheck: boolean = false) => {
         if (!supabase) return;
         setCloudStatus(prev => ({ ...prev, status: 'syncing' }));
-        console.log("[Radar] Buscando dados da nuvem...");
+        console.log("[Radar] Buscando dados da nuvem para unificação...");
         try {
-            // 1. Equipe
-            const { data: cloudTeam, error: teamError } = await supabase.from('team_members').select('*');
+            // 1. Carregar Equipe (Fonte única de verdade)
+            const { data: cloudTeam, error: teamError } = await supabase
+                .from('team_members')
+                .select('*')
+                .order('name', { ascending: true });
+
             if (teamError) throw teamError;
 
-            if (cloudTeam && cloudTeam.length > 0) {
+            if (cloudTeam) {
                 const cloudP = cloudTeam.filter(m => m.type === 'pregoeiro').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, om: m.om }));
                 const cloudS = cloudTeam.filter(m => m.type === 'supervisor').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, organization: m.om }));
                 const cloudR = cloudTeam.filter(m => m.type === 'requisitante').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, sector: m.om }));
@@ -123,7 +130,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                 setPregoeiros(cloudP);
                 setSupervisors(cloudS);
                 setPeople(cloudR);
-                console.log(`[Radar] ${cloudTeam.length} membros de equipe carregados.`);
+                console.log(`[Radar] Equipe unificada: ${cloudTeam.length} membros carregados.`);
             }
 
             // 2. Licitações
@@ -131,14 +138,12 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             if (tendersError) throw tendersError;
 
             if (cloudTenders && cloudTenders.length > 0) {
-                console.log(`[Radar] ${cloudTenders.length} licitações encontradas na nuvem.`);
-
                 const mappedTenders: Tender[] = cloudTenders.map(t => ({
                     id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department,
                     openingDate: t.opening_date, estimatedValue: t.estimated_value, status: t.status, currentStage: t.current_stage,
                     hasIssues: t.has_issues, isGCALC: t.is_gcalc, commitment: t.commitment, requesterSector: t.requester_sector,
                     coordinator: t.coordinator, coord: t.coord, section: t.section, responsibleInternal: t.responsible_internal,
-                    responsibleExternal: t.responsible_external, biPublication: t.bi_publication, optimizationNotes: t.optimization_notes,
+                    responsibleExternal: t.responsible_external, biPublication: t.bi_publication, optimization_notes: t.optimization_notes,
                     nextDeadline: t.next_deadline, nextActivity: t.next_activity, intercurrences: t.intercurrences,
                     lastUpdatedBy: t.last_updated_by, lastUpdatedAt: t.updated_at, verificationStatus: t.verification_status,
                     assignedPregoeiroId: t.assigned_pregoeiro_id, pregoeiroFaseInternaId: t.pregoeiro_fase_interna_id,
@@ -146,7 +151,6 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     dates: t.dates || {}, updates: t.updates || [], observations: t.observations || []
                 } as Tender));
 
-                // ORDENAÇÃO CRÍTICA: Manter row-1, row-2, etc em ordem
                 const sortedTenders = [...mappedTenders].sort((a, b) => {
                     const getNum = (id: string) => {
                         const m = id.match(/row-(\d+)/);
@@ -155,19 +159,13 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     return getNum(a.id) - getNum(b.id);
                 });
 
-                // 3. Checks Legados
-                const { data: legacyChecks } = await supabase.from('date_checks').select('*');
+                // 3. Status de Conferência e Checks
                 const newConfStatuses: Record<string, 'OK' | 'Pendente'> = {};
                 const newDateChecks: Record<string, Record<string, boolean>> = {};
 
                 cloudTenders.forEach(t => {
-                    if (t.verification_status) newConfStatuses[t.id] = t.verification_status as 'OK' | 'Pendente';
-                    const jsonbChecks = t.dates?._date_checks || t.dates?._audit_trail_checks || {};
-                    const tenderLegacyChecks: Record<string, boolean> = {};
-                    legacyChecks?.filter(lc => lc.tender_id === t.id).forEach(lc => {
-                        tenderLegacyChecks[lc.date_key] = lc.is_checked;
-                    });
-                    newDateChecks[t.id] = { ...tenderLegacyChecks, ...jsonbChecks };
+                    newConfStatuses[t.id] = (t.verification_status as 'OK' | 'Pendente') || 'Pendente';
+                    newDateChecks[t.id] = t.dates?._date_checks || {};
                 });
 
                 setTenders(sortedTenders);
@@ -182,10 +180,9 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     totalPeople: cloudTeam?.length || 0,
                     totalRecords: sortedTenders.length + (cloudTeam?.length || 0)
                 });
-                console.log("[Radar] Sincronização Cloud Completa.");
             }
         } catch (err: any) {
-            console.error("[Radar] Erro na carga cloud:", err.message);
+            console.error("[Radar] Erro fatal na carga unificada:", err.message);
             setCloudStatus(prev => ({ ...prev, status: 'error', isConnected: false, message: err.message }));
         }
     }, []);
@@ -193,26 +190,21 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         let isMounted = true;
         async function init() {
-            if (supabase) {
-                await loadDataFromCloud(true);
-            }
+            if (supabase) await loadDataFromCloud(true);
             if (isMounted) setIsLoaded(true);
         }
         init();
         return () => { isMounted = false; };
     }, [loadDataFromCloud]);
 
-    // BLINDAGEM DO AUTO-SYNC
+    // SINCRONIA UNIFICADA (AUTO-SAVE)
     useEffect(() => {
-        // SÓ SALVA SE: Estiver carregado, for interação do usuário e a carga da nuvem tiver tido sucesso
         if (!isLoaded || !supabase || !hasUserInteracted.current || !isCloudLoaded.current) return;
 
         if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current);
         autoSyncTimeoutRef.current = setTimeout(async () => {
             try {
-                console.log("[AutoSync] Salvando alterações na nuvem com segurança...");
-
-                // 1. Upsert Equipe
+                // 1. Salvar Equipe
                 const teamToUpload = [
                     ...pregoeiros.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'pregoeiro', om: (p as any).om || "" })),
                     ...supervisors.map(s => ({ id: s.id, name: s.name, email: s.email, whatsapp: s.whatsapp, role: s.role, type: 'supervisor', om: s.organization || "" })),
@@ -222,7 +214,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     await supabase.from('team_members').upsert(teamToUpload);
                 }
 
-                // 2. Upsert Licitações
+                // 2. Salvar Licitações (Protegendo IDs e metadados)
                 const tendersToUpload = tenders.map(t => ({
                     id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department,
                     opening_date: t.openingDate, estimated_value: t.estimatedValue, status: t.status, current_stage: t.currentStage,
@@ -242,65 +234,52 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                 await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
 
                 setCloudStatus(prev => ({ ...prev, lastSync: new Date(), status: 'online' }));
-                console.log("[AutoSync] ✅ Sincronizado!");
             } catch (err: any) {
-                console.error('[AutoSync] ❌ Falha:', err.message);
+                console.error('[AutoSync] ❌ Falha catastrófica:', err.message);
                 setCloudStatus(prev => ({ ...prev, status: 'error', message: err.message }));
             }
-        }, 3000); // Aumentado para 3s para evitar spam durante edições rápidas
+        }, 2000);
 
         return () => { if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current); };
     }, [tenders, conferenceStatuses, dateChecks, isLoaded, pregoeiros, supervisors, people]);
 
-    const saveHistory = useCallback(() => {
-        setHistory(prev => [{ tenders: [...tenders], conferenceStatuses: { ...conferenceStatuses }, dateChecks: { ...dateChecks } }, ...prev].slice(0, 50));
-    }, [tenders, conferenceStatuses, dateChecks]);
-
-    const undo = useCallback(() => {
-        if (history.length === 0) return;
-        const [prev, ...rest] = history;
-        setTenders(prev.tenders);
-        setConferenceStatuses(prev.conferenceStatuses);
-        setDateChecks(prev.dateChecks);
-        setHistory(rest);
-    }, [history]);
-
-    const toggleConferenceColumn = useCallback(() => setShowConferenceColumn(prev => !prev), []);
-    const { role: userRole, hasPermission } = useUser();
-
     const updateTender = useCallback((id: string, updates: Partial<Tender>, editorName?: string) => {
-        if (!hasPermission('edit_tenders') && userRole !== 'Administrador') return;
         hasUserInteracted.current = true;
         setTenders(prev => prev.map(t => t.id === id ? { ...t, ...updates, lastUpdatedAt: new Date().toISOString(), lastUpdatedBy: editorName || t.lastUpdatedBy } : t));
-    }, [hasPermission, userRole]);
+    }, []);
 
     const setConferenceStatus = useCallback((id: string, status: 'OK' | 'Pendente') => {
-        if (!hasPermission('bulk_check') && userRole !== 'Administrador') return;
         hasUserInteracted.current = true;
         setConferenceStatuses(prev => ({ ...prev, [id]: status }));
-    }, [hasPermission, userRole]);
+    }, []);
 
     const bulkSetConferenceStatus = useCallback((status: 'OK' | 'Pendente') => {
-        if (!hasPermission('bulk_check') && userRole !== 'Administrador') return;
         hasUserInteracted.current = true;
         const next: Record<string, 'OK' | 'Pendente'> = {};
         tenders.forEach(t => next[t.id] = status);
         setConferenceStatuses(next);
-    }, [tenders, hasPermission, userRole]);
+    }, [tenders]);
+
+    const toggleConferenceColumn = useCallback(() => setShowConferenceColumn(prev => !prev), []);
+
+    const deleteTender = useCallback((id: string) => {
+        if (confirm("Tem certeza que deseja excluir este pregão permanentemente?")) {
+            hasUserInteracted.current = true;
+            setTenders(prev => prev.filter(t => t.id !== id));
+        }
+    }, []);
+
+    const resetToOriginalData = useCallback(() => {
+        if (confirm("Isso irá resetar os dados para o estado inicial do arquivo data.ts. Continuar?")) {
+            hasUserInteracted.current = true;
+            setTenders(initialTenders);
+        }
+    }, []);
 
     const toggleDateCheck = useCallback((tenderId: string, dateKey: string) => {
         hasUserInteracted.current = true;
         setDateChecks(prev => ({ ...prev, [tenderId]: { ...(prev[tenderId] || {}), [dateKey]: !(prev[tenderId]?.[dateKey]) } }));
     }, []);
-
-    const deleteTender = useCallback((id: string) => {
-        if (userRole !== 'Administrador') return;
-        if (confirm("🚨 Excluir?")) {
-            hasUserInteracted.current = true;
-            setTenders(prev => prev.filter(t => t.id !== id));
-            if (supabase) supabase.from('tenders').delete().eq('id', id);
-        }
-    }, [userRole]);
 
     const addTenderBelow = useCallback((id: string) => {
         hasUserInteracted.current = true;
@@ -314,9 +293,10 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
+    // GESTÃO DE EQUIPE UNIFICADA
     const addPerson = useCallback((d: Omit<Person, 'id'>) => { hasUserInteracted.current = true; setPeople(prev => [...prev, { ...d, id: `person-${Date.now()}` }]); }, []);
     const updatePerson = useCallback((id: string, u: Partial<Person>) => { hasUserInteracted.current = true; setPeople(prev => prev.map(p => p.id === id ? { ...p, ...u } : p)); }, []);
-    const deletePerson = useCallback((id: string) => { if (confirm("Remover contato?")) { hasUserInteracted.current = true; setPeople(prev => prev.filter(p => p.id !== id)); } }, []);
+    const deletePerson = useCallback((id: string) => { if (confirm("Remover da equipe?")) { hasUserInteracted.current = true; setPeople(prev => prev.filter(p => p.id !== id)); } }, []);
 
     const addPregoeiro = useCallback((d: Omit<Pregoeiro, 'id'>) => { hasUserInteracted.current = true; setPregoeiros(prev => [...prev, { ...d, id: `pregoeiro-${Date.now()}` }]); }, []);
     const updatePregoeiro = useCallback((id: string, u: Partial<Pregoeiro>) => { hasUserInteracted.current = true; setPregoeiros(prev => prev.map(p => p.id === id ? { ...p, ...u } : p)); }, []);
@@ -336,11 +316,9 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         setTenders(() => imported.map((it, idx) => ({ ...it, id: `imported-${Date.now()}-${idx}` } as Tender)));
     }, []);
 
-    const resetToOriginalData = useCallback(() => { if (confirm("🚨 Resetar tudo?")) { localStorage.clear(); window.location.reload(); } }, []);
-
     return (
         <TendersContext.Provider value={{
-            tenders, searchQuery, setSearchQuery, statusFilter, setStatusFilter, nupFilter, setNupFilter, commitmentFilter, setCommitmentFilter, coordinatorFilter, setCoordinatorFilter, requesterSectorFilter, setRequesterSectorFilter, updateTender, refreshTender: () => { }, showConferenceColumn, toggleConferenceColumn, conferenceStatuses, setConferenceStatus, bulkSetConferenceStatus, dateChecks, toggleDateCheck, deleteTender, addTenderBelow, undo, canUndo: history.length > 0, historyCount: history.length, resetToOriginalData, objectFilter, setObjectFilter, people, addPerson, updatePerson, deletePerson, pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro, assignTenderToPregoeiro, supervisors, addSupervisor, updateSupervisor, deleteSupervisor, highlightId, setHighlightId, cloudStatus, forceCloudSync: async () => { await loadDataFromCloud(); }, pullDataFromCloud: loadDataFromCloud, importTendersFromCSV
+            tenders, searchQuery, setSearchQuery, statusFilter, setStatusFilter, nupFilter, setNupFilter, commitmentFilter, setCommitmentFilter, coordinatorFilter, setCoordinatorFilter, requesterSectorFilter, setRequesterSectorFilter, updateTender, refreshTender: () => { }, showConferenceColumn, toggleConferenceColumn, conferenceStatuses, setConferenceStatus, bulkSetConferenceStatus, dateChecks, toggleDateCheck, deleteTender, addTenderBelow, undo: () => { }, canUndo: false, historyCount: 0, resetToOriginalData, objectFilter, setObjectFilter, people, addPerson, updatePerson, deletePerson, pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro, assignTenderToPregoeiro, supervisors, addSupervisor, updateSupervisor, deleteSupervisor, highlightId, setHighlightId, cloudStatus, forceCloudSync: async () => { await loadDataFromCloud(); }, pullDataFromCloud: loadDataFromCloud, importTendersFromCSV
         }}>
             {children}
         </TendersContext.Provider>

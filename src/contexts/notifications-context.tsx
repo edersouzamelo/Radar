@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { Subscriber, NotificationLog } from '@/types';
 import { useTenders } from './tenders-context';
 
@@ -15,97 +15,63 @@ interface NotificationsContextType {
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
 
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
-    const { tenders, people, pregoeiros } = useTenders();
-    const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+    const { tenders, people, pregoeiros, supervisors } = useTenders();
+    const [manualSubscribers, setManualSubscribers] = useState<Subscriber[]>([]);
     const [logs, setLogs] = useState<NotificationLog[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Carregar dados salvos
+    // Carregar logs salvos (Logs podem continuar no localStorage ou ir pro DB no futuro)
     useEffect(() => {
-        const savedSubs = localStorage.getItem('radar_subscribers');
         const savedLogs = localStorage.getItem('radar_logs');
-
-        if (savedSubs) {
-            setSubscribers(JSON.parse(savedSubs));
-        } else {
-            // Mock inicial removido em favor da sincronização automática
-            setSubscribers([]);
-        }
-
-        if (savedLogs) {
-            setLogs(JSON.parse(savedLogs));
-        }
+        if (savedLogs) setLogs(JSON.parse(savedLogs));
         setIsLoaded(true);
     }, []);
 
-    // SINCRONIZAÇÃO AUTOMÁTICA: Vínculos -> Alertas
-    useEffect(() => {
-        if (!isLoaded) return;
-
-        setSubscribers(prev => {
-            // 1. Filtrar inscritos manuais (os que NÃO começam com 'sync-')
-            const manualSubscribers = prev.filter(s => !s.id.startsWith('sync-'));
-
-            // 2. Criar lista de inscritos sincronizados a partir de people e pregoeiros
-            const syncedSubscribers: Subscriber[] = [
-                ...people.map(p => {
-                    const id = `sync-person-${p.id}`;
-                    const existing = prev.find(s => s.id === id);
-                    return {
-                        id,
-                        name: p.name,
-                        email: p.email,
-                        phone: p.whatsapp,
-                        department: p.sector || 'Integrante',
-                        // Preserva preferências se já existirem, senão usa padrão
-                        preferences: existing?.preferences || { email: true, whatsapp: true, sms: false },
-                        createdAt: existing?.createdAt || new Date().toISOString()
-                    };
-                }),
-                ...pregoeiros.map(p => {
-                    const id = `sync-pregoeiro-${p.id}`;
-                    const existing = prev.find(s => s.id === id);
-                    return {
-                        id,
-                        name: p.name,
-                        email: p.email,
-                        phone: p.whatsapp,
-                        department: 'Pregoeiro',
-                        preferences: existing?.preferences || { email: true, whatsapp: true, sms: false },
-                        createdAt: existing?.createdAt || new Date().toISOString()
-                    };
-                })
-            ];
-
-            // Reconciliação: preservamos os manuais e injetamos a lista atual de synced (com prefs preservadas)
-            return [...manualSubscribers, ...syncedSubscribers];
-        });
-    }, [people, pregoeiros, isLoaded]);
-
-    // Salvar mudanças
-    useEffect(() => {
-        if (isLoaded) {
-            localStorage.setItem('radar_subscribers', JSON.stringify(subscribers));
-        }
-    }, [subscribers, isLoaded]);
-
-    useEffect(() => {
-        if (logs.length > 0) {
-            localStorage.setItem('radar_logs', JSON.stringify(logs));
-        }
-    }, [logs]);
+    // DERIVAÇÃO UNIFICADA: Os subscritores são SEMPRE os membros da equipe + manuais
+    const subscribers = useMemo(() => {
+        const synced: Subscriber[] = [
+            ...pregoeiros.map(p => ({
+                id: `team-${p.id}`,
+                name: p.name,
+                email: p.email,
+                phone: p.whatsapp,
+                department: 'Pregoeiro',
+                preferences: { email: true, whatsapp: true, sms: false },
+                createdAt: new Date().toISOString()
+            })),
+            ...people.map(p => ({
+                id: `team-${p.id}`,
+                name: p.name,
+                email: p.email,
+                phone: p.whatsapp,
+                department: p.sector || 'Requisitante',
+                preferences: { email: true, whatsapp: true, sms: false },
+                createdAt: new Date().toISOString()
+            })),
+            ...supervisors.map(s => ({
+                id: `team-${s.id}`,
+                name: s.name,
+                email: s.email,
+                phone: s.whatsapp,
+                department: s.organization || 'Supervisor',
+                preferences: { email: true, whatsapp: true, sms: false },
+                createdAt: new Date().toISOString()
+            }))
+        ];
+        return [...synced, ...manualSubscribers];
+    }, [pregoeiros, people, supervisors, manualSubscribers]);
 
     const addSubscriber = (newSub: Omit<Subscriber, 'id' | 'createdAt'>) => {
         const subscriber: Subscriber = {
             ...newSub,
-            id: Math.random().toString(36).substr(2, 9),
+            id: `manual-${Math.random().toString(36).substr(2, 9)}`,
             createdAt: new Date().toISOString()
         };
-        setSubscribers(prev => [...prev, subscriber]);
+        setManualSubscribers(prev => [...prev, subscriber]);
     };
 
     const removeSubscriber = (id: string) => {
-        setSubscribers(prev => prev.filter(s => s.id !== id));
+        setManualSubscribers(prev => prev.filter(s => s.id !== id));
     };
 
     const checkAndSendNotifications = async () => {
@@ -116,12 +82,14 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
             const openingDate = new Date(tender.openingDate);
             const diffDays = Math.ceil((openingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
+            // Alerta se faltar 30, 5 ou 0 dias
             if ([30, 5, 0].includes(diffDays)) {
                 for (const sub of subscribers) {
                     const type = diffDays === 30 ? '30_days' : diffDays === 5 ? '5_days' : 'deadline';
 
-                    if (sub.preferences.email) {
+                    if (sub.preferences.email && sub.email) {
                         try {
+                            // Interface com API de disparo (Vercel/Node)
                             const response = await fetch('/api/notifications/email', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -142,7 +110,6 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
                             });
 
                             const result = await response.json();
-
                             newLogs.push({
                                 id: Math.random().toString(36).substr(2, 9),
                                 subscriberId: sub.id,
@@ -163,6 +130,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
 
         if (newLogs.length > 0) {
             setLogs(prev => [...newLogs, ...prev]);
+            localStorage.setItem('radar_logs', JSON.stringify([...newLogs, ...logs]));
         }
     };
 

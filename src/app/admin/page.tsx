@@ -57,8 +57,23 @@ export default function AdminPage() {
         fetchProfiles();
     }, []);
 
-    // Unificamos a equipe para exibição, priorizando os perfis do banco
-    const teamMembers = allProfiles;
+    // Consolidação da equipe: Unimos pregoeiros, supervisores e requisitantes com os perfis de autenticação
+    const teamMembers = [
+        ...pregoeiros.map(p => ({ ...p, type: 'pregoeiro' })),
+        ...supervisors.map(s => ({ ...s, type: 'supervisor' })),
+        ...people.map(p => ({ ...p, type: 'requisitante' }))
+    ].map(member => {
+        // Tenta encontrar um perfil (login) correspondente pelo e-mail
+        const profile = allProfiles.find(p => p.email?.toLowerCase() === member.email?.toLowerCase());
+        return {
+            ...member,
+            // Normalização de campos para evitar erros de tipagem e duplicidade
+            full_name: profile?.full_name || member.name,
+            permissions: profile?.permissions || {},
+            profile_id: profile?.id,
+            is_auth_user: !!profile
+        };
+    }).sort((a, b) => a.full_name.localeCompare(b.full_name));
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [editingMember, setEditingMember] = useState<any>(null)
@@ -263,13 +278,13 @@ export default function AdminPage() {
                                                     key={perm.id}
                                                     variant="ghost"
                                                     size="sm"
-                                                    className={`h-7 px-2 text-[10px] border ${u.role === 'Administrador' ? 'opacity-50 cursor-not-allowed' : ''} ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
+                                                    className={`h-7 px-2 text-[10px] border ${u.role === 'Administrador' || !u.is_auth_user ? 'opacity-50 cursor-not-allowed' : ''} ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
                                                     onClick={async () => {
-                                                        if (u.role === 'Administrador') return;
+                                                        if (u.role === 'Administrador' || !u.is_auth_user) return;
                                                         const newPerms = { ...(u.permissions || {}), [perm.id]: !u.permissions?.[perm.id] };
-                                                        await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.id);
-                                                        // O radar-presence disparará o sync ou podemos forçar um reload local
-                                                        window.location.reload(); // Simplificado para garantir sincronia
+                                                        await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+                                                        // Forçamos o reload para refletir a mudança (pode ser otimizado depois)
+                                                        window.location.reload();
                                                     }}
                                                 >
                                                     {u.permissions?.[perm.id] ? <CheckSquare className="h-3 w-3 mr-1" /> : <Square className="h-3 w-3 mr-1" />}
