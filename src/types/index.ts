@@ -35,7 +35,12 @@ export type TenderStage =
     | '1. Entrada do TR na SAL'
     | '6. Publicação do Aviso de Licitação'
     | '5.1 Ajuste para publicação na SAL'
-    | 'A cargo do 9º B Sup';
+    | 'A cargo do 9º B Sup'
+    | '0. DIEx com alerta de prazo para OMDS 5 dias antes'
+    | '7. Fase  Externa'
+    | '8 Adjudicação e Homologação'
+    | '8 Adjudicação e Homologação'
+    | '9 Abandonado';
 
 export interface TenderUpdate {
     id: string;
@@ -88,18 +93,25 @@ export interface TenderDates {
     // Prazo do GCALC
     prazoGCALC?: string;
 
-    // Novos campos solicitados
-    cjuSendDeadline?: string; // Prazo de envio à CJU
-    cjuReturnDate?: string; // Data de regresso da CJU
-    publicationAdjustmentsDeadline?: string; // Prazo de ajustes para publicação
-    publicationDate?: string; // Data de publicação
-    proposalOpeningDate?: string; // Data de abertura e julgamento das propostas
-    homologationForecast?: string; // Previsão interna de homologação (previsão)
-    homologationDeadline?: string; // Prazo de homologação
     minutesSignatureDeadline?: string; // Prazo de assinatura das atas
+    cjuSendDeadline?: string;
+    cjuReturnDate?: string;
+    publicationAdjustmentsDeadline?: string;
+    publicationDate?: string;
+    proposalOpeningDate?: string;
+    homologationForecast?: string;
+    homologationDeadline?: string;
+    _date_checks?: Record<string, boolean>; // Controle interno de conferência de datas
 }
 
-export type UserRole = 'Chefe da Seção de Licitações' | 'Pregoeiro' | 'Auxiliar' | 'Setor Requisitante';
+export type UserRole =
+    | 'Administrador'
+    | 'Ordenador de Despesas'
+    | 'Agente Diretor'
+    | 'Chefe da Seção de Licitações'
+    | 'Pregoeiro'
+    | 'Auxiliar'
+    | 'Setor Requisitante';
 
 export interface User {
     id: string;
@@ -190,8 +202,8 @@ export interface Tender {
     nextActivity?: string;
     intercurrences?: string;
     commitment?: 'GCALC' | 'PCA da OM' | 'Operação Perseu' | 'Outros';
-    requesterSector?: '9º B Mnt' | '9º B Sup' | '18º B Trnp' | 'Cia Cmdo' | '9º B Sau' | 'Cmdo 9º Gpt' | 'A definir';
-    coordinator?: 'CAF' | 'CCOL' | '9º B Sup' | 'A definir';
+    requesterSector?: '9º B Mnt' | '9º B Sup' | '18º B Trnp' | 'Cia Cmdo' | 'Cia C' | '9º B Sau' | 'Cmdo 9º Gpt' | 'A definir';
+    coordinator?: 'CAF' | 'CCOL' | '9º B Sup' | 'Cia C' | 'A definir';
 
     // Controle de auditoria
     lastUpdatedAt?: string; // ISO date string
