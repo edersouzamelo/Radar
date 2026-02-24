@@ -226,16 +226,17 @@ const TenderRow = memo(({
                     onChange={(e) => handleDateChange(field, subField, e.target.value)}
                 />
                 <button
+                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                     onClick={() => toggleDateCheck(tender.id, dateKey)}
                     className={cn(
-                        "p-0.5 rounded-full transition-all active:scale-90 flex-shrink-0",
+                        "p-0.5 rounded-full transition-all active:scale-95 flex-shrink-0 disabled:cursor-not-allowed",
                         isChecked
-                            ? "bg-green-500 text-white shadow-sm"
-                            : "bg-gray-100 text-gray-400 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100"
+                            ? "bg-green-600 text-white shadow-md scale-110"
+                            : "bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 opacity-0 group-hover:opacity-100"
                     )}
                     title={isChecked ? "Etapa concluída" : "Marcar como concluído"}
                 >
-                    <Check className="w-3 h-3" />
+                    <Check className={cn("w-3.5 h-3.5", isChecked && "stroke-[3px]")} />
                 </button>
             </div>
         );

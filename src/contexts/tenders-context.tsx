@@ -227,10 +227,17 @@ export function TendersProvider({ children }: { children: ReactNode }) {
 
     // Carregamento Inicial (Tenta sincronizar com o Cloud se disponível)
     useEffect(() => {
-        if (supabase) {
-            loadDataFromCloud(true);
+        let isMounted = true;
+
+        async function init() {
+            if (supabase) {
+                await loadDataFromCloud(true);
+            }
+            if (isMounted) setIsLoaded(true);
         }
-        setIsLoaded(true);
+
+        init();
+        return () => { isMounted = false; };
     }, [loadDataFromCloud]);
 
     // Persistência Local
@@ -284,18 +291,10 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                 }));
                 await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
 
-                // 3. Salvar date_checks separadamente (backup)
-                for (const t of tenders) {
-                    const checks = dateChecks[t.id];
-                    if (checks && Object.keys(checks).length > 0) {
-                        for (const [dateKey, isChecked] of Object.entries(checks)) {
-                            await supabase.from('date_checks').upsert(
-                                { tender_id: t.id, date_key: dateKey, is_checked: isChecked },
-                                { onConflict: 'tender_id,date_key' }
-                            );
-                        }
-                    }
-                }
+                // 3. Salvar date_checks separadamente (backup opcional / removido redundância por performance)
+                // Removido o loop que salvava linha por linha para evitar TIMEOUTS do Supabase
+                // O _date_checks dentro de 'dates' já é a fonte da verdade definitiva.
+
                 const totalDates = Object.values(dateChecks).reduce((acc, curr) => acc + Object.keys(curr).length, 0);
 
                 setCloudStatus(prev => ({
