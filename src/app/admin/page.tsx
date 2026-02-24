@@ -347,20 +347,12 @@ export default function AdminPage() {
                                                                     if (updateErr) throw updateErr;
 
                                                                     // 2. Garantir Perfil/Vínculo
-                                                                    const { data: existingProfile } = await supabase.from('profiles').select('id').eq('email', emailLower).single();
-                                                                    if (!existingProfile) {
-                                                                        await supabase.from('profiles').insert([{
-                                                                            email: emailLower,
-                                                                            full_name: u.name,
-                                                                            role: 'Visitante',
-                                                                            permissions: { view_all: true }
-                                                                        }]);
-                                                                    }
-
-                                                                    alert(`Vínculo realizado com sucesso para: ${emailLower}`);
+                                                                    // NOTA: Não criamos perfis aqui para evitar erros de ID nulo.
+                                                                    // O vínculo é ativado automaticamente no primeiro login do usuário.
+                                                                    alert(`E-mail definido para: ${emailLower}. Você já pode configurar as prerrogativas abaixo.`);
                                                                     window.location.reload();
                                                                 } catch (err: any) {
-                                                                    alert("Erro ao vincular: " + err.message);
+                                                                    alert("Erro ao salvar e-mail: " + err.message);
                                                                 }
                                                             }
                                                         }}
@@ -382,54 +374,33 @@ export default function AdminPage() {
                                                     size="sm"
                                                     className={`h-7 px-2 text-[10px] border ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
                                                     onClick={async () => {
-                                                        let currentProfileId = u.profile_id;
                                                         let currentPermissions = u.permissions || {};
 
-                                                        // VERIFICAÇÃO DINÂMICA: Se não houver vínculo local, busca no banco em tempo real
-                                                        if (!u.is_auth_user && u.email) {
-                                                            const { data: dbProfile } = await supabase
-                                                                .from('profiles')
-                                                                .select('id, permissions')
-                                                                .eq('email', u.email.toLowerCase().trim())
-                                                                .single();
-
-                                                            if (dbProfile) {
-                                                                currentProfileId = dbProfile.id;
-                                                                currentPermissions = dbProfile.permissions || {};
-                                                            } else {
-                                                                // Se nem no banco existir, oferecemos criar o vínculo agora
-                                                                if (confirm(`O perfil de login para "${u.email}" ainda não foi criado por este usuário (ele nunca logou).\n\nDeseja criar um vínculo de 'Visitante' agora para poder atribuir permissões antecipadamente?`)) {
-                                                                    const { data: newProfile, error: createErr } = await supabase.from('profiles').insert([{
-                                                                        email: u.email.toLowerCase().trim(),
-                                                                        full_name: u.name,
-                                                                        role: 'Visitante',
-                                                                        permissions: { view_all: true }
-                                                                    }]).select().single();
-
-                                                                    if (createErr) {
-                                                                        alert("Erro ao criar vínculo: " + createErr.message);
-                                                                        return;
-                                                                    }
-                                                                    currentProfileId = newProfile.id;
-                                                                    currentPermissions = newProfile.permissions || {};
-                                                                } else {
-                                                                    return;
-                                                                }
-                                                            }
-                                                        } else if (!u.email) {
-                                                            alert("Erro: Este membro não possui e-mail cadastrado. Defina o e-mail no botão amarelo acima primeiro.");
+                                                        if (!u.email) {
+                                                            alert("Erro: Defina o e-mail no botão amarelo acima primeiro.");
                                                             return;
                                                         }
 
                                                         // Executa a atualização das permissões
                                                         const newPerms = { ...currentPermissions, [perm.id]: !currentPermissions[perm.id] };
-                                                        const { error } = await supabase
-                                                            .from('profiles')
-                                                            .update({ permissions: newPerms })
-                                                            .eq('id', currentProfileId);
 
-                                                        if (error) alert("Erro ao salvar: " + error.message);
-                                                        else window.location.reload();
+                                                        if (u.is_auth_user) {
+                                                            // Caso padrão: usuário já logou, salvamos no perfil
+                                                            const { error } = await supabase
+                                                                .from('profiles')
+                                                                .update({ permissions: newPerms })
+                                                                .eq('id', u.profile_id);
+                                                            if (error) alert("Erro ao salvar no perfil: " + error.message);
+                                                            else window.location.reload();
+                                                        } else {
+                                                            // CASO ANTECIPADO: Salvamos na gaveta (team_members)
+                                                            const { error } = await supabase
+                                                                .from('team_members')
+                                                                .update({ permissions: newPerms })
+                                                                .eq('id', u.id);
+                                                            if (error) alert("Erro ao salvar prerrogativa antecipada: " + error.message);
+                                                            else window.location.reload();
+                                                        }
                                                     }}
                                                 >
                                                     {u.permissions?.[perm.id] ? <CheckSquare className="h-3 w-3 mr-1" /> : <Square className="h-3 w-3 mr-1" />}

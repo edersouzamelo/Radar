@@ -144,23 +144,33 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     }
                 }
             } else {
-                // CRIAÇÃO AUTOMÁTICA DE PERFIL VISITANTE PARA NOVOS ACESSOS
+                // CRIAÇÃO AUTOMÁTICA DE PERFIL COM SINCRO DE PERMISSÕES ANTECIPADAS
                 const userId = user?.id;
-                const email = user?.email;
+                const email = user?.email?.toLowerCase().trim();
                 if (userId && email) {
+                    // Busca se o Major já deixou permissões prontas na team_members
+                    const { data: teamData } = await supabase
+                        .from('team_members')
+                        .select('role, permissions')
+                        .eq('email', email)
+                        .maybeSingle();
+
+                    const initialRole = (teamData?.role || 'Visitante') as UserRole;
+                    const initialPermissions = teamData?.permissions || { view_all: true };
+
                     const { error: createError } = await supabase
                         .from('profiles')
                         .insert([{
                             id: userId,
                             email: email,
                             full_name: user?.name || email.split('@')[0],
-                            role: 'Visitante',
-                            permissions: { view_all: true }
+                            role: initialRole,
+                            permissions: initialPermissions
                         }]);
 
                     if (!createError) {
-                        setRole('Visitante');
-                        setPermissions({ view_all: true });
+                        setRole(initialRole);
+                        setPermissions(initialPermissions);
                     }
                 }
             }
