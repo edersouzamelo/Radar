@@ -380,16 +380,55 @@ export default function AdminPage() {
                                                     key={perm.id}
                                                     variant="ghost"
                                                     size="sm"
-                                                    className={`h-7 px-2 text-[10px] border ${!u.is_auth_user ? 'opacity-50 cursor-not-allowed' : ''} ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
+                                                    className={`h-7 px-2 text-[10px] border ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
                                                     onClick={async () => {
-                                                        if (!u.is_auth_user) {
-                                                            alert("Erro: Este membro ainda não possui um perfil de acesso vinculado.\n\nPor favor, defina o e-mail clicando no botão amarelo acima primeiro.");
+                                                        let currentProfileId = u.profile_id;
+                                                        let currentPermissions = u.permissions || {};
+
+                                                        // VERIFICAÇÃO DINÂMICA: Se não houver vínculo local, busca no banco em tempo real
+                                                        if (!u.is_auth_user && u.email) {
+                                                            const { data: dbProfile } = await supabase
+                                                                .from('profiles')
+                                                                .select('id, permissions')
+                                                                .eq('email', u.email.toLowerCase().trim())
+                                                                .single();
+
+                                                            if (dbProfile) {
+                                                                currentProfileId = dbProfile.id;
+                                                                currentPermissions = dbProfile.permissions || {};
+                                                            } else {
+                                                                // Se nem no banco existir, oferecemos criar o vínculo agora
+                                                                if (confirm(`O perfil de login para "${u.email}" ainda não foi criado por este usuário (ele nunca logou).\n\nDeseja criar um vínculo de 'Visitante' agora para poder atribuir permissões antecipadamente?`)) {
+                                                                    const { data: newProfile, error: createErr } = await supabase.from('profiles').insert([{
+                                                                        email: u.email.toLowerCase().trim(),
+                                                                        full_name: u.name,
+                                                                        role: 'Visitante',
+                                                                        permissions: { view_all: true }
+                                                                    }]).select().single();
+
+                                                                    if (createErr) {
+                                                                        alert("Erro ao criar vínculo: " + createErr.message);
+                                                                        return;
+                                                                    }
+                                                                    currentProfileId = newProfile.id;
+                                                                    currentPermissions = newProfile.permissions || {};
+                                                                } else {
+                                                                    return;
+                                                                }
+                                                            }
+                                                        } else if (!u.email) {
+                                                            alert("Erro: Este membro não possui e-mail cadastrado. Defina o e-mail no botão amarelo acima primeiro.");
                                                             return;
                                                         }
-                                                        const newPerms = { ...(u.permissions || {}), [perm.id]: !u.permissions?.[perm.id] };
-                                                        const { error } = await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
 
-                                                        if (error) alert("Erro: " + error.message);
+                                                        // Executa a atualização das permissões
+                                                        const newPerms = { ...currentPermissions, [perm.id]: !currentPermissions[perm.id] };
+                                                        const { error } = await supabase
+                                                            .from('profiles')
+                                                            .update({ permissions: newPerms })
+                                                            .eq('id', currentProfileId);
+
+                                                        if (error) alert("Erro ao salvar: " + error.message);
                                                         else window.location.reload();
                                                     }}
                                                 >
