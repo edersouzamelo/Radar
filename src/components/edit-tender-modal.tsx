@@ -15,14 +15,14 @@ interface EditTenderModalProps {
 }
 
 export function EditTenderModal({ tender }: EditTenderModalProps) {
-    const { role } = useUser();
+    const { role, hasPermission } = useUser();
     const { updateTender } = useTenders();
     const [open, setOpen] = useState(false);
 
-    // Permissões: Apenas Chefe SALC, Pregoeiro e Auxiliares
-    const canEdit = ['Chefe da Seção de Licitações', 'Pregoeiro', 'Auxiliar'].includes(role);
+    const canEditTender = hasPermission('edit_tenders') || role === 'Administrador';
+    const canEditDates = hasPermission('edit_dates') || role === 'Administrador';
 
-    if (!canEdit) return null;
+    if (!canEditTender && !canEditDates) return null;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -101,7 +101,8 @@ export function EditTenderModal({ tender }: EditTenderModalProps) {
                                 id="isGCALC"
                                 name="isGCALC"
                                 defaultChecked={tender.isGCALC}
-                                className="h-4 w-4 rounded border-gray-300 text-radar-gold focus:ring-radar-gold"
+                                disabled={!canEditTender}
+                                className="h-4 w-4 rounded border-gray-300 text-radar-gold focus:ring-radar-gold disabled:opacity-50"
                             />
                             <Label htmlFor="isGCALC" className="font-bold">
                                 É GCALC?

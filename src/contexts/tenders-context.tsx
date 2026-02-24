@@ -4,6 +4,7 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect,
 import { Tender, Person, Pregoeiro, Supervisor } from '@/types';
 import { tenders as initialTenders, DATA_VERSION } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
+import { useUser } from './user-context';
 
 interface TendersContextType {
     tenders: Tender[];
@@ -363,17 +364,27 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     }, [history]);
 
     const toggleConferenceColumn = useCallback(() => setShowConferenceColumn(prev => !prev), []);
+    const { role: userRole, hasPermission } = useUser();
+
     const setConferenceStatus = useCallback((id: string, status: 'OK' | 'Pendente') => {
+        if (!hasPermission('bulk_check') && userRole !== 'Administrador') {
+            alert("Apenas perfis autorizados podem alterar dados de conferência.");
+            return;
+        }
         saveHistory();
         setConferenceStatuses(prev => ({ ...prev, [id]: status }));
-    }, [saveHistory]);
+    }, [saveHistory, hasPermission, userRole]);
 
     const bulkSetConferenceStatus = useCallback((status: 'OK' | 'Pendente') => {
+        if (!hasPermission('bulk_check') && userRole !== 'Administrador') {
+            alert("Você não tem prerrogativa para realizar conferência em massa.");
+            return;
+        }
         saveHistory();
         const next: Record<string, 'OK' | 'Pendente'> = {};
         tenders.forEach(t => next[t.id] = status);
         setConferenceStatuses(next);
-    }, [tenders, saveHistory]);
+    }, [tenders, saveHistory, hasPermission, userRole]);
 
     const toggleDateCheck = useCallback((tenderId: string, dateKey: string) => {
         saveHistory();
@@ -381,6 +392,10 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     }, [saveHistory]);
 
     const deleteTender = useCallback((id: string) => {
+        if (userRole !== 'Administrador') {
+            alert("Apenas o Administrador pode excluir pregões.");
+            return;
+        }
         if (confirm("🚨 Excluir pregão?")) {
             saveHistory();
             setTenders(prev => prev.filter(t => t.id !== id));
@@ -389,7 +404,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                 if (error) console.error('[Delete] Erro ao deletar do Supabase:', error.message);
             });
         }
-    }, [saveHistory]);
+    }, [saveHistory, userRole]);
 
     const addTenderBelow = useCallback((id: string) => {
         saveHistory();
@@ -426,8 +441,12 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     }, [saveHistory]);
 
     const updateTender = useCallback((id: string, updates: Partial<Tender>, editorName?: string) => {
+        if (!hasPermission('edit_tenders') && userRole !== 'Administrador') {
+            console.warn("Usuário sem permissão de edição ignorado.");
+            return;
+        }
         setTenders(prev => prev.map(t => t.id === id ? { ...t, ...updates, lastUpdatedAt: new Date().toISOString(), lastUpdatedBy: editorName || t.lastUpdatedBy } : t));
-    }, []);
+    }, [hasPermission, userRole]);
 
     const saveAndUpdateTender = useCallback((id: string, updates: Partial<Tender>, editorName?: string) => {
         saveHistory();

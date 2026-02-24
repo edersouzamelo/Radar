@@ -3,6 +3,7 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { supabase } from '@/lib/supabase';
 
 export type UserRole =
+    | 'Administrador'
     | 'Ordenador de Despesas'
     | 'Agente Diretor'
     | 'Chefe da Seção de Licitações'
@@ -10,22 +11,79 @@ export type UserRole =
     | 'Auxiliar'
     | 'Setor Requisitante';
 
+export interface UserPermissions {
+    edit_tenders?: boolean;
+    edit_dates?: boolean;
+    edit_users?: boolean;
+    view_all?: boolean;
+    bulk_check?: boolean;
+}
+
 interface UserContextType {
     role: UserRole;
+    permissions: UserPermissions;
     setRole: (role: UserRole) => void;
     isAuthenticated: boolean;
-    user: { name: string; email: string; avatar?: string } | null;
+    user: { id: string; name: string; email: string; avatar?: string } | null;
+    onlineUsers: Array<{ id: string; name: string; email: string; avatar?: string; lastSeen: string }>;
     loginWithGoogle: () => Promise<void>;
-    login: (role: UserRole, name: string, email: string) => void; // Mantido para compatibilidade legado
+    login: (role: UserRole, name: string, email: string) => void;
     logout: () => Promise<void>;
+    hasPermission: (permission: keyof UserPermissions) => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [role, setRole] = useState<UserRole>('Chefe da Seção de Licitações');
+    const [role, setRole] = useState<UserRole>('Setor Requisitante');
+    const [permissions, setPermissions] = useState<UserPermissions>({});
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [user, setUser] = useState<{ name: string; email: string; avatar?: string } | null>(null);
+    const [user, setUser] = useState<{ id: string; name: string; email: string; avatar?: string } | null>(null);
+    const [onlineUsers, setOnlineUsers] = useState<UserContextType['onlineUsers']>([]);
+
+    // Rastreamento de Presença (Presence)
+    useEffect(() => {
+        if (!isAuthenticated || !user || !supabase) return;
+
+        const channel = supabase.channel('radar-presence', {
+            config: { presence: { key: user.id } }
+        });
+
+        channel
+            .on('presence', { event: 'sync' }, () => {
+                const state = channel.presenceState();
+                const users: any[] = [];
+                Object.values(state).forEach((presence: any) => {
+                    presence.forEach((p: any) => {
+                        users.push({
+                            id: p.id,
+                            name: p.name,
+                            email: p.email,
+                            avatar: p.avatar,
+                            lastSeen: new Date().toISOString()
+                        });
+                    });
+                });
+                setOnlineUsers(users);
+
+                // Atualiza last_seen no banco (opcional, mas bom para histórico)
+                supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', user.id);
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await channel.track({
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        avatar: user.avatar
+                    });
+                }
+            });
+
+        return () => {
+            channel.unsubscribe();
+        };
+    }, [isAuthenticated, user]);
 
     // Carregar dados de autenticação e monitorar mudanças de sessão
     useEffect(() => {
@@ -53,13 +111,43 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return () => subscription.unsubscribe();
     }, []);
 
+    const fetchUserProfile = async (userId: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('role, permissions, is_admin')
+                .eq('id', userId)
+                .single();
+
+            if (data) {
+                setRole(data.role as UserRole);
+                setPermissions(data.permissions || {});
+                // Se for admin, garante todas as permissões
+                if (data.is_admin) {
+                    setPermissions({
+                        edit_tenders: true,
+                        edit_dates: true,
+                        edit_users: true,
+                        view_all: true,
+                        bulk_check: true
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Erro ao carregar perfil:", err);
+        }
+    };
+
     const updateUserFromSession = (session: any) => {
         setIsAuthenticated(true);
-        setUser({
+        const userData = {
+            id: session.user.id,
             name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'Usuário',
             email: session.user.email || '',
             avatar: session.user.user_metadata.avatar_url
-        });
+        };
+        setUser(userData);
+        fetchUserProfile(session.user.id);
     };
 
     const loginWithGoogle = async () => {
@@ -79,7 +167,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const login = (role: UserRole, name: string, email: string) => {
         setIsAuthenticated(true);
         setRole(role);
-        setUser({ name, email });
+        const tempId = `legacy-${Date.now()}`;
+        setUser({ id: tempId, name, email });
         localStorage.setItem('radar-auth', 'true');
         localStorage.setItem('radar-role', role);
         localStorage.setItem('radar-user', JSON.stringify({ name, email }));
@@ -98,15 +187,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('radar-role', newRole);
     };
 
+    const hasPermission = (permission: keyof UserPermissions): boolean => {
+        if (role === 'Administrador') return true;
+        return !!permissions[permission];
+    };
+
     return (
         <UserContext.Provider value={{
             role,
+            permissions,
             setRole: updateRole,
             isAuthenticated,
             user,
+            onlineUsers,
             loginWithGoogle,
             login,
-            logout
+            logout,
+            hasPermission
         }}>
             {children}
         </UserContext.Provider>

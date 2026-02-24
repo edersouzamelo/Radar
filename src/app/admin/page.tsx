@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Shield, UserPlus, Key, UserCog, AlertTriangle, Download, Trash2 } from "lucide-react"
+import { Shield, UserPlus, Key, UserCog, AlertTriangle, Download, Trash2, Users, Radio, CheckSquare, Square } from "lucide-react"
 import { useTenders } from "@/contexts/tenders-context"
 import { exportTendersToCSV } from "@/lib/export-utils"
 import { DatabaseMonitor } from "@/components/admin/database-monitor"
+import { supabase } from "@/lib/supabase"
 import {
     Dialog,
     DialogContent,
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/select"
 
 export default function AdminPage() {
-    const { role, user } = useUser()
+    const { role, user, onlineUsers, hasPermission, permissions: userPermissions } = useUser()
     const {
         tenders,
         pregoeiros,
@@ -46,12 +47,18 @@ export default function AdminPage() {
         deletePerson
     } = useTenders()
 
-    // Unificamos a equipe para exibição, mas mantemos a origem para edição
-    const teamMembers = [
-        ...pregoeiros.map(p => ({ ...p, type: 'pregoeiro' as const })),
-        ...supervisors.map(s => ({ ...s, type: 'supervisor' as const })),
-        ...people.map(p => ({ ...p, type: 'requisitante' as const, role: p.role || 'Requisitante' }))
-    ];
+    const [allProfiles, setAllProfiles] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchProfiles = async () => {
+            const { data } = await supabase.from('profiles').select('*');
+            if (data) setAllProfiles(data);
+        };
+        fetchProfiles();
+    }, []);
+
+    // Unificamos a equipe para exibição, priorizando os perfis do banco
+    const teamMembers = allProfiles;
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [editingMember, setEditingMember] = useState<any>(null)
@@ -96,15 +103,23 @@ export default function AdminPage() {
         }
     }
 
-    if (role !== 'Chefe da Seção de Licitações') {
+    if (role !== 'Administrador' && role !== 'Chefe da Seção de Licitações') {
         return (
             <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
                 <AlertTriangle className="h-16 w-16 text-red-500" />
                 <h1 className="text-2xl font-bold text-radar-dark">Acesso Negado</h1>
-                <p className="text-gray-500">Apenas o Chefe da SALC tem permissão para acessar este módulo.</p>
+                <p className="text-gray-500">Apenas o Administrador ou Chefe da SALC tem permissão para acessar este módulo.</p>
             </div>
         )
     }
+
+    const availablePermissions = [
+        { id: 'edit_tenders', name: 'Editar Pregões', description: 'Alterar dados principais dos processos' },
+        { id: 'edit_dates', name: 'Editar Datas', description: 'Alterar cronogramas e prazos' },
+        { id: 'bulk_check', name: 'Conferência em Massa', description: 'Usar o "Verificar Todos" na lista' },
+        { id: 'edit_users', name: 'Editar Usuários', description: 'Cadastrar novos membros e perfis' },
+        { id: 'view_all', name: 'Visualizar Tudo', description: 'Acesso total de leitura' },
+    ];
 
     return (
         <div className="space-y-6">
@@ -112,9 +127,9 @@ export default function AdminPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-radar-dark dark:text-white flex items-center">
                         <Shield className="mr-2 h-8 w-8 text-radar-gold" />
-                        Gerenciamento de Perfis
+                        Painel de Controle SALC
                     </h1>
-                    <p className="text-muted-foreground">Concessão de acessos e senhas para a equipe da SALC</p>
+                    <p className="text-muted-foreground">Monitoramento ao vivo e gestão de prerrogativas do sistema</p>
                 </div>
                 <div className="flex space-x-2">
                     <Button
@@ -185,8 +200,40 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            <div className="mb-6">
-                <DatabaseMonitor />
+            <div className="grid gap-6 md:grid-cols-3">
+                <Card className="col-span-1 border-green-500/30">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center space-x-2">
+                            <Radio className="h-5 w-5 text-green-500 animate-pulse" />
+                            <CardTitle className="text-lg">Acessando Agora</CardTitle>
+                        </div>
+                        <CardDescription>Usuários online em tempo real</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-3">
+                            {onlineUsers.length === 0 ? (
+                                <p className="text-sm text-muted-foreground italic">Apenas você monitorando...</p>
+                            ) : (
+                                onlineUsers.map((u) => (
+                                    <div key={u.id} className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-800">
+                                        <div className="flex items-center space-x-2">
+                                            <div className="h-2 w-2 bg-green-500 rounded-full" />
+                                            <div>
+                                                <p className="text-xs font-bold text-radar-dark dark:text-white">{u.name}</p>
+                                                <p className="text-[10px] text-muted-foreground">{u.email}</p>
+                                            </div>
+                                        </div>
+                                        <Badge variant="outline" className="text-[8px] h-4 bg-white">ONLINE</Badge>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="col-span-2">
+                    <DatabaseMonitor />
+                </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -201,33 +248,35 @@ export default function AdminPage() {
                                 <div key={u.id} className="group relative flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-radar-gold/50 transition-all shadow-sm">
                                     <div className="flex items-center space-x-4">
                                         <div className="h-10 w-10 bg-radar-dark text-white rounded-full flex items-center justify-center font-bold">
-                                            {u.name[0]}
+                                            {u.full_name ? u.full_name[0] : (u.name ? u.name[0] : '?')}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-radar-dark dark:text-white">{u.name}</p>
+                                            <p className="font-bold text-radar-dark dark:text-white">{u.full_name || u.name}</p>
                                             <p className="text-xs text-muted-foreground">{u.email}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center space-x-1">
-                                        <Badge variant="outline" className="font-black border-radar-dark/30 text-[10px] uppercase tracking-widest mr-2">{u.role}</Badge>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-9 w-9 text-radar-dark hover:bg-radar-gold/20 transition-all"
-                                            onClick={() => setEditingMember(u)}
-                                            title="Editar Perfil"
-                                        >
-                                            <UserCog className="h-5 w-5" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-9 w-9 text-red-500 hover:bg-red-50 transition-all"
-                                            onClick={() => handleDeleteMember(u)}
-                                            title="Remover da Equipe"
-                                        >
-                                            <Trash2 className="h-5 w-5" />
-                                        </Button>
+                                    <div className="flex flex-col space-y-2 mt-4 p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                                        <p className="text-[10px] font-black uppercase text-radar-dark/50 tracking-tighter mb-1">Prerrogativas do Perfil</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {availablePermissions.map(perm => (
+                                                <Button
+                                                    key={perm.id}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={`h-7 px-2 text-[10px] border ${u.role === 'Administrador' ? 'opacity-50 cursor-not-allowed' : ''} ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
+                                                    onClick={async () => {
+                                                        if (u.role === 'Administrador') return;
+                                                        const newPerms = { ...(u.permissions || {}), [perm.id]: !u.permissions?.[perm.id] };
+                                                        await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.id);
+                                                        // O radar-presence disparará o sync ou podemos forçar um reload local
+                                                        window.location.reload(); // Simplificado para garantir sincronia
+                                                    }}
+                                                >
+                                                    {u.permissions?.[perm.id] ? <CheckSquare className="h-3 w-3 mr-1" /> : <Square className="h-3 w-3 mr-1" />}
+                                                    {perm.name}
+                                                </Button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -239,7 +288,7 @@ export default function AdminPage() {
                                 <DialogContent className="bg-white dark:bg-slate-900 border-radar-gold">
                                     <form onSubmit={handleEditMember}>
                                         <DialogHeader>
-                                            <DialogTitle>Editar Membro: {editingMember.name}</DialogTitle>
+                                            <DialogTitle>Editar Membro: {editingMember.full_name || editingMember.name}</DialogTitle>
                                             <DialogDescription>Atualize os dados de contato ou função.</DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
@@ -285,7 +334,7 @@ export default function AdminPage() {
                         <div className="space-y-2">
                             <Label htmlFor="user-select">Selecionar Usuário</Label>
                             <select id="user-select" className="w-full p-2 bg-white dark:bg-gray-800 border rounded-md">
-                                {teamMembers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                {teamMembers.map(u => <option key={u.id} value={u.id}>{u.full_name || u.name}</option>)}
                             </select>
                         </div>
                         <div className="space-y-2">
