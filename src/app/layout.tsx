@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  minimumScale: 0.1,
   maximumScale: 5,
   userScalable: true,
 };
@@ -34,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br" className="h-full bg-radar-cream select-none overflow-x-hidden" suppressHydrationWarning>
-      <body className={`${inter.className} flex h-full min-h-screen bg-radar-cream overflow-x-hidden`}>
+    <html lang="pt-br" className="bg-radar-cream" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-radar-cream`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

@@ -787,7 +787,7 @@ export default function TendersPage() {
     });
 
     return (
-        <div className="flex flex-col flex-1 w-full h-full gap-4">
+        <div className="flex flex-col flex-1 w-full gap-4">
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold tracking-tight text-foreground mr-4">Pregões em Monitoramento</h1>
@@ -964,14 +964,14 @@ export default function TendersPage() {
                 </div>
             )}
 
-            <Card className="flex flex-col flex-1 overflow-hidden border-none shadow-sm dark:bg-slate-900/50">
+            <Card className="flex flex-col flex-1 border-none shadow-sm dark:bg-slate-900/50 bg-radar-cream">
                 <CardHeader className="shrink-0">
                     <CardTitle>Todos os Processos</CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 p-0 relative min-h-0">
+                <CardContent className="flex-1 p-0 relative">
                     <div
                         ref={tableContainerRef}
-                        className="absolute inset-0 overflow-auto force-scrollbar border rounded-lg"
+                        className="w-full overflow-auto force-scrollbar border rounded-lg bg-white"
                     >
                         <table className="w-full text-xs text-left text-gray-500 min-w-[2000px]">
                             <thead className="text-[10px] text-muted-foreground uppercase bg-white dark:bg-gray-950 border-b sticky top-0 z-50 shadow-sm">

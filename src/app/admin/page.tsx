@@ -329,35 +329,15 @@ export default function AdminPage() {
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-radar-dark dark:text-white truncate">{u.full_name || u.name}</p>
                                             <div className="flex items-center gap-2 group/email">
-                                                <p className="text-xs text-muted-foreground truncate">{u.email || 'Sem e-mail'}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{u.email || '⚠️ Sem e-mail'}</p>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-4 w-4 opacity-0 group-hover/email:opacity-100 transition-opacity"
+                                                    className="h-6 w-6 bg-radar-gold/10 hover:bg-radar-gold text-radar-dark border border-radar-gold/20"
                                                     onClick={async () => {
-                                                        const newEmail = prompt(`Alterar e-mail de ${u.name}:`, u.email || "");
+                                                        const newEmail = prompt(`Definir E-mail Institucional para ${u.name}:`, u.email || "");
                                                         if (newEmail !== null && newEmail.trim() !== "") {
                                                             const emailLower = newEmail.toLowerCase().trim();
-
-                                                            // 1. Atualiza na tabela de membros
-                                                            if (u.type === 'pregoeiro') updatePregoeiro(u.id, { ...u, email: emailLower });
-                                                            else if (u.type === 'supervisor') updateSupervisor(u.id, { ...u, email: emailLower });
-                                                            else updatePerson(u.id, { ...u, email: emailLower });
-
-                                                            // 2. Tenta encontrar ou criar o perfil para o vínculo (Convite)
-                                                            const { data: existingProfile } = await supabase
-                                                                .from('profiles')
-                                                                .select('id')
-                                                                .eq('email', emailLower)
-                                                                .single();
-
-                                                            if (!existingProfile) {
-                                                                // Se não existir, criamos um perfil 'Visitante' para que o vínculo ocorra
-                                                                await supabase.from('profiles').insert([{
-                                                                    email: emailLower,
-                                                                    full_name: u.name,
-                                                                    role: 'Visitante',
-                                                                    permissions: { view_all: true }
                                                                 }]);
                                                             }
 
@@ -403,79 +383,79 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
+                    </div>
 
-                        {/* Modal de Edição */}
-                        {editingMember && (
-                            <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
-                                <DialogContent className="bg-white dark:bg-slate-900 border-radar-gold">
-                                    <form onSubmit={handleEditMember}>
-                                        <DialogHeader>
-                                            <DialogTitle>Editar Membro: {editingMember.full_name || editingMember.name}</DialogTitle>
-                                            <DialogDescription>Atualize os dados de contato ou função.</DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="edit-name">Nome / Posto ou Grad</Label>
-                                                <Input id="edit-name" value={editingMember.name} onChange={e => setEditingMember({ ...editingMember, name: e.target.value })} />
-                                            </div>
-                                            <div className="grid gap-2 text-radar-dark dark:text-white">
-                                                <Label htmlFor="edit-email">E-mail</Label>
-                                                <Input id="edit-email" type="email" value={editingMember.email} onChange={e => setEditingMember({ ...editingMember, email: e.target.value })} />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="edit-whatsapp">WhatsApp</Label>
-                                                <Input id="edit-whatsapp" value={editingMember.whatsapp} onChange={e => setEditingMember({ ...editingMember, whatsapp: e.target.value })} />
-                                            </div>
-                                            <div className="grid gap-2 text-radar-dark dark:text-white">
-                                                <Label>Função / Cargo</Label>
-                                                <Input value={editingMember.role} onChange={e => setEditingMember({ ...editingMember, role: e.target.value })} />
-                                            </div>
-                                            {editingMember.type === 'requisitante' && (
-                                                <div className="grid gap-2 text-radar-dark dark:text-white">
-                                                    <Label htmlFor="edit-sector">OM / Setor Requisitante</Label>
-                                                    <Input id="edit-sector" value={editingMember.sector} onChange={e => setEditingMember({ ...editingMember, sector: e.target.value })} />
-                                                </div>
-                                            )}
+                    {/* Modal de Edição */}
+                    {editingMember && (
+                        <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
+                            <DialogContent className="bg-white dark:bg-slate-900 border-radar-gold">
+                                <form onSubmit={handleEditMember}>
+                                    <DialogHeader>
+                                        <DialogTitle>Editar Membro: {editingMember.full_name || editingMember.name}</DialogTitle>
+                                        <DialogDescription>Atualize os dados de contato ou função.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="edit-name">Nome / Posto ou Grad</Label>
+                                            <Input id="edit-name" value={editingMember.name} onChange={e => setEditingMember({ ...editingMember, name: e.target.value })} />
                                         </div>
-                                        <DialogFooter>
-                                            <Button type="submit" className="bg-radar-dark text-white w-full">Salvar Alterações</Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                        )}
-                    </CardContent>
-                </Card>
+                                        <div className="grid gap-2 text-radar-dark dark:text-white">
+                                            <Label htmlFor="edit-email">E-mail</Label>
+                                            <Input id="edit-email" type="email" value={editingMember.email} onChange={e => setEditingMember({ ...editingMember, email: e.target.value })} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="edit-whatsapp">WhatsApp</Label>
+                                            <Input id="edit-whatsapp" value={editingMember.whatsapp} onChange={e => setEditingMember({ ...editingMember, whatsapp: e.target.value })} />
+                                        </div>
+                                        <div className="grid gap-2 text-radar-dark dark:text-white">
+                                            <Label>Função / Cargo</Label>
+                                            <Input value={editingMember.role} onChange={e => setEditingMember({ ...editingMember, role: e.target.value })} />
+                                        </div>
+                                        {editingMember.type === 'requisitante' && (
+                                            <div className="grid gap-2 text-radar-dark dark:text-white">
+                                                <Label htmlFor="edit-sector">OM / Setor Requisitante</Label>
+                                                <Input id="edit-sector" value={editingMember.sector} onChange={e => setEditingMember({ ...editingMember, sector: e.target.value })} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="submit" className="bg-radar-dark text-white w-full">Salvar Alterações</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    )}
+                </CardContent>
+            </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Segurança e Senhas</CardTitle>
-                        <CardDescription>Redefinição de credenciais de acesso</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="user-select">Selecionar Usuário</Label>
-                            <select id="user-select" className="w-full p-2 bg-white dark:bg-gray-800 border rounded-md">
-                                {teamMembers.map(u => <option key={u.id} value={u.id}>{u.full_name || u.name}</option>)}
-                            </select>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Segurança e Senhas</CardTitle>
+                    <CardDescription>Redefinição de credenciais de acesso</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="user-select">Selecionar Usuário</Label>
+                        <select id="user-select" className="w-full p-2 bg-white dark:bg-gray-800 border rounded-md">
+                            {teamMembers.map(u => <option key={u.id} value={u.id}>{u.full_name || u.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="new-password">Nova Senha Temporária</Label>
+                        <div className="flex space-x-2">
+                            <Input id="new-password" type="password" placeholder="********" />
+                            <Button variant="outline">
+                                <Key className="mr-2 h-4 w-4" />
+                                Gerar
+                            </Button>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="new-password">Nova Senha Temporária</Label>
-                            <div className="flex space-x-2">
-                                <Input id="new-password" type="password" placeholder="********" />
-                                <Button variant="outline">
-                                    <Key className="mr-2 h-4 w-4" />
-                                    Gerar
-                                </Button>
-                            </div>
-                        </div>
-                        <Button className="w-full bg-radar-dark text-white hover:bg-gray-800">
-                            Atualizar Credenciais
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
+                    </div>
+                    <Button className="w-full bg-radar-dark text-white hover:bg-gray-800">
+                        Atualizar Credenciais
+                    </Button>
+                </CardContent>
+            </Card>
         </div>
+        </div >
     )
 }
