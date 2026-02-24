@@ -36,7 +36,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         { name: 'Contato', href: '/contact', icon: MessageSquare },
     ];
 
-    if (role === 'Chefe da Seção de Licitações') {
+    if (role === 'Chefe da Seção de Licitações' || role === 'Administrador') {
         navigation.push({ name: 'Gerenciamento de Perfis', href: '/admin', icon: Shield });
         navigation.push({ name: 'Central de Alertas', href: '/admin/notifications', icon: Bell });
     }

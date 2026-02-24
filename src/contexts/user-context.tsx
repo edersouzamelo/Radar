@@ -116,10 +116,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 .single();
 
             if (data) {
-                setRole(data.role as UserRole);
-                setPermissions(data.permissions || {});
-                // Se for admin, garante todas as permissões
-                if (data.is_admin) {
+                // FAILSAFE: Respeita o Major independente do que vier do banco
+                if (user?.email === 'eder.souzamelo@gmail.com') {
+                    setRole('Administrador');
                     setPermissions({
                         edit_tenders: true,
                         edit_dates: true,
@@ -127,6 +126,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
                         view_all: true,
                         bulk_check: true
                     });
+                } else {
+                    setRole(data.role as UserRole);
+                    setPermissions(data.permissions || {});
+                    // Se for admin no banco, garante todas as permissões
+                    if (data.is_admin) {
+                        setPermissions({
+                            edit_tenders: true,
+                            edit_dates: true,
+                            edit_users: true,
+                            view_all: true,
+                            bulk_check: true
+                        });
+                    }
                 }
             }
         } catch (err) {
@@ -136,13 +148,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const updateUserFromSession = (session: any) => {
         setIsAuthenticated(true);
+        const email = session.user.email || '';
         const userData = {
             id: session.user.id,
-            name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'Usuário',
-            email: session.user.email || '',
+            name: session.user.user_metadata.full_name || email.split('@')[0] || 'Usuário',
+            email: email,
             avatar: session.user.user_metadata.avatar_url
         };
         setUser(userData);
+
+        // FAILSAFE: Se for o Major, força Admin independente do banco
+        if (email === 'eder.souzamelo@gmail.com') {
+            setRole('Administrador');
+            setPermissions({
+                edit_tenders: true,
+                edit_dates: true,
+                edit_users: true,
+                view_all: true,
+                bulk_check: true
+            });
+        }
+
         fetchUserProfile(session.user.id);
     };
 

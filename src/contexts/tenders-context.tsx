@@ -188,15 +188,26 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     return getRowNum(a.id) - getRowNum(b.id);
                 });
 
+                // RESGATE DE CHECKS (JSONB + Tabela Legada)
+                const { data: legacyChecks } = await supabase.from('date_checks').select('*');
+
                 const newConfStatuses: Record<string, 'OK' | 'Pendente'> = {};
                 const newDateChecks: Record<string, Record<string, boolean>> = {};
+
                 cloudTenders.forEach(t => {
                     if (t.verification_status) newConfStatuses[t.id] = t.verification_status as 'OK' | 'Pendente';
-                    // Os checks ficam embutidos em dates._date_checks (JSONB confiável)
-                    const checks = t.dates?._date_checks || t.dates?._audit_trail_checks || t.date_checks || {};
-                    if (Object.keys(checks).length > 0) {
-                        newDateChecks[t.id] = checks;
-                    }
+
+                    // 1. Pega do JSONB (fonte moderna)
+                    const jsonbChecks = t.dates?._date_checks || t.dates?._audit_trail_checks || {};
+
+                    // 2. Filtra da tabela legada para este tender (fonte de backup)
+                    const tenderLegacyChecks: Record<string, boolean> = {};
+                    legacyChecks?.filter(lc => lc.tender_id === t.id).forEach(lc => {
+                        tenderLegacyChecks[lc.date_key] = lc.is_checked;
+                    });
+
+                    // 3. Mescla (prioridade para JSONB se existir algo)
+                    newDateChecks[t.id] = { ...tenderLegacyChecks, ...jsonbChecks };
                 });
 
                 const totalDates = Object.values(newDateChecks).reduce((acc, curr) => acc + Object.keys(curr).length, 0);
