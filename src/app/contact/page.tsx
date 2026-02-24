@@ -23,7 +23,7 @@ export default function ContactPage() {
             </div>
 
             <Card className="border-radar-gold border-2 shadow-none overflow-hidden rounded-[2rem] bg-white">
-                <CardHeader className="bg-white border-b border-gray-100 p-10 relative">
+                <CardHeader className="bg-slate-50 border-b border-gray-100 p-10 relative">
                     <div className="flex items-center gap-8 relative z-10">
                         <div className="h-28 w-28 rounded-3xl bg-radar-dark flex items-center justify-center text-radar-gold text-5xl font-black transform -rotate-3 transition-transform duration-300">
                             EM

@@ -334,15 +334,35 @@ export default function AdminPage() {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-4 w-4 opacity-0 group-hover/email:opacity-100 transition-opacity"
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                         const newEmail = prompt(`Alterar e-mail de ${u.name}:`, u.email || "");
-                                                        if (newEmail !== null) {
-                                                            if (u.type === 'pregoeiro') updatePregoeiro(u.id, { ...u, email: newEmail });
-                                                            else if (u.type === 'supervisor') updateSupervisor(u.id, { ...u, email: newEmail });
-                                                            else updatePerson(u.id, { ...u, email: newEmail });
+                                                        if (newEmail !== null && newEmail.trim() !== "") {
+                                                            const emailLower = newEmail.toLowerCase().trim();
 
-                                                            // Forçar recarga para atualizar o vínculo com profiles
-                                                            setTimeout(() => window.location.reload(), 500);
+                                                            // 1. Atualiza na tabela de membros
+                                                            if (u.type === 'pregoeiro') updatePregoeiro(u.id, { ...u, email: emailLower });
+                                                            else if (u.type === 'supervisor') updateSupervisor(u.id, { ...u, email: emailLower });
+                                                            else updatePerson(u.id, { ...u, email: emailLower });
+
+                                                            // 2. Tenta encontrar ou criar o perfil para o vínculo (Convite)
+                                                            const { data: existingProfile } = await supabase
+                                                                .from('profiles')
+                                                                .select('id')
+                                                                .eq('email', emailLower)
+                                                                .single();
+
+                                                            if (!existingProfile) {
+                                                                // Se não existir, criamos um perfil 'Visitante' para que o vínculo ocorra
+                                                                await supabase.from('profiles').insert([{
+                                                                    email: emailLower,
+                                                                    full_name: u.name,
+                                                                    role: 'Visitante',
+                                                                    permissions: { view_all: true }
+                                                                }]);
+                                                            }
+
+                                                            alert("E-mail atualizado. Se o perfil não existia, criamos um vínculo de 'Visitante' para este e-mail.");
+                                                            window.location.reload();
                                                         }
                                                     }}
                                                 >
