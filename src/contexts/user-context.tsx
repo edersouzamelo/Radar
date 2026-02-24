@@ -9,6 +9,7 @@ export type UserRole =
     | 'Chefe da Seção de Licitações'
     | 'Pregoeiro'
     | 'Auxiliar'
+    | 'Visitante'
     | 'Setor Requisitante';
 
 export interface UserPermissions {
@@ -26,6 +27,7 @@ interface UserContextType {
     isAuthenticated: boolean;
     user: { id: string; name: string; email: string; avatar?: string } | null;
     onlineUsers: Array<{ id: string; name: string; email: string; avatar?: string; lastSeen: string }>;
+    dailyUsers: Array<{ id: string; name: string; email: string; avatar?: string; lastSeen: string }>;
     loginWithGoogle: () => Promise<void>;
     login: (role: UserRole, name: string, email: string) => void;
     logout: () => Promise<void>;
@@ -40,6 +42,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [user, setUser] = useState<{ id: string; name: string; email: string; avatar?: string } | null>(null);
     const [onlineUsers, setOnlineUsers] = useState<UserContextType['onlineUsers']>([]);
+    const [dailyUsers, setDailyUsers] = useState<UserContextType['onlineUsers']>([]);
 
     // Rastreamento de Presença (Presence)
     useEffect(() => {
@@ -127,7 +130,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                         bulk_check: true
                     });
                 } else {
-                    setRole(data.role as UserRole);
+                    setRole((data.role || 'Visitante') as UserRole);
                     setPermissions(data.permissions || {});
                     // Se for admin no banco, garante todas as permissões
                     if (data.is_admin) {
@@ -140,11 +143,58 @@ export function UserProvider({ children }: { children: ReactNode }) {
                         });
                     }
                 }
+            } else {
+                // CRIAÇÃO AUTOMÁTICA DE PERFIL VISITANTE PARA NOVOS ACESSOS
+                const userId = user?.id;
+                const email = user?.email;
+                if (userId && email) {
+                    const { error: createError } = await supabase
+                        .from('profiles')
+                        .insert([{
+                            id: userId,
+                            email: email,
+                            full_name: user?.name || email.split('@')[0],
+                            role: 'Visitante',
+                            permissions: { view_all: true }
+                        }]);
+
+                    if (!createError) {
+                        setRole('Visitante');
+                        setPermissions({ view_all: true });
+                    }
+                }
             }
         } catch (err) {
             console.error("Erro ao carregar perfil:", err);
         }
     };
+
+    // Buscar usuários que acessaram hoje
+    useEffect(() => {
+        const fetchDailyUsers = async () => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .gte('last_seen', today.toISOString());
+
+            if (data) {
+                setDailyUsers(data.map(p => ({
+                    id: p.id,
+                    name: p.full_name || p.email.split('@')[0],
+                    email: p.email,
+                    avatar: p.avatar_url,
+                    lastSeen: p.last_seen
+                })));
+            }
+        };
+
+        fetchDailyUsers();
+        const interval = setInterval(fetchDailyUsers, 300000); // 5 min
+        return () => clearInterval(interval);
+    }, []);
 
     const updateUserFromSession = (session: any) => {
         setIsAuthenticated(true);
@@ -215,6 +265,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             isAuthenticated,
             user,
             onlineUsers,
+            dailyUsers,
             loginWithGoogle,
             login,
             logout,

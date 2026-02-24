@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select"
 
 export default function AdminPage() {
-    const { role, user, onlineUsers, hasPermission, permissions: userPermissions } = useUser()
+    const { role, user, onlineUsers, dailyUsers, hasPermission, permissions: userPermissions } = useUser()
     const {
         tenders,
         pregoeiros,
@@ -63,8 +63,10 @@ export default function AdminPage() {
         ...supervisors.map(s => ({ ...s, type: 'supervisor' })),
         ...people.map(p => ({ ...p, type: 'requisitante' }))
     ].map(member => {
-        // Tenta encontrar um perfil (login) correspondente pelo e-mail
-        const profile = allProfiles.find(p => p.email?.toLowerCase() === member.email?.toLowerCase());
+        // Tenta encontrar um perfil (login) correspondente pelo e-mail com busca robusta
+        const memberEmail = member.email?.toLowerCase().trim();
+        const profile = allProfiles.find(p => p.email?.toLowerCase().trim() === memberEmail);
+
         return {
             ...member,
             // Normalização de campos para evitar erros de tipagem e duplicidade
@@ -248,6 +250,65 @@ export default function AdminPage() {
 
                 <div className="col-span-2">
                     <DatabaseMonitor />
+                </div>
+
+                <div className="col-span-1 lg:col-span-1">
+                    <Card className="h-full border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
+                        <CardHeader className="bg-slate-50 dark:bg-slate-800/50 py-3">
+                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                <Radio className="w-4 h-4 text-green-500 animate-pulse" />
+                                Monitor de Adesão Diária
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4">
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
+                                        Acessando Agora
+                                        <Badge variant="outline" className="text-[10px] h-4 bg-green-50 text-green-700 border-green-200">
+                                            {onlineUsers.length} ONLINE
+                                        </Badge>
+                                    </p>
+                                    <div className="space-y-2">
+                                        {onlineUsers.map(u => (
+                                            <div key={u.id} className="flex items-center gap-3 p-2 bg-green-50/30 rounded-lg border border-green-100/50">
+                                                <div className="h-8 w-8 rounded-full bg-radar-dark text-white flex items-center justify-center text-xs font-bold">
+                                                    {u.name[0]}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-bold truncate">{u.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
+                                                </div>
+                                                <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
+                                        Histórico do Dia (Acessos Hoje)
+                                        <span className="text-[10px] font-bold text-slate-400">
+                                            {dailyUsers.length} TOTAL
+                                        </span>
+                                    </p>
+                                    <div className="space-y-2">
+                                        {dailyUsers.filter(du => !onlineUsers.find(ou => ou.id === du.id)).map(u => (
+                                            <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group">
+                                                <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold group-hover:bg-radar-gold group-hover:text-radar-dark transition-colors">
+                                                    {u.name[0]}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-medium truncate">{u.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground truncate">Visto em: {new Date(u.lastSeen).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
 

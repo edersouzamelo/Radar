@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Mail, Linkedin, GraduationCap, Link2, BookOpen, Globe } from "lucide-react"
+import { Mail, Linkedin, GraduationCap, Link2, BookOpen, Globe, Shield } from "lucide-react"
 
 export default function ContactPage() {
     const contactLinks = [
@@ -22,15 +22,19 @@ export default function ContactPage() {
                 <p className="text-muted-foreground">Perfis profissionais, acadêmicos e meios de comunicação direta.</p>
             </div>
 
-            <Card className="border-radar-gold/20 shadow-xl overflow-hidden">
-                <CardHeader className="bg-radar-dark text-white p-8">
-                    <div className="flex items-center gap-6">
-                        <div className="h-24 w-24 rounded-full bg-radar-gold flex items-center justify-center text-radar-dark text-4xl font-bold shadow-lg">
+            <Card className="border-radar-gold shadow-2xl overflow-hidden rounded-[2rem]">
+                <CardHeader className="bg-radar-dark text-white p-10 relative">
+                    <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <Shield className="w-32 h-32 -rotate-12" />
+                    </div>
+                    <div className="flex items-center gap-8 relative z-10">
+                        <div className="h-28 w-28 rounded-3xl bg-radar-gold flex items-center justify-center text-radar-dark text-5xl font-black shadow-[0_0_30px_rgba(235,174,48,0.3)] transform -rotate-3 hover:rotate-0 transition-transform duration-300">
                             EM
                         </div>
-                        <div>
-                            <CardTitle className="text-3xl">Edervaldo José de Souza Melo</CardTitle>
-                            <CardDescription className="text-radar-gold font-medium mt-1">Desenvolvedor do Sistema RADAR</CardDescription>
+                        <div className="space-y-1">
+                            <CardTitle className="text-4xl font-black tracking-tight drop-shadow-md">Edervaldo José de Souza Melo</CardTitle>
+                            <CardDescription className="text-radar-gold text-lg font-bold tracking-widest uppercase opacity-90 drop-shadow-sm">Desenvolvedor do Sistema RADAR</CardDescription>
+                            <div className="h-1 w-20 bg-radar-gold rounded-full mt-4" />
                         </div>
                     </div>
                 </CardHeader>
