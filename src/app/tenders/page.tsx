@@ -119,6 +119,39 @@ const TenderRow = memo(({
         return "bg-white dark:bg-slate-900";
     };
 
+    // Helper para cor do Compromisso
+    const getCommitmentStyles = (value: string) => {
+        switch (value) {
+            case 'GCALC': return "bg-blue-900 text-white border-blue-900";
+            case 'PCA da OM': return "bg-emerald-100 text-emerald-900 border-emerald-200";
+            case 'Operação Perseu': return "bg-rose-100 text-rose-900 border-rose-200";
+            default: return "bg-white dark:bg-slate-900 border-radar-dark/20";
+        }
+    };
+
+    // Helper para cor do Coordenador
+    const getCoordinatorStyles = (value: string) => {
+        switch (value) {
+            case 'CCOL': return "bg-[#556B2F] text-white border-[#556B2F]"; // Verde Oliva
+            case 'CAF': return "bg-[#8B4513] text-white border-[#8B4513]";  // Marrom
+            case '9º B Sup': return "bg-amber-100 text-amber-900 border-amber-200"; // Amarelo claro pastel
+            default: return "bg-white dark:bg-slate-900 border-radar-dark/20";
+        }
+    };
+
+    // Helper para cor do Requisitante
+    const getRequesterStyles = (value: string) => {
+        switch (value) {
+            case '9º B Mnt': return "bg-slate-700 text-slate-50 border-slate-700"; // Cinza escuro / letra clara
+            case '9º B Sup': return "bg-amber-100 text-amber-900 border-amber-200"; // Amarelo claro pastel / letra escura
+            case '18º B Trnp': return "bg-orange-100 text-orange-900 border-orange-200"; // Laranja pastel / letra escura
+            case 'Cia Cmdo': return "bg-white text-red-600 border-red-200"; // Branco / letra vermelha
+            case '9º B Sau': return "bg-red-600 text-white border-red-600"; // Vermelho normal / letra clara
+            case 'Cmdo 9º Gpt': return "bg-slate-200 text-slate-800 border-slate-300"; // Cinza claro / letra escura
+            default: return "bg-white dark:bg-slate-900 border-radar-dark/20";
+        }
+    };
+
     // Componente visual de Pista de Corrida / Tabuleiro
     const ProgressRaceTrack = ({ currentStatus }: { currentStatus: string }) => {
         const stages = [
@@ -433,7 +466,7 @@ const TenderRow = memo(({
                     value={tender.commitment || 'Outros'}
                     onValueChange={(value) => updateTender(tender.id, { commitment: value as any }, editorName)}
                 >
-                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2 font-bold text-foreground">
+                    <SelectTrigger className={cn("w-[140px] h-8 text-xs text-left justify-start px-2 font-bold", getCommitmentStyles(tender.commitment || ''))}>
                         <SelectValue placeholder="Selecione" className="text-left" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
@@ -450,7 +483,7 @@ const TenderRow = memo(({
                     value={tender.coordinator || 'A definir'}
                     onValueChange={(value) => updateTender(tender.id, { coordinator: value as any }, editorName)}
                 >
-                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2 font-bold text-foreground">
+                    <SelectTrigger className={cn("w-[140px] h-8 text-xs text-left justify-start px-2 font-bold", getCoordinatorStyles(tender.coordinator || ''))}>
                         <SelectValue placeholder="Selecione" className="text-left" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
@@ -467,7 +500,7 @@ const TenderRow = memo(({
                     value={tender.requesterSector || 'A definir'}
                     onValueChange={(value) => updateTender(tender.id, { requesterSector: value as any }, editorName)}
                 >
-                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2 font-bold text-foreground">
+                    <SelectTrigger className={cn("w-[140px] h-8 text-xs text-left justify-start px-2 font-bold", getRequesterStyles(tender.requesterSector || ''))}>
                         <SelectValue placeholder="Selecione" className="text-left" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
