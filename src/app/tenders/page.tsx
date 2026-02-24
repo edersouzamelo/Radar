@@ -27,7 +27,8 @@ import {
     Database,
     X,
     Info,
-    LocateFixed
+    LocateFixed,
+    EyeOff
 } from "lucide-react";
 import { EditTenderModal } from "@/components/edit-tender-modal";
 import { CreateTenderModal } from "@/components/create-tender-modal";
@@ -47,7 +48,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+    DialogClose
+} from "@/components/ui/dialog";
 import { useUser } from "@/contexts/user-context";
 import { cn } from "@/lib/utils";
 import { exportTendersToCSV, parseCSVToTenders } from "@/lib/export-utils";
@@ -69,7 +78,9 @@ const TenderRow = memo(({
     deleteTender,
     addTenderBelow,
     isHighlighted,
-    pregoeiros
+    pregoeiros,
+    canManage,
+    showNotesColumn
 }: {
     tender: any,
     index: number,
@@ -85,7 +96,9 @@ const TenderRow = memo(({
     deleteTender: (id: string) => void,
     addTenderBelow: (id: string) => void,
     isHighlighted?: boolean,
-    pregoeiros: any[]
+    pregoeiros: any[],
+    canManage: boolean,
+    showNotesColumn: boolean
 }) => {
     // Estados locais para inputs para evitar re-renders globais ao digitar
     const [localNumber, setLocalNumber] = useState(tender.number ?? '');
@@ -337,7 +350,7 @@ const TenderRow = memo(({
             )}
             <td className={cn("px-3 py-2 font-medium whitespace-nowrap", isCancelled ? "text-slate-400" : "text-foreground")}>
                 <div className="flex flex-col gap-1">
-                    {role === 'Chefe da Seção de Licitações' ? (
+                    {canManage ? (
                         <>
                             <input
                                 type="text"
@@ -372,7 +385,7 @@ const TenderRow = memo(({
                 </div>
             </td>
             <td className="px-3 py-2 min-w-[320px] max-w-[500px]">
-                {role === 'Chefe da Seção de Licitações' || role === 'Administrador' ? (
+                {canManage ? (
                     <textarea
                         className={cn(
                             "bg-transparent border-none focus:ring-1 focus:ring-radar-dark/30 rounded p-0 text-sm font-bold w-full text-foreground dark:text-gray-100 resize-none overflow-hidden min-h-[1.5rem]",
@@ -399,55 +412,22 @@ const TenderRow = memo(({
                     </span>
                 )}
             </td>
-            <td className="px-3 py-2 w-[50px] text-center">
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <button
-                            disabled={role !== 'Chefe da Seção de Licitações'}
-                            className={`p-1.5 rounded-full transition-all ${tender.quickNotes ? 'bg-amber-100 text-amber-600 border border-amber-200 shadow-sm' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'}`}
-                            title={tender.quickNotes || "Adicionar anotação rápida"}
-                        >
-                            <StickyNote className={`w-4 h-4 ${tender.quickNotes ? 'fill-amber-400' : ''}`} />
-                        </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-3 bg-white dark:bg-slate-900 border-radar-gold shadow-xl z-[10000]">
-                        <div className="space-y-2">
-                            <h4 className="font-semibold text-sm flex items-center gap-2">
-                                <StickyNote className="w-4 h-4 text-amber-500" />
-                                Anotações do Objeto
-                            </h4>
-                            <textarea
-                                className="w-full h-32 p-2 text-sm bg-amber-50/30 dark:bg-amber-900/10 border-amber-200/50 rounded-md focus:ring-amber-500/30 resize-none placeholder:text-slate-400 placeholder:italic"
-                                placeholder="Insira observações rápidas aqui..."
-                                value={localNote}
-                                onChange={(e) => setLocalNote(e.target.value)}
-                            />
-                            <div className="flex justify-between items-center pt-1">
-                                <button
-                                    onClick={() => {
-                                        setLocalNote('');
-                                        updateTender(tender.id, { quickNotes: '' }, editorName);
-                                    }}
-                                    className="text-[10px] text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                                >
-                                    Apagar Nota
-                                </button>
-                                <div className="flex gap-2">
-                                    <p className="text-[9px] text-slate-400 italic self-center">SALC Only</p>
-                                    <button
-                                        onClick={() => {
-                                            updateTender(tender.id, { quickNotes: localNote }, editorName);
-                                        }}
-                                        className="text-[10px] bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1 rounded shadow-sm transition-all"
-                                    >
-                                        Salvar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </PopoverContent>
-                </Popover>
-            </td>
+            {showNotesColumn && (
+                <td className="px-3 py-2 min-w-[300px]">
+                    <textarea
+                        className="w-full h-[60px] p-2 text-[11px] leading-tight bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 rounded focus:ring-1 focus:ring-amber-400 placeholder:text-slate-400 placeholder:italic text-foreground resize-none transition-all focus:bg-white"
+                        placeholder="Clique para adicionar observações do gestor..."
+                        disabled={!canManage}
+                        value={localNote}
+                        onChange={(e) => setLocalNote(e.target.value)}
+                        onBlur={() => {
+                            if (localNote !== (tender.quickNotes || '')) {
+                                updateTender(tender.id, { quickNotes: localNote }, editorName);
+                            }
+                        }}
+                    />
+                </td>
+            )}
             <td className="px-3 py-2">
                 <input
                     type="text"
@@ -628,7 +608,7 @@ const TenderRow = memo(({
                     <Eye className="w-4 h-4 mr-1" />
                     Detalhes
                 </Link>
-                {role === 'Chefe da Seção de Licitações' && (
+                {canManage && (
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => addTenderBelow(tender.id)}
@@ -655,6 +635,8 @@ const TenderRow = memo(({
 TenderRow.displayName = "TenderRow";
 
 export default function TendersPage() {
+    const [showNotesColumn, setShowNotesColumn] = useState(true);
+
     const {
         tenders,
         searchQuery,
@@ -698,6 +680,10 @@ export default function TendersPage() {
 
     const searchParams = useSearchParams();
     const tableContainerRef = React.useRef<HTMLDivElement>(null);
+
+    // Permissão mestre unificada (Role + Email Failsafe)
+    const isMajor = user?.email?.toLowerCase().trim() === 'edersouzamelo@gmail.com';
+    const canManage = role === 'Chefe da Seção de Licitações' || role === 'Administrador' || isMajor;
 
     // Sincronizar highlightId da URL com o contexto
     useEffect(() => {
@@ -827,7 +813,7 @@ export default function TendersPage() {
 
                     <div className="flex items-center gap-1.5">
                         {/* Botão Novo Pregão */}
-                        {role === 'Chefe da Seção de Licitações' && (
+                        {canManage && (
                             <CreateTenderModal />
                         )}
                         <div className="h-5 w-px bg-slate-200 mx-0.5" />
@@ -856,6 +842,22 @@ export default function TendersPage() {
                         >
                             <Undo2 className="w-3.5 h-3.5" />
                             Desfazer
+                        </Button>
+
+                        <Button
+                            variant={showNotesColumn ? "secondary" : "outline"}
+                            size="sm"
+                            className={cn(
+                                "h-8 text-xs gap-1.5 border-slate-200",
+                                showNotesColumn
+                                    ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            )}
+                            onClick={() => setShowNotesColumn(!showNotesColumn)}
+                            title={showNotesColumn ? "Ocultar coluna de notas" : "Mostrar coluna de notas"}
+                        >
+                            {showNotesColumn ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            Notas
                         </Button>
 
                         <div className="h-5 w-px bg-slate-200 mx-0.5" />
@@ -910,7 +912,7 @@ export default function TendersPage() {
                             Exportar Backup
                         </Button>
 
-                        {role === 'Chefe da Seção de Licitações' && (
+                        {canManage && (
                             <div className="relative">
                                 <input
                                     type="file"
@@ -1044,7 +1046,9 @@ export default function TendersPage() {
                                             </div>
                                         </div>
                                     </th>
-                                    <th scope="col" className="px-3 py-2 text-center w-8">OBS</th>
+                                    {showNotesColumn && (
+                                        <th scope="col" className="px-3 py-2 text-amber-700 font-bold bg-amber-50/50 min-w-[300px]">ANOTAÇÕES DO GESTOR (SALC Only)</th>
+                                    )}
                                     <th scope="col" className="px-3 py-2 min-w-[150px]">
                                         <div className="flex flex-col gap-1">
                                             <span>NUP</span>
@@ -1183,6 +1187,8 @@ export default function TendersPage() {
                                         addTenderBelow={addTenderBelow}
                                         isHighlighted={highlightId === tender.id}
                                         pregoeiros={pregoeiros}
+                                        canManage={canManage}
+                                        showNotesColumn={showNotesColumn}
                                     />
                                 ))}
                             </tbody>

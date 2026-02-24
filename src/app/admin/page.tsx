@@ -57,6 +57,14 @@ export default function AdminPage() {
         fetchProfiles();
     }, []);
 
+    // TODO: Tasks
+    // - [x] Correção de Camadas (Sidebar z-index)
+    // - [x] Codificação por Cores: Compromisso (GCALC, PCA, Perseu)
+    // - [x] Codificação por Cores: Coordenador (CCOL, CAF, 9º B Sup)
+    // - [x] Codificação por Cores: Requisitante (9º B Mnt, 9° B Sup, 18° B Trnp, Cia Cmdo, 9° B Sau, Cmdo 9° Gpt)
+    // - [x] Verificação de contraste e legibilidade
+    // - [x] Push final para produção
+
     // Consolidação da equipe: Unimos pregoeiros, supervisores e requisitantes com os perfis de autenticação
     const teamMembers = [
         ...pregoeiros.map(p => ({ ...p, type: 'pregoeiro' })),

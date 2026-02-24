@@ -15,12 +15,13 @@ interface EditTenderModalProps {
 }
 
 export function EditTenderModal({ tender }: EditTenderModalProps) {
-    const { role, hasPermission } = useUser();
+    const { role, hasPermission, user } = useUser();
     const { updateTender } = useTenders();
     const [open, setOpen] = useState(false);
 
-    const canEditTender = hasPermission('edit_tenders') || role === 'Administrador';
-    const canEditDates = hasPermission('edit_dates') || role === 'Administrador';
+    const isMajor = user?.email?.toLowerCase().trim() === 'edersouzamelo@gmail.com';
+    const canEditTender = hasPermission('edit_tenders') || role === 'Administrador' || isMajor;
+    const canEditDates = hasPermission('edit_dates') || role === 'Administrador' || isMajor;
 
     if (!canEditTender && !canEditDates) return null;
 

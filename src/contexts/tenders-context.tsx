@@ -197,51 +197,65 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         return () => { isMounted = false; };
     }, [loadDataFromCloud]);
 
+    // --- DATA SYNC LOGIC (PUSH) ---
+    const pushDataToCloud = useCallback(async () => {
+        if (!supabase) return;
+        setCloudStatus(prev => ({ ...prev, status: 'syncing' }));
+        try {
+            // 1. Salvar Equipe
+            const teamToUpload = [
+                ...pregoeiros.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'pregoeiro', om: (p as any).om || "" })),
+                ...supervisors.map(s => ({ id: s.id, name: s.name, email: s.email, whatsapp: s.whatsapp, role: s.role, type: 'supervisor', om: s.organization || "" })),
+                ...people.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'requisitante', om: p.sector || "" }))
+            ];
+            if (teamToUpload.length > 0) {
+                await supabase.from('team_members').upsert(teamToUpload);
+            }
+
+            // 2. Salvar Licitações (Protegendo IDs e metadados)
+            const tendersToUpload = tenders.map(t => ({
+                id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department,
+                opening_date: t.openingDate, estimated_value: t.estimatedValue, status: t.status, current_stage: t.currentStage,
+                has_issues: t.hasIssues, is_gcalc: t.isGCALC, commitment: t.commitment, requester_sector: t.requesterSector,
+                coordinator: t.coordinator, coord: t.coord, section: t.section, responsible_internal: t.responsibleInternal,
+                responsible_external: t.responsibleExternal, bi_publication: t.biPublication, optimization_notes: t.optimizationNotes,
+                next_deadline: t.nextDeadline, next_activity: t.nextActivity, intercurrences: t.intercurrences,
+                last_updated_by: t.lastUpdatedBy, quick_notes: t.quickNotes,
+                verification_status: conferenceStatuses[t.id] || 'Pendente',
+                assigned_pregoeiro_id: t.assignedPregoeiroId || null,
+                pregoeiro_fase_interna_id: t.pregoeiroFaseInternaId || null,
+                pregoeiro_fase_externa_id: t.pregoeiroFaseExternaId || null,
+                dates: { ...(t.dates || {}), _date_checks: dateChecks[t.id] || {} },
+                updates: t.updates || [], observations: t.observations || []
+            }));
+
+            await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
+
+            setCloudStatus(prev => ({
+                ...prev,
+                lastSync: new Date(),
+                status: 'online',
+                totalTenders: tenders.length,
+                totalPeople: pregoeiros.length + supervisors.length + people.length
+            }));
+        } catch (err: any) {
+            console.error('[Sync] ❌ Falha catastrófica:', err.message);
+            setCloudStatus(prev => ({ ...prev, status: 'error', message: err.message }));
+            throw err;
+        }
+    }, [tenders, conferenceStatuses, dateChecks, pregoeiros, supervisors, people]);
+
     // SINCRONIA UNIFICADA (AUTO-SAVE)
     useEffect(() => {
         if (!isLoaded || !supabase || !hasUserInteracted.current || !isCloudLoaded.current) return;
 
         if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current);
         autoSyncTimeoutRef.current = setTimeout(async () => {
-            try {
-                // 1. Salvar Equipe
-                const teamToUpload = [
-                    ...pregoeiros.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'pregoeiro', om: (p as any).om || "" })),
-                    ...supervisors.map(s => ({ id: s.id, name: s.name, email: s.email, whatsapp: s.whatsapp, role: s.role, type: 'supervisor', om: s.organization || "" })),
-                    ...people.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'requisitante', om: p.sector || "" }))
-                ];
-                if (teamToUpload.length > 0) {
-                    await supabase.from('team_members').upsert(teamToUpload);
-                }
-
-                // 2. Salvar Licitações (Protegendo IDs e metadados)
-                const tendersToUpload = tenders.map(t => ({
-                    id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department,
-                    opening_date: t.openingDate, estimated_value: t.estimatedValue, status: t.status, current_stage: t.currentStage,
-                    has_issues: t.hasIssues, is_gcalc: t.isGCALC, commitment: t.commitment, requester_sector: t.requesterSector,
-                    coordinator: t.coordinator, coord: t.coord, section: t.section, responsible_internal: t.responsibleInternal,
-                    responsible_external: t.responsibleExternal, bi_publication: t.biPublication, optimization_notes: t.optimizationNotes,
-                    next_deadline: t.nextDeadline, next_activity: t.nextActivity, intercurrences: t.intercurrences,
-                    last_updated_by: t.lastUpdatedBy, quick_notes: t.quickNotes,
-                    verification_status: conferenceStatuses[t.id] || 'Pendente',
-                    assigned_pregoeiro_id: t.assignedPregoeiroId || null,
-                    pregoeiro_fase_interna_id: t.pregoeiroFaseInternaId || null,
-                    pregoeiro_fase_externa_id: t.pregoeiroFaseExternaId || null,
-                    dates: { ...(t.dates || {}), _date_checks: dateChecks[t.id] || {} },
-                    updates: t.updates || [], observations: t.observations || []
-                }));
-
-                await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
-
-                setCloudStatus(prev => ({ ...prev, lastSync: new Date(), status: 'online' }));
-            } catch (err: any) {
-                console.error('[AutoSync] ❌ Falha catastrófica:', err.message);
-                setCloudStatus(prev => ({ ...prev, status: 'error', message: err.message }));
-            }
-        }, 2000);
+            await pushDataToCloud();
+        }, 3000);
 
         return () => { if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current); };
-    }, [tenders, conferenceStatuses, dateChecks, isLoaded, pregoeiros, supervisors, people]);
+    }, [pushDataToCloud, isLoaded]);
 
     const updateTender = useCallback((id: string, updates: Partial<Tender>, editorName?: string) => {
         hasUserInteracted.current = true;
@@ -318,7 +332,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
 
     return (
         <TendersContext.Provider value={{
-            tenders, searchQuery, setSearchQuery, statusFilter, setStatusFilter, nupFilter, setNupFilter, commitmentFilter, setCommitmentFilter, coordinatorFilter, setCoordinatorFilter, requesterSectorFilter, setRequesterSectorFilter, updateTender, refreshTender: () => { }, showConferenceColumn, toggleConferenceColumn, conferenceStatuses, setConferenceStatus, bulkSetConferenceStatus, dateChecks, toggleDateCheck, deleteTender, addTenderBelow, undo: () => { }, canUndo: false, historyCount: 0, resetToOriginalData, objectFilter, setObjectFilter, people, addPerson, updatePerson, deletePerson, pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro, assignTenderToPregoeiro, supervisors, addSupervisor, updateSupervisor, deleteSupervisor, highlightId, setHighlightId, cloudStatus, forceCloudSync: async () => { await loadDataFromCloud(); }, pullDataFromCloud: loadDataFromCloud, importTendersFromCSV
+            tenders, searchQuery, setSearchQuery, statusFilter, setStatusFilter, nupFilter, setNupFilter, commitmentFilter, setCommitmentFilter, coordinatorFilter, setCoordinatorFilter, requesterSectorFilter, setRequesterSectorFilter, updateTender, refreshTender: (_id: string, _editorName?: string) => loadDataFromCloud(true), showConferenceColumn, toggleConferenceColumn, conferenceStatuses, setConferenceStatus, bulkSetConferenceStatus, dateChecks, toggleDateCheck, deleteTender, addTenderBelow, undo: () => { }, canUndo: false, historyCount: 0, resetToOriginalData, objectFilter, setObjectFilter, people, addPerson, updatePerson, deletePerson, pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro, assignTenderToPregoeiro, supervisors, addSupervisor, updateSupervisor, deleteSupervisor, highlightId, setHighlightId, cloudStatus, forceCloudSync: pushDataToCloud, pullDataFromCloud: loadDataFromCloud, importTendersFromCSV
         }}>
             {children}
         </TendersContext.Provider>

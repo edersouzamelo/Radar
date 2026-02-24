@@ -22,8 +22,9 @@ export function CreateTenderModal() {
     const [description, setDescription] = useState("");
     const [openingDate, setOpeningDate] = useState("");
 
-    // Permissões: Apenas Chefe SALC, Pregoeiro e Auxiliares
-    const canCreate = ['Chefe da Seção de Licitações', 'Pregoeiro', 'Auxiliar'].includes(role);
+    // Permissões: Apenas Chefe SALC, Pregoeiro, Auxiliares e Administrador (Major)
+    const isMajor = user?.email?.toLowerCase().trim() === 'edersouzamelo@gmail.com';
+    const canCreate = ['Chefe da Seção de Licitações', 'Pregoeiro', 'Auxiliar', 'Administrador'].includes(role) || isMajor;
 
     if (!canCreate) return null;
 

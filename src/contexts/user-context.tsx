@@ -110,17 +110,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return () => subscription.unsubscribe();
     }, []);
 
-    const fetchUserProfile = async (userId: string) => {
+    const fetchUserProfile = async (userId: string, sessionEmail?: string) => {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('role, permissions, is_admin')
+                .select('role, permissions, is_admin, email')
                 .eq('id', userId)
                 .single();
 
-            if (data) {
+            const profileEmail = sessionEmail || data?.email || user?.email;
+            const normalizedEmail = profileEmail?.toLowerCase().trim();
+
+            if (data || normalizedEmail === 'edersouzamelo@gmail.com') {
                 // FAILSAFE: Respeita o Major independente do que vier do banco
-                if (user?.email === 'edersouzamelo@gmail.com') {
+                if (normalizedEmail === 'edersouzamelo@gmail.com') {
                     setRole('Administrador');
                     setPermissions({
                         edit_tenders: true,
@@ -129,7 +132,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                         view_all: true,
                         bulk_check: true
                     });
-                } else {
+                } else if (data) {
                     setRole((data.role || 'Visitante') as UserRole);
                     setPermissions(data.permissions || {});
                     // Se for admin no banco, garante todas as permissões
@@ -217,8 +220,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         };
         setUser(userData);
 
+        const normalizedEmail = email.toLowerCase().trim();
         // FAILSAFE: Se for o Major, força Admin independente do banco
-        if (email === 'edersouzamelo@gmail.com') {
+        if (normalizedEmail === 'edersouzamelo@gmail.com') {
             setRole('Administrador');
             setPermissions({
                 edit_tenders: true,
@@ -229,7 +233,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             });
         }
 
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user.id, email);
     };
 
     const loginWithGoogle = async () => {
