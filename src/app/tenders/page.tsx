@@ -242,7 +242,7 @@ const TenderRow = memo(({
         );
     };
 
-    const isCancelled = tender.status.startsWith('CANCELADO');
+    const isCancelled = tender.status.startsWith('CANCELADO') || tender.status === 'ABANDONADO' || tender.currentStage.includes('9. Abandonado');
 
     return (
         <tr
@@ -342,8 +342,8 @@ const TenderRow = memo(({
                 {role === 'Chefe da Seção de Licitações' || role === 'Administrador' ? (
                     <textarea
                         className={cn(
-                            "bg-transparent border-none focus:ring-1 focus:ring-radar-dark/30 rounded p-0 text-sm font-semibold w-full text-foreground dark:text-gray-100 resize-none overflow-hidden min-h-[1.5rem]",
-                            isCancelled && "line-through text-slate-400/70 dark:text-slate-500 font-normal"
+                            "bg-transparent border-none focus:ring-1 focus:ring-radar-dark/30 rounded p-0 text-sm font-bold w-full text-foreground dark:text-gray-100 resize-none overflow-hidden min-h-[1.5rem]",
+                            isCancelled && "line-through text-slate-400/70 font-normal italic"
                         )}
                         rows={tender.description.length > 50 ? 2 : 1}
                         value={localDescription}
