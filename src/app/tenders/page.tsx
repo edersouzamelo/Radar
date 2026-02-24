@@ -193,8 +193,8 @@ const TenderRow = memo(({
 
     // Helper para cor da data
     const getDateColor = (dateStr: string, isChecked: boolean, isCancelled: boolean) => {
-        if (isCancelled) return "text-slate-400/60 dark:text-slate-500/60 font-normal";
-        if (isChecked) return "text-gray-400 dark:text-gray-600 font-medium opacity-60";
+        if (isCancelled) return "text-slate-400 font-normal";
+        if (isChecked) return "text-slate-500 font-bold";
         if (!dateStr) return "";
 
         const today = new Date();
@@ -203,8 +203,8 @@ const TenderRow = memo(({
         if (isNaN(targetDate.getTime())) return "";
 
         return targetDate < today
-            ? "text-red-500 font-bold dark:text-red-400"
-            : "text-green-600 font-bold dark:text-green-400";
+            ? "text-red-600 font-black dark:text-red-400"
+            : "text-green-700 font-black dark:text-green-400";
     };
 
     // Helper para renderizar input de data com check
@@ -218,10 +218,10 @@ const TenderRow = memo(({
                 <input
                     type="date"
                     className={cn(
-                        "bg-transparent border-none focus:ring-0 p-0 text-sm w-[110px] disabled:opacity-50 transition-colors",
+                        "bg-transparent border-none focus:ring-0 p-0 text-sm w-[110px] transition-colors font-bold",
                         getDateColor(val, isChecked, isCancelled)
                     )}
-                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                     value={val || ''}
                     onChange={(e) => handleDateChange(field, subField, e.target.value)}
                 />
@@ -249,7 +249,7 @@ const TenderRow = memo(({
             className={cn(
                 "border-b bg-white transition-colors group",
                 isHighlighted && "bg-amber-50/50 ring-2 ring-radar-gold ring-inset animate-pulse-subtle",
-                isCancelled && "line-through text-slate-400 opacity-60"
+                isCancelled && "line-through text-slate-400 bg-slate-50/30"
             )}
         >
             <td className="px-3 py-2 text-center font-medium text-muted-foreground w-8">
@@ -282,10 +282,11 @@ const TenderRow = memo(({
                 <td className="px-3 py-2 text-center">
                     <div className="flex items-center justify-center">
                         <button
+                            disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                             onClick={() => setConferenceStatus(tender.id, conferenceStatuses[tender.id] === 'OK' ? 'Pendente' : 'OK')}
-                            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase transition-all shadow-sm active:scale-95 ${conferenceStatuses[tender.id] === 'OK'
-                                ? 'bg-green-500 text-white hover:bg-green-600'
-                                : 'bg-gray-200 text-gray-500 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400'
+                            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase transition-all shadow-sm active:scale-95 disabled:cursor-not-allowed ${conferenceStatuses[tender.id] === 'OK'
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-slate-200 text-slate-600 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300'
                                 }`}
                         >
                             {conferenceStatuses[tender.id] === 'OK' ? (
@@ -330,14 +331,14 @@ const TenderRow = memo(({
                         </>
                     ) : (
                         <>
-                            <span className={cn("font-bold", isCancelled && "line-through")}>{tender.number}</span>
-                            <span className="text-[10px] text-muted-foreground">UASG {tender.uasg}</span>
+                            <span className={cn("font-bold text-foreground dark:text-gray-100", isCancelled && "line-through text-slate-400")}>{tender.number}</span>
+                            <span className="text-[10px] text-muted-foreground font-semibold">UASG {tender.uasg}</span>
                         </>
                     )}
                 </div>
             </td>
             <td className="px-3 py-2 min-w-[320px] max-w-[500px]">
-                {role === 'Chefe da Seção de Licitações' ? (
+                {role === 'Chefe da Seção de Licitações' || role === 'Administrador' ? (
                     <textarea
                         className={cn(
                             "bg-transparent border-none focus:ring-1 focus:ring-radar-dark/30 rounded p-0 text-sm font-semibold w-full text-foreground dark:text-gray-100 resize-none overflow-hidden min-h-[1.5rem]",
@@ -359,7 +360,7 @@ const TenderRow = memo(({
                         }}
                     />
                 ) : (
-                    <span className="text-sm font-semibold text-foreground break-words whitespace-normal block">
+                    <span className="text-sm font-bold text-radar-dark dark:text-gray-100 break-words whitespace-normal block">
                         {tender.description}
                     </span>
                 )}
@@ -416,9 +417,9 @@ const TenderRow = memo(({
             <td className="px-3 py-2">
                 <input
                     type="text"
-                    className="bg-transparent border-none focus:ring-0 p-0 text-xs w-[130px] dark:text-gray-300 disabled:opacity-50"
+                    className="bg-transparent border-none focus:ring-0 p-0 text-xs w-[130px] text-foreground dark:text-gray-100 font-semibold"
                     placeholder="NUP..."
-                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                     value={localNup}
                     onChange={(e) => setLocalNup(e.target.value)}
                     onBlur={(e) => handleBlur('nup', e.target.value)}
@@ -427,11 +428,11 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                     value={tender.commitment || 'Outros'}
                     onValueChange={(value) => updateTender(tender.id, { commitment: value as any }, editorName)}
                 >
-                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
+                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2 font-bold text-foreground">
                         <SelectValue placeholder="Selecione" className="text-left" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
@@ -444,11 +445,11 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                     value={tender.coordinator || 'A definir'}
                     onValueChange={(value) => updateTender(tender.id, { coordinator: value as any }, editorName)}
                 >
-                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
+                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2 font-bold text-foreground">
                         <SelectValue placeholder="Selecione" className="text-left" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
@@ -461,11 +462,11 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                     value={tender.requesterSector || 'A definir'}
                     onValueChange={(value) => updateTender(tender.id, { requesterSector: value as any }, editorName)}
                 >
-                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2">
+                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 text-left justify-start px-2 font-bold text-foreground">
                         <SelectValue placeholder="Selecione" className="text-left" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
@@ -518,11 +519,11 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                     value={tender.pregoeiroFaseInternaId || 'none'}
                     onValueChange={(value) => updateTender(tender.id, { pregoeiroFaseInternaId: value === 'none' ? undefined : value }, editorName)}
                 >
-                    <SelectTrigger className="w-[150px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20">
+                    <SelectTrigger className="w-[150px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 font-bold text-foreground">
                         <SelectValue placeholder="A definir" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
@@ -535,11 +536,11 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações'}
+                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                     value={tender.pregoeiroFaseExternaId || 'none'}
                     onValueChange={(value) => updateTender(tender.id, { pregoeiroFaseExternaId: value === 'none' ? undefined : value }, editorName)}
                 >
-                    <SelectTrigger className="w-[150px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20">
+                    <SelectTrigger className="w-[150px] h-8 text-xs bg-white dark:bg-slate-900 border-radar-dark/20 font-bold text-foreground">
                         <SelectValue placeholder="A definir" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
@@ -553,12 +554,12 @@ const TenderRow = memo(({
             <td className="px-3 py-2">
                 <div className="flex items-center gap-3">
                     <Select
-                        disabled={role !== 'Chefe da Seção de Licitações'}
+                        disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
                         value={tender.status}
                         onValueChange={(value) => updateTender(tender.id, { status: value as any }, editorName)}
                     >
                         <SelectTrigger className={cn(
-                            "w-[240px] h-auto min-h-[2.2rem] text-[10px] leading-tight border transition-all shadow-sm text-left justify-start px-3 py-1.5 rounded-lg",
+                            "w-[240px] h-auto min-h-[2.2rem] text-[10px] leading-tight border transition-all shadow-sm text-left justify-start px-3 py-1.5 rounded-lg font-bold",
                             getStatusStyles(tender.status)
                         )}>
                             <SelectValue />
@@ -838,12 +839,12 @@ export default function TendersPage() {
                             {showConferenceColumn ? "Ocultar Conferência" : "Conferência"}
                         </Button>
 
-                        {showConferenceColumn && (
+                        {showConferenceColumn && (role === 'Chefe da Seção de Licitações' || role === 'Administrador') && (
                             <>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 text-xs gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200"
+                                    className="h-8 text-xs gap-1.5 text-slate-800 font-bold hover:text-slate-900 hover:bg-slate-50 border-slate-300"
                                     onClick={() => bulkSetConferenceStatus('OK')}
                                 >
                                     Todos OK
@@ -851,7 +852,7 @@ export default function TendersPage() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 text-xs gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200"
+                                    className="h-8 text-xs gap-1.5 text-slate-800 font-bold hover:text-slate-900 hover:bg-slate-50 border-slate-300"
                                     onClick={() => bulkSetConferenceStatus('Pendente')}
                                 >
                                     Todos Pendente
