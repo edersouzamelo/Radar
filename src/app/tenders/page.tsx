@@ -971,7 +971,7 @@ export default function TendersPage() {
                 <CardContent className="flex-1 p-0 relative">
                     <div
                         ref={tableContainerRef}
-                        className="w-full overflow-auto force-scrollbar border rounded-lg bg-white"
+                        className="w-full bg-white"
                     >
                         <table className="w-full text-xs text-left text-gray-500 min-w-[2000px]">
                             <thead className="text-[10px] text-muted-foreground uppercase bg-white dark:bg-gray-950 border-b sticky top-0 z-50 shadow-sm">

@@ -321,36 +321,57 @@ export default function AdminPage() {
                     <CardContent>
                         <div className="space-y-4">
                             {teamMembers.map((u) => (
-                                <div key={u.id} className="group relative flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-radar-gold/50 transition-all shadow-sm">
-                                    <div className="flex items-center space-x-4">
-                                        <div className="h-10 w-10 bg-radar-dark text-white rounded-full flex items-center justify-center font-bold">
-                                            {u.full_name ? u.full_name[0] : (u.name ? u.name[0] : '?')}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-radar-dark dark:text-white truncate">{u.full_name || u.name}</p>
-                                            <div className="flex items-center gap-2 group/email">
-                                                <p className="text-xs text-muted-foreground truncate">{u.email || '⚠️ Sem e-mail'}</p>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6 bg-radar-gold/10 hover:bg-radar-gold text-radar-dark border border-radar-gold/20"
-                                                    onClick={async () => {
-                                                        const newEmail = prompt(`Definir E-mail Institucional para ${u.name}:`, u.email || "");
-                                                        if (newEmail !== null && newEmail.trim() !== "") {
-                                                            const emailLower = newEmail.toLowerCase().trim();
-                                                                }]);
-                                                            }
+                                <div key={u.id} className="group relative flex flex-col p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-radar-gold/50 transition-all shadow-sm">
+                                    <div className="flex items-center justify-between w-full">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="h-10 w-10 bg-radar-dark text-white rounded-full flex items-center justify-center font-bold">
+                                                {u.full_name ? u.full_name[0] : (u.name ? u.name[0] : '?')}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-radar-dark dark:text-white truncate">{u.full_name || u.name}</p>
+                                                <div className="flex items-center gap-2 group/email">
+                                                    <p className={`text-xs truncate ${!u.email ? 'text-red-500 font-bold' : 'text-muted-foreground'}`}>
+                                                        {u.email || '⚠️ Sem e-mail (Clique ao lado)'}
+                                                    </p>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6 bg-radar-gold/10 hover:bg-radar-gold text-radar-dark border border-radar-gold/20"
+                                                        onClick={async () => {
+                                                            const newEmail = prompt(`Definir E-mail Institucional para ${u.name}:`, u.email || "");
+                                                            if (newEmail !== null && newEmail.trim() !== "") {
+                                                                const emailLower = newEmail.toLowerCase().trim();
+                                                                try {
+                                                                    // 1. Persistência IMEDIATA
+                                                                    const { error: updateErr } = await supabase.from('team_members').update({ email: emailLower }).eq('id', u.id);
+                                                                    if (updateErr) throw updateErr;
 
-                                                            alert("E-mail atualizado. Se o perfil não existia, criamos um vínculo de 'Visitante' para este e-mail.");
-                                                            window.location.reload();
-                                                        }
-                                                    }}
-                                                >
-                                                    <UserCog className="h-3 w-3" />
-                                                </Button>
+                                                                    // 2. Garantir Perfil/Vínculo
+                                                                    const { data: existingProfile } = await supabase.from('profiles').select('id').eq('email', emailLower).single();
+                                                                    if (!existingProfile) {
+                                                                        await supabase.from('profiles').insert([{
+                                                                            email: emailLower,
+                                                                            full_name: u.name,
+                                                                            role: 'Visitante',
+                                                                            permissions: { view_all: true }
+                                                                        }]);
+                                                                    }
+
+                                                                    alert(`Vínculo realizado com sucesso para: ${emailLower}`);
+                                                                    window.location.reload();
+                                                                } catch (err: any) {
+                                                                    alert("Erro ao vincular: " + err.message);
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <UserCog className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
                                     <div className="flex flex-col space-y-2 mt-4 p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-100 dark:border-gray-700">
                                         <p className="text-[10px] font-black uppercase text-radar-dark/50 tracking-tighter mb-1">Prerrogativas do Perfil</p>
                                         <div className="flex flex-wrap gap-2">
@@ -362,17 +383,14 @@ export default function AdminPage() {
                                                     className={`h-7 px-2 text-[10px] border ${!u.is_auth_user ? 'opacity-50 cursor-not-allowed' : ''} ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
                                                     onClick={async () => {
                                                         if (!u.is_auth_user) {
-                                                            alert("Este membro ainda não possui um perfil de acesso vinculado (e-mail).");
+                                                            alert("Erro: Este membro ainda não possui um perfil de acesso vinculado.\n\nPor favor, defina o e-mail clicando no botão amarelo acima primeiro.");
                                                             return;
                                                         }
                                                         const newPerms = { ...(u.permissions || {}), [perm.id]: !u.permissions?.[perm.id] };
                                                         const { error } = await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
 
-                                                        if (error) {
-                                                            alert("Erro ao atualizar permissões: " + error.message);
-                                                        } else {
-                                                            window.location.reload();
-                                                        }
+                                                        if (error) alert("Erro: " + error.message);
+                                                        else window.location.reload();
                                                     }}
                                                 >
                                                     {u.permissions?.[perm.id] ? <CheckSquare className="h-3 w-3 mr-1" /> : <Square className="h-3 w-3 mr-1" />}
@@ -383,79 +401,79 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                             ))}
-                    </div>
-
-                    {/* Modal de Edição */}
-                    {editingMember && (
-                        <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
-                            <DialogContent className="bg-white dark:bg-slate-900 border-radar-gold">
-                                <form onSubmit={handleEditMember}>
-                                    <DialogHeader>
-                                        <DialogTitle>Editar Membro: {editingMember.full_name || editingMember.name}</DialogTitle>
-                                        <DialogDescription>Atualize os dados de contato ou função.</DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4 py-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="edit-name">Nome / Posto ou Grad</Label>
-                                            <Input id="edit-name" value={editingMember.name} onChange={e => setEditingMember({ ...editingMember, name: e.target.value })} />
-                                        </div>
-                                        <div className="grid gap-2 text-radar-dark dark:text-white">
-                                            <Label htmlFor="edit-email">E-mail</Label>
-                                            <Input id="edit-email" type="email" value={editingMember.email} onChange={e => setEditingMember({ ...editingMember, email: e.target.value })} />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="edit-whatsapp">WhatsApp</Label>
-                                            <Input id="edit-whatsapp" value={editingMember.whatsapp} onChange={e => setEditingMember({ ...editingMember, whatsapp: e.target.value })} />
-                                        </div>
-                                        <div className="grid gap-2 text-radar-dark dark:text-white">
-                                            <Label>Função / Cargo</Label>
-                                            <Input value={editingMember.role} onChange={e => setEditingMember({ ...editingMember, role: e.target.value })} />
-                                        </div>
-                                        {editingMember.type === 'requisitante' && (
-                                            <div className="grid gap-2 text-radar-dark dark:text-white">
-                                                <Label htmlFor="edit-sector">OM / Setor Requisitante</Label>
-                                                <Input id="edit-sector" value={editingMember.sector} onChange={e => setEditingMember({ ...editingMember, sector: e.target.value })} />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <DialogFooter>
-                                        <Button type="submit" className="bg-radar-dark text-white w-full">Salvar Alterações</Button>
-                                    </DialogFooter>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
-                    )}
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Segurança e Senhas</CardTitle>
-                    <CardDescription>Redefinição de credenciais de acesso</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="user-select">Selecionar Usuário</Label>
-                        <select id="user-select" className="w-full p-2 bg-white dark:bg-gray-800 border rounded-md">
-                            {teamMembers.map(u => <option key={u.id} value={u.id}>{u.full_name || u.name}</option>)}
-                        </select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="new-password">Nova Senha Temporária</Label>
-                        <div className="flex space-x-2">
-                            <Input id="new-password" type="password" placeholder="********" />
-                            <Button variant="outline">
-                                <Key className="mr-2 h-4 w-4" />
-                                Gerar
-                            </Button>
                         </div>
-                    </div>
-                    <Button className="w-full bg-radar-dark text-white hover:bg-gray-800">
-                        Atualizar Credenciais
-                    </Button>
-                </CardContent>
-            </Card>
-        </div>
+
+                        {/* Modal de Edição */}
+                        {editingMember && (
+                            <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
+                                <DialogContent className="bg-white dark:bg-slate-900 border-radar-gold">
+                                    <form onSubmit={handleEditMember}>
+                                        <DialogHeader>
+                                            <DialogTitle>Editar Membro: {editingMember.full_name || editingMember.name}</DialogTitle>
+                                            <DialogDescription>Atualize os dados de contato ou função.</DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="edit-name">Nome / Posto ou Grad</Label>
+                                                <Input id="edit-name" value={editingMember.name} onChange={e => setEditingMember({ ...editingMember, name: e.target.value })} />
+                                            </div>
+                                            <div className="grid gap-2 text-radar-dark dark:text-white">
+                                                <Label htmlFor="edit-email">E-mail</Label>
+                                                <Input id="edit-email" type="email" value={editingMember.email} onChange={e => setEditingMember({ ...editingMember, email: e.target.value })} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="edit-whatsapp">WhatsApp</Label>
+                                                <Input id="edit-whatsapp" value={editingMember.whatsapp} onChange={e => setEditingMember({ ...editingMember, whatsapp: e.target.value })} />
+                                            </div>
+                                            <div className="grid gap-2 text-radar-dark dark:text-white">
+                                                <Label>Função / Cargo</Label>
+                                                <Input value={editingMember.role} onChange={e => setEditingMember({ ...editingMember, role: e.target.value })} />
+                                            </div>
+                                            {editingMember.type === 'requisitante' && (
+                                                <div className="grid gap-2 text-radar-dark dark:text-white">
+                                                    <Label htmlFor="edit-sector">OM / Setor Requisitante</Label>
+                                                    <Input id="edit-sector" value={editingMember.sector} onChange={e => setEditingMember({ ...editingMember, sector: e.target.value })} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <DialogFooter>
+                                            <Button type="submit" className="bg-radar-dark text-white w-full">Salvar Alterações</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Segurança e Senhas</CardTitle>
+                        <CardDescription>Redefinição de credenciais de acesso</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="user-select">Selecionar Usuário</Label>
+                            <select id="user-select" className="w-full p-2 bg-white dark:bg-gray-800 border rounded-md">
+                                {teamMembers.map(u => <option key={u.id} value={u.id}>{u.full_name || u.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new-password">Nova Senha Temporária</Label>
+                            <div className="flex space-x-2">
+                                <Input id="new-password" type="password" placeholder="********" />
+                                <Button variant="outline">
+                                    <Key className="mr-2 h-4 w-4" />
+                                    Gerar
+                                </Button>
+                            </div>
+                        </div>
+                        <Button className="w-full bg-radar-dark text-white hover:bg-gray-800">
+                            Atualizar Credenciais
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
         </div >
     )
 }
