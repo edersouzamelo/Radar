@@ -278,13 +278,20 @@ export default function AdminPage() {
                                                     key={perm.id}
                                                     variant="ghost"
                                                     size="sm"
-                                                    className={`h-7 px-2 text-[10px] border ${u.role === 'Administrador' || !u.is_auth_user ? 'opacity-50 cursor-not-allowed' : ''} ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
+                                                    className={`h-7 px-2 text-[10px] border ${!u.is_auth_user ? 'opacity-50 cursor-not-allowed' : ''} ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
                                                     onClick={async () => {
-                                                        if (u.role === 'Administrador' || !u.is_auth_user) return;
+                                                        if (!u.is_auth_user) {
+                                                            alert("Este membro ainda não possui um perfil de acesso vinculado (e-mail).");
+                                                            return;
+                                                        }
                                                         const newPerms = { ...(u.permissions || {}), [perm.id]: !u.permissions?.[perm.id] };
-                                                        await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
-                                                        // Forçamos o reload para refletir a mudança (pode ser otimizado depois)
-                                                        window.location.reload();
+                                                        const { error } = await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+
+                                                        if (error) {
+                                                            alert("Erro ao atualizar permissões: " + error.message);
+                                                        } else {
+                                                            window.location.reload();
+                                                        }
                                                     }}
                                                 >
                                                     {u.permissions?.[perm.id] ? <CheckSquare className="h-3 w-3 mr-1" /> : <Square className="h-3 w-3 mr-1" />}
