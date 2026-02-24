@@ -117,7 +117,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
             if (data) {
                 // FAILSAFE: Respeita o Major independente do que vier do banco
-                if (user?.email === 'eder.souzamelo@gmail.com') {
+                if (user?.email === 'edersouzamelo@gmail.com') {
                     setRole('Administrador');
                     setPermissions({
                         edit_tenders: true,
@@ -158,7 +158,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setUser(userData);
 
         // FAILSAFE: Se for o Major, força Admin independente do banco
-        if (email === 'eder.souzamelo@gmail.com') {
+        if (email === 'edersouzamelo@gmail.com') {
             setRole('Administrador');
             setPermissions({
                 edit_tenders: true,
