@@ -123,9 +123,9 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             if (teamError) throw teamError;
 
             if (cloudTeam) {
-                const cloudP = cloudTeam.filter(m => m.type === 'pregoeiro').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, om: m.om }));
-                const cloudS = cloudTeam.filter(m => m.type === 'supervisor').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, organization: m.om }));
-                const cloudR = cloudTeam.filter(m => m.type === 'requisitante').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, sector: m.om }));
+                const cloudP = cloudTeam.filter(m => m.type === 'pregoeiro').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, om: m.om, permissions: m.permissions }));
+                const cloudS = cloudTeam.filter(m => m.type === 'supervisor').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, organization: m.om, permissions: m.permissions }));
+                const cloudR = cloudTeam.filter(m => m.type === 'requisitante').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, sector: m.om, permissions: m.permissions }));
 
                 setPregoeiros(cloudP);
                 setSupervisors(cloudS);

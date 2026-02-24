@@ -71,7 +71,8 @@ export default function AdminPage() {
             ...member,
             // Normalização de campos para evitar erros de tipagem e duplicidade
             full_name: profile?.full_name || member.name,
-            permissions: profile?.permissions || {},
+            // PRIORIDADE: Perfil real > Gaveta (team_members) > Vazio
+            permissions: profile?.permissions || (member as any).permissions || {},
             profile_id: profile?.id,
             is_auth_user: !!profile
         };
