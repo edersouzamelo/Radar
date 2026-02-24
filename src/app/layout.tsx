@@ -34,8 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br" className="h-full bg-gray-50" suppressHydrationWarning>
-      <body className={`${inter.className} h-full overflow-hidden bg-radar-cream`}>
+    <html lang="pt-br" className="min-h-screen bg-radar-cream" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-radar-cream`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

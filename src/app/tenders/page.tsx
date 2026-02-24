@@ -787,7 +787,7 @@ export default function TendersPage() {
     });
 
     return (
-        <div className="flex flex-col h-[calc(100dvh-40px)] md:h-[calc(100dvh-80px)] lg:h-[calc(100dvh-120px)] gap-4 pb-2">
+        <div className="flex flex-col flex-1 gap-4 pb-4 min-h-[calc(100vh-140px)]">
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold tracking-tight text-foreground mr-4">Pregões em Monitoramento</h1>

@@ -326,9 +326,29 @@ export default function AdminPage() {
                                         <div className="h-10 w-10 bg-radar-dark text-white rounded-full flex items-center justify-center font-bold">
                                             {u.full_name ? u.full_name[0] : (u.name ? u.name[0] : '?')}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-radar-dark dark:text-white">{u.full_name || u.name}</p>
-                                            <p className="text-xs text-muted-foreground">{u.email}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-radar-dark dark:text-white truncate">{u.full_name || u.name}</p>
+                                            <div className="flex items-center gap-2 group/email">
+                                                <p className="text-xs text-muted-foreground truncate">{u.email || 'Sem e-mail'}</p>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-4 w-4 opacity-0 group-hover/email:opacity-100 transition-opacity"
+                                                    onClick={() => {
+                                                        const newEmail = prompt(`Alterar e-mail de ${u.name}:`, u.email || "");
+                                                        if (newEmail !== null) {
+                                                            if (u.type === 'pregoeiro') updatePregoeiro(u.id, { ...u, email: newEmail });
+                                                            else if (u.type === 'supervisor') updateSupervisor(u.id, { ...u, email: newEmail });
+                                                            else updatePerson(u.id, { ...u, email: newEmail });
+
+                                                            // Forçar recarga para atualizar o vínculo com profiles
+                                                            setTimeout(() => window.location.reload(), 500);
+                                                        }
+                                                    }}
+                                                >
+                                                    <UserCog className="h-3 w-3" />
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex flex-col space-y-2 mt-4 p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-100 dark:border-gray-700">

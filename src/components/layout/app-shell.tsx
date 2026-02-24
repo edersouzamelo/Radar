@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <div className="flex h-full">
+        <div className="flex min-h-screen bg-radar-cream">
             {/* Mobile Drawer */}
             <Dialog open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <DialogContent className="p-0 border-none bg-transparent shadow-none w-fit h-fit left-0 translate-x-0 !top-0 !translate-y-0 sm:max-w-none">
@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Área principal */}
-            <div className={`flex flex-col flex-1 h-full transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'md:pl-20' : 'md:pl-60'}`}>
+            <div className={`flex flex-col flex-1 min-h-screen transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'md:pl-20' : 'md:pl-60'}`}>
                 <Header onMenuOpen={() => setIsMobileMenuOpen(true)} />
                 <main className="flex-1 overflow-y-auto px-4 md:px-8 pb-8">
                     {children}
