@@ -128,7 +128,7 @@ const TenderRow = memo(({
             { id: 'final', label: 'Homologado', icon: Trophy, color: 'text-emerald-500', match: (s: string) => s === 'HOMOLOGADO' }
         ];
 
-        const isCancelled = currentStatus.startsWith('CANCELADO');
+        const isCancelled = currentStatus.startsWith('CANCELADO') || currentStatus === 'ABANDONADO' || currentStatus.includes('Abandonado');
 
         return (
             <div className="flex items-center gap-1.5">
@@ -566,6 +566,8 @@ const TenderRow = memo(({
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-white dark:bg-slate-950 border-radar-dark/20 z-[9999]">
+                            <SelectItem value="CANCELADO">CANCELADO</SelectItem>
+                            <SelectItem value="ABANDONADO">ABANDONADO</SelectItem>
                             <SelectItem value="CANCELADO POR ABANDONO">CANCELADO POR ABANDONO</SelectItem>
                             <SelectItem value="CANCELADO POR REVOGAÇÃO">CANCELADO POR REVOGAÇÃO</SelectItem>
                             <SelectItem value="CANCELADO POR DUPLICIDADE DE OBJETO">CANCELADO POR DUPLICIDADE DE OBJETO</SelectItem>

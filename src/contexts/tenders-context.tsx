@@ -102,30 +102,37 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         status: 'offline'
     });
 
+    const isCloudLoaded = useRef(false);
     const hasUserInteracted = useRef(false);
     const autoSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const loadDataFromCloud = useCallback(async (skipGoldCheck: boolean = false) => {
         if (!supabase) return;
         setCloudStatus(prev => ({ ...prev, status: 'syncing' }));
+        console.log("[Radar] Buscando dados da nuvem...");
         try {
+            // 1. Equipe
             const { data: cloudTeam, error: teamError } = await supabase.from('team_members').select('*');
             if (teamError) throw teamError;
 
-            let cloudPregoeiros: Pregoeiro[] = [];
-            let cloudSupervisors: Supervisor[] = [];
-            let cloudPeople: Person[] = [];
+            if (cloudTeam && cloudTeam.length > 0) {
+                const cloudP = cloudTeam.filter(m => m.type === 'pregoeiro').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, om: m.om }));
+                const cloudS = cloudTeam.filter(m => m.type === 'supervisor').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, organization: m.om }));
+                const cloudR = cloudTeam.filter(m => m.type === 'requisitante').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, sector: m.om }));
 
-            if (cloudTeam) {
-                cloudPregoeiros = cloudTeam.filter(m => m.type === 'pregoeiro').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role }));
-                cloudSupervisors = cloudTeam.filter(m => m.type === 'supervisor').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, organization: m.om }));
-                cloudPeople = cloudTeam.filter(m => m.type === 'requisitante').map(m => ({ id: m.id, name: m.name, email: m.email, whatsapp: m.whatsapp, role: m.role, sector: m.om }));
+                setPregoeiros(cloudP);
+                setSupervisors(cloudS);
+                setPeople(cloudR);
+                console.log(`[Radar] ${cloudTeam.length} membros de equipe carregados.`);
             }
 
+            // 2. Licitações
             const { data: cloudTenders, error: tendersError } = await supabase.from('tenders').select('*');
             if (tendersError) throw tendersError;
 
             if (cloudTenders && cloudTenders.length > 0) {
+                console.log(`[Radar] ${cloudTenders.length} licitações encontradas na nuvem.`);
+
                 const mappedTenders: Tender[] = cloudTenders.map(t => ({
                     id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department,
                     openingDate: t.opening_date, estimatedValue: t.estimated_value, status: t.status, currentStage: t.current_stage,
@@ -139,7 +146,16 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     dates: t.dates || {}, updates: t.updates || [], observations: t.observations || []
                 } as Tender));
 
-                // Resgate de checks legados
+                // ORDENAÇÃO CRÍTICA: Manter row-1, row-2, etc em ordem
+                const sortedTenders = [...mappedTenders].sort((a, b) => {
+                    const getNum = (id: string) => {
+                        const m = id.match(/row-(\d+)/);
+                        return m ? parseInt(m[1], 10) : 999999;
+                    };
+                    return getNum(a.id) - getNum(b.id);
+                });
+
+                // 3. Checks Legados
                 const { data: legacyChecks } = await supabase.from('date_checks').select('*');
                 const newConfStatuses: Record<string, 'OK' | 'Pendente'> = {};
                 const newDateChecks: Record<string, Record<string, boolean>> = {};
@@ -154,22 +170,22 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     newDateChecks[t.id] = { ...tenderLegacyChecks, ...jsonbChecks };
                 });
 
-                setTenders(mappedTenders);
+                setTenders(sortedTenders);
                 setConferenceStatuses(newConfStatuses);
                 setDateChecks(newDateChecks);
-                if (cloudPregoeiros.length > 0) setPregoeiros(cloudPregoeiros);
-                if (cloudSupervisors.length > 0) setSupervisors(cloudSupervisors);
-                if (cloudPeople.length > 0) setPeople(cloudPeople);
 
+                isCloudLoaded.current = true;
                 setCloudStatus({
                     isConnected: true, status: 'online', lastSync: new Date(),
-                    totalTenders: mappedTenders.length,
+                    totalTenders: sortedTenders.length,
                     totalDates: Object.values(newDateChecks).reduce((acc, curr) => acc + Object.keys(curr).length, 0),
-                    totalPeople: cloudPregoeiros.length + cloudSupervisors.length + cloudPeople.length,
-                    totalRecords: mappedTenders.length + cloudPregoeiros.length + cloudSupervisors.length + cloudPeople.length
+                    totalPeople: cloudTeam?.length || 0,
+                    totalRecords: sortedTenders.length + (cloudTeam?.length || 0)
                 });
+                console.log("[Radar] Sincronização Cloud Completa.");
             }
         } catch (err: any) {
+            console.error("[Radar] Erro na carga cloud:", err.message);
             setCloudStatus(prev => ({ ...prev, status: 'error', isConnected: false, message: err.message }));
         }
     }, []);
@@ -178,7 +194,6 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         let isMounted = true;
         async function init() {
             if (supabase) {
-                console.log("[Radar] Carga inicial profunda...");
                 await loadDataFromCloud(true);
             }
             if (isMounted) setIsLoaded(true);
@@ -187,18 +202,27 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         return () => { isMounted = false; };
     }, [loadDataFromCloud]);
 
+    // BLINDAGEM DO AUTO-SYNC
     useEffect(() => {
-        if (!isLoaded || !supabase || !hasUserInteracted.current) return;
+        // SÓ SALVA SE: Estiver carregado, for interação do usuário e a carga da nuvem tiver tido sucesso
+        if (!isLoaded || !supabase || !hasUserInteracted.current || !isCloudLoaded.current) return;
+
         if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current);
         autoSyncTimeoutRef.current = setTimeout(async () => {
             try {
+                console.log("[AutoSync] Salvando alterações na nuvem com segurança...");
+
+                // 1. Upsert Equipe
                 const teamToUpload = [
                     ...pregoeiros.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'pregoeiro', om: (p as any).om || "" })),
                     ...supervisors.map(s => ({ id: s.id, name: s.name, email: s.email, whatsapp: s.whatsapp, role: s.role, type: 'supervisor', om: s.organization || "" })),
                     ...people.map(p => ({ id: p.id, name: p.name, email: p.email, whatsapp: p.whatsapp, role: p.role, type: 'requisitante', om: p.sector || "" }))
                 ];
-                if (teamToUpload.length > 0) await supabase.from('team_members').upsert(teamToUpload);
+                if (teamToUpload.length > 0) {
+                    await supabase.from('team_members').upsert(teamToUpload);
+                }
 
+                // 2. Upsert Licitações
                 const tendersToUpload = tenders.map(t => ({
                     id: t.id, uasg: t.uasg, number: t.number, nup: t.nup, description: t.description, department: t.department,
                     opening_date: t.openingDate, estimated_value: t.estimatedValue, status: t.status, current_stage: t.currentStage,
@@ -208,18 +232,24 @@ export function TendersProvider({ children }: { children: ReactNode }) {
                     next_deadline: t.nextDeadline, next_activity: t.nextActivity, intercurrences: t.intercurrences,
                     last_updated_by: t.lastUpdatedBy, quick_notes: t.quickNotes,
                     verification_status: conferenceStatuses[t.id] || 'Pendente',
-                    assigned_pregoeiro_id: t.assignedPregoeiroId, pregoeiro_fase_interna_id: t.pregoeiroFaseInternaId,
-                    pregoeiro_fase_externa_id: t.pregoeiroFaseExternaId,
+                    assigned_pregoeiro_id: t.assignedPregoeiroId || null,
+                    pregoeiro_fase_interna_id: t.pregoeiroFaseInternaId || null,
+                    pregoeiro_fase_externa_id: t.pregoeiroFaseExternaId || null,
                     dates: { ...(t.dates || {}), _date_checks: dateChecks[t.id] || {} },
                     updates: t.updates || [], observations: t.observations || []
                 }));
+
                 await supabase.from('tenders').upsert(tendersToUpload, { onConflict: 'id' });
 
                 setCloudStatus(prev => ({ ...prev, lastSync: new Date(), status: 'online' }));
+                console.log("[AutoSync] ✅ Sincronizado!");
             } catch (err: any) {
-                console.error('[AutoSync] Erro:', err.message);
+                console.error('[AutoSync] ❌ Falha:', err.message);
+                setCloudStatus(prev => ({ ...prev, status: 'error', message: err.message }));
             }
-        }, 1500);
+        }, 3000); // Aumentado para 3s para evitar spam durante edições rápidas
+
+        return () => { if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current); };
     }, [tenders, conferenceStatuses, dateChecks, isLoaded, pregoeiros, supervisors, people]);
 
     const saveHistory = useCallback(() => {
@@ -286,15 +316,15 @@ export function TendersProvider({ children }: { children: ReactNode }) {
 
     const addPerson = useCallback((d: Omit<Person, 'id'>) => { hasUserInteracted.current = true; setPeople(prev => [...prev, { ...d, id: `person-${Date.now()}` }]); }, []);
     const updatePerson = useCallback((id: string, u: Partial<Person>) => { hasUserInteracted.current = true; setPeople(prev => prev.map(p => p.id === id ? { ...p, ...u } : p)); }, []);
-    const deletePerson = useCallback((id: string) => { hasUserInteracted.current = true; setPeople(prev => prev.filter(p => p.id !== id)); }, []);
+    const deletePerson = useCallback((id: string) => { if (confirm("Remover contato?")) { hasUserInteracted.current = true; setPeople(prev => prev.filter(p => p.id !== id)); } }, []);
 
     const addPregoeiro = useCallback((d: Omit<Pregoeiro, 'id'>) => { hasUserInteracted.current = true; setPregoeiros(prev => [...prev, { ...d, id: `pregoeiro-${Date.now()}` }]); }, []);
     const updatePregoeiro = useCallback((id: string, u: Partial<Pregoeiro>) => { hasUserInteracted.current = true; setPregoeiros(prev => prev.map(p => p.id === id ? { ...p, ...u } : p)); }, []);
-    const deletePregoeiro = useCallback((id: string) => { hasUserInteracted.current = true; setPregoeiros(prev => prev.filter(p => p.id !== id)); }, []);
+    const deletePregoeiro = useCallback((id: string) => { if (confirm("Remover pregoeiro?")) { hasUserInteracted.current = true; setPregoeiros(prev => prev.filter(p => p.id !== id)); } }, []);
 
     const addSupervisor = useCallback((d: Omit<Supervisor, 'id'>) => { hasUserInteracted.current = true; setSupervisors(prev => [...prev, { ...d, id: `supervisor-${Date.now()}` }]); }, []);
     const updateSupervisor = useCallback((id: string, u: Partial<Supervisor>) => { hasUserInteracted.current = true; setSupervisors(prev => prev.map(s => s.id === id ? { ...s, ...u } : s)); }, []);
-    const deleteSupervisor = useCallback((id: string) => { hasUserInteracted.current = true; setSupervisors(prev => prev.filter(s => s.id !== id)); }, []);
+    const deleteSupervisor = useCallback((id: string) => { if (confirm("Remover supervisor?")) { hasUserInteracted.current = true; setSupervisors(prev => prev.filter(s => s.id !== id)); } }, []);
 
     const assignTenderToPregoeiro = useCallback((tid: string, pid: string, ph: 'interna' | 'externa') => {
         hasUserInteracted.current = true;
@@ -310,7 +340,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
 
     return (
         <TendersContext.Provider value={{
-            tenders, searchQuery, setSearchQuery, statusFilter, setStatusFilter, nupFilter, setNupFilter, commitmentFilter, setCommitmentFilter, coordinatorFilter, setCoordinatorFilter, requesterSectorFilter, setRequesterSectorFilter, updateTender, refreshTender: () => { }, showConferenceColumn, toggleConferenceColumn, conferenceStatuses, setConferenceStatus, bulkSetConferenceStatus, dateChecks, toggleDateCheck, deleteTender, addTenderBelow, undo, canUndo: history.length > 0, historyCount: history.length, resetToOriginalData, objectFilter, setObjectFilter, people, addPerson, updatePerson, deletePerson, pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro, assignTenderToPregoeiro, supervisors, addSupervisor, updateSupervisor, deleteSupervisor, highlightId, setHighlightId, cloudStatus, forceCloudSync: async () => { }, pullDataFromCloud: loadDataFromCloud, importTendersFromCSV
+            tenders, searchQuery, setSearchQuery, statusFilter, setStatusFilter, nupFilter, setNupFilter, commitmentFilter, setCommitmentFilter, coordinatorFilter, setCoordinatorFilter, requesterSectorFilter, setRequesterSectorFilter, updateTender, refreshTender: () => { }, showConferenceColumn, toggleConferenceColumn, conferenceStatuses, setConferenceStatus, bulkSetConferenceStatus, dateChecks, toggleDateCheck, deleteTender, addTenderBelow, undo, canUndo: history.length > 0, historyCount: history.length, resetToOriginalData, objectFilter, setObjectFilter, people, addPerson, updatePerson, deletePerson, pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro, assignTenderToPregoeiro, supervisors, addSupervisor, updateSupervisor, deleteSupervisor, highlightId, setHighlightId, cloudStatus, forceCloudSync: async () => { await loadDataFromCloud(); }, pullDataFromCloud: loadDataFromCloud, importTendersFromCSV
         }}>
             {children}
         </TendersContext.Provider>
