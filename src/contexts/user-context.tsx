@@ -104,10 +104,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
         });
 
-        // 3. Carregar Roles salvas (Persistência de Role independente do Auth)
-        const savedRole = localStorage.getItem('radar-role') as UserRole;
-        if (savedRole) setRole(savedRole);
-
         return () => subscription.unsubscribe();
     }, []);
 
@@ -163,15 +159,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Função de login legado (localStorage) – será gradualmente substituída
+    // Função de login legado removida para evitar simulações
     const login = (role: UserRole, name: string, email: string) => {
-        setIsAuthenticated(true);
-        setRole(role);
-        const tempId = `legacy-${Date.now()}`;
-        setUser({ id: tempId, name, email });
-        localStorage.setItem('radar-auth', 'true');
-        localStorage.setItem('radar-role', role);
-        localStorage.setItem('radar-user', JSON.stringify({ name, email }));
+        console.warn("Acesso via login legado desativado. Use autenticação Google.");
     };
 
     const logout = async () => {
@@ -184,7 +174,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const updateRole = (newRole: UserRole) => {
         setRole(newRole);
-        localStorage.setItem('radar-role', newRole);
     };
 
     const hasPermission = (permission: keyof UserPermissions): boolean => {

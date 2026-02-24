@@ -61,18 +61,12 @@ export function UserNav() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                    <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 tracking-widest px-4">Nível de Acesso (Simulado)</DropdownMenuLabel>
-                    {roles.map((r) => (
-                        <DropdownMenuItem
-                            key={r.label}
-                            onClick={() => setRole(r.label)}
-                            className="px-4 py-2 cursor-pointer focus:bg-slate-50 dark:focus:bg-slate-800"
-                        >
-                            <r.icon className={`mr-2 h-4 w-4 ${role === r.label ? 'text-radar-gold' : 'text-slate-400'}`} />
-                            <span className={role === r.label ? 'font-bold' : ''}>{r.label}</span>
-                            {role === r.label && <span className="ml-auto text-radar-gold font-black">✓</span>}
-                        </DropdownMenuItem>
-                    ))}
+                    <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 tracking-widest px-4">Função Atual</DropdownMenuLabel>
+                    <DropdownMenuItem className="px-4 py-2 focus:bg-transparent cursor-default">
+                        <Shield className="mr-2 h-4 w-4 text-radar-gold" />
+                        <span className="font-bold">{role}</span>
+                        <span className="ml-auto text-radar-gold font-black">✓</span>
+                    </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
