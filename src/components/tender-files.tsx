@@ -57,8 +57,8 @@ export function TenderFiles({ tenderId }: { tenderId: string }) {
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const selectedFiles = e.target.files;
+        if (!selectedFiles || selectedFiles.length === 0) return;
 
         setIsUploading(true);
         try {
@@ -66,54 +66,59 @@ export function TenderFiles({ tenderId }: { tenderId: string }) {
             const { data: userData } = await supabase.auth.getUser();
             const uploadedBy = userData?.user?.email || 'Usuário RADAR';
 
-            // Upload to Storage
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${tenderId}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-            const filePath = `${fileName}`;
+            // Convert FileList to Array
+            const filesArray = Array.from(selectedFiles);
 
-            const { error: uploadError } = await supabase.storage
-                .from('tender_documents')
-                .upload(filePath, file);
+            // Process all files concurrently
+            await Promise.all(filesArray.map(async (file) => {
+                // Upload to Storage
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${tenderId}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                const filePath = `${fileName}`;
 
-            if (uploadError) throw uploadError;
+                const { error: uploadError } = await supabase.storage
+                    .from('tender_documents')
+                    .upload(filePath, file);
 
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('tender_documents')
-                .getPublicUrl(filePath);
+                if (uploadError) throw uploadError;
 
-            // Save to DB
-            const { data: insertedData, error: dbError } = await supabase
-                .from('tender_files')
-                .insert([{
-                    tender_id: tenderId,
-                    file_name: file.name,
-                    file_size: file.size,
-                    file_url: publicUrl,
-                    uploaded_by: uploadedBy
-                }])
-                .select();
+                // Get public URL
+                const { data: { publicUrl } } = supabase.storage
+                    .from('tender_documents')
+                    .getPublicUrl(filePath);
 
-            if (dbError) throw dbError;
+                // Save to DB
+                const { data: insertedData, error: dbError } = await supabase
+                    .from('tender_files')
+                    .insert([{
+                        tender_id: tenderId,
+                        file_name: file.name,
+                        file_size: file.size,
+                        file_url: publicUrl,
+                        uploaded_by: uploadedBy
+                    }])
+                    .select();
 
-            // Trigger RAG Processing text extraction
-            if (insertedData && insertedData[0]) {
-                try {
-                    await fetch('/api/rag/process', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            fileUrl: publicUrl,
-                            tenderId: tenderId,
-                            fileId: insertedData[0].id,
-                            fileName: file.name
-                        })
-                    });
-                } catch (ragError) {
-                    console.error("Erro interno no RAG endpoint:", ragError);
-                    // Falha no RAG não deve impedir a lista de carregar a interface do PDF.
+                if (dbError) throw dbError;
+
+                // Trigger RAG Processing text extraction (fire and forget immediately)
+                if (insertedData && insertedData[0]) {
+                    try {
+                        fetch('/api/rag/process', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                fileUrl: publicUrl,
+                                tenderId: tenderId,
+                                fileId: insertedData[0].id,
+                                fileName: file.name
+                            })
+                        }).catch(err => console.error("Falha background RAG", err));
+                    } catch (ragError) {
+                        console.error("Erro interno no RAG endpoint:", ragError);
+                    }
                 }
-            }
+            }));
 
             // Refresh list
             fetchFiles();
@@ -177,6 +182,7 @@ export function TenderFiles({ tenderId }: { tenderId: string }) {
                             <>
                                 <input
                                     type="file"
+                                    multiple
                                     className="hidden"
                                     ref={fileInputRef}
                                     onChange={handleFileUpload}
@@ -215,37 +221,37 @@ export function TenderFiles({ tenderId }: { tenderId: string }) {
                         <p className="text-xs text-muted-foreground mt-1">Faça o upload de Editais, Termos de Referência (TR) e minutas.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                         {files.map(file => (
-                            <div key={file.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-card rounded-lg border shadow-sm group hover:border-radar-gold/50 transition-colors">
-                                <div className="flex items-start gap-3 overflow-hidden mb-3 sm:mb-0">
-                                    <div className="p-2 bg-muted rounded-md shrink-0">
-                                        <FileText className="h-5 w-5 text-radar-gold" />
+                            <div key={file.id} className="flex flex-col p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm group hover:border-radar-gold/50 transition-all hover:shadow-md relative">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg text-radar-gold group-hover:scale-110 transition-transform">
+                                        <FileText className="h-6 w-6" />
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-semibold truncate text-foreground" title={file.file_name}>
-                                            {file.file_name}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-                                            <span className="font-medium">{formatBytes(file.file_size)}</span>
-                                            <span>•</span>
-                                            <span>Por {file.uploaded_by}</span>
-                                            <span>•</span>
-                                            <span>{new Date(file.uploaded_at).toLocaleString('pt-BR')}</span>
-                                        </p>
+                                    <div className="flex gap-1 z-10">
+                                        {canManageFiles && (
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(file.id, file.file_url)} title="Excluir">
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        )}
+                                        <a href={file.file_url} target="_blank" rel="noopener noreferrer">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-radar-gold hover:bg-radar-gold/10 rounded-full" title="Baixar">
+                                                <Download className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </a>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                                        <Button variant="outline" size="sm" className="h-8 gap-1" title="Baixar">
-                                            <Download className="h-3.5 w-3.5" /> Baixar
-                                        </Button>
-                                    </a>
-                                    {canManageFiles && (
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950" onClick={() => handleDelete(file.id, file.file_url)} title="Excluir">
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    )}
+                                <div className="flex-1">
+                                    <p className="text-sm font-semibold truncate text-foreground mb-1 group-hover:text-radar-gold transition-colors" title={file.file_name}>
+                                        {file.file_name}
+                                    </p>
+                                    <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground font-medium">
+                                        <span>{formatBytes(file.file_size)}</span>
+                                        <span>{new Date(file.uploaded_at).toLocaleDateString('pt-BR')} às {new Date(file.uploaded_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-[9px] text-muted-foreground truncate uppercase tracking-wider">
+                                    Enviado por: {file.uploaded_by.split('@')[0]}
                                 </div>
                             </div>
                         ))}
