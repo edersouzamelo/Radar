@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function TenderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const { tenders, updateTender } = useTenders();
+    const { tenders, updateTender, dateChecks } = useTenders();
     const tender = tenders.find((t) => t.id === id);
 
     const [editingObsId, setEditingObsId] = useState<string | null>(null);
@@ -66,6 +66,67 @@ export default function TenderDetailsPage({ params }: { params: Promise<{ id: st
         updateTender(tender.id, { updates: newUpdates });
     };
 
+    const checks = tender ? (dateChecks[tender.id] || {}) : {};
+
+    const timelineSteps = [
+        {
+            title: 'Protocolo Inicial do Setor Requisitante',
+            dateLabel: 'Definido',
+            dateValue: tender?.dates?.protocoloSetorRequisitante?.defined,
+            extraLabel: 'Executado',
+            extraValue: tender?.dates?.protocoloSetorRequisitante?.executed,
+            checked: checks['protocoloSetorRequisitante.defined'] || !!tender?.dates?.protocoloSetorRequisitante?.executed
+        },
+        {
+            title: 'Envio à CJU',
+            dateLabel: 'Prazo',
+            dateValue: tender?.dates?.cjuSendDeadline,
+            checked: checks['cjuSendDeadline']
+        },
+        {
+            title: 'Regresso da CJU',
+            dateLabel: 'Data',
+            dateValue: tender?.dates?.cjuReturnDate,
+            checked: checks['cjuReturnDate']
+        },
+        {
+            title: 'Ajustes para Publicação',
+            dateLabel: 'Prazo',
+            dateValue: tender?.dates?.publicationAdjustmentsDeadline,
+            checked: checks['publicationAdjustmentsDeadline']
+        },
+        {
+            title: 'Publicação',
+            dateLabel: 'Data',
+            dateValue: tender?.dates?.publicationDate,
+            checked: checks['publicationDate']
+        },
+        {
+            title: 'Sessão Pública / Abertura de Propostas',
+            dateLabel: 'Data',
+            dateValue: tender?.dates?.proposalOpeningDate,
+            checked: checks['proposalOpeningDate']
+        },
+        {
+            title: 'Previsão de Homologação',
+            dateLabel: 'Previsão',
+            dateValue: tender?.dates?.homologationForecast,
+            checked: checks['homologationForecast']
+        },
+        {
+            title: 'Prazo Homologação',
+            dateLabel: 'Prazo Limite',
+            dateValue: tender?.dates?.homologationDeadline,
+            checked: checks['homologationDeadline']
+        },
+        {
+            title: 'Assinatura das Atas',
+            dateLabel: 'Prazo',
+            dateValue: tender?.dates?.minutesSignatureDeadline,
+            checked: checks['minutesSignatureDeadline']
+        }
+    ];
+
     return (
         <div className="space-y-6">
             {/* Cabeçalho e Navegação */}
@@ -113,77 +174,26 @@ export default function TenderDetailsPage({ params }: { params: Promise<{ id: st
                         </CardHeader>
                         <CardContent>
                             <div className="relative border-l-2 border-muted ml-3 space-y-8 pb-4 mt-2">
-                                {/* Item 1: Protocolo */}
-                                <div className="mb-8 ml-6 relative">
-                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.protocoloSetorRequisitante?.executed ? 'bg-green-500' : tender.dates?.protocoloSetorRequisitante?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
-                                        {tender.dates?.protocoloSetorRequisitante?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
-                                    </span>
-                                    <h3 className="text-base font-semibold text-foreground">Protocolo Inicial do Setor Requisitante</h3>
-                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
-                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.protocoloSetorRequisitante?.defined ? new Date(tender.dates.protocoloSetorRequisitante.defined).toLocaleDateString('pt-BR') : '-'}</div>
-                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.protocoloSetorRequisitante?.executed ? new Date(tender.dates.protocoloSetorRequisitante.executed).toLocaleDateString('pt-BR') : '-'}</div>
+                                {timelineSteps.map((step, index) => (
+                                    <div key={index} className={`mb-8 ml-6 relative ${index === timelineSteps.length - 1 ? 'mb-0' : ''}`}>
+                                        <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${step.checked ? 'bg-green-500' : step.dateValue ? 'bg-amber-500' : 'bg-muted'}`}>
+                                            {step.checked ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
+                                        </span>
+                                        <h3 className="text-base font-semibold text-foreground">{step.title}</h3>
+                                        <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
+                                            <div>
+                                                <span className="font-medium text-foreground">{step.dateLabel}:</span> <br />
+                                                {step.dateValue ? new Date(step.dateValue).toLocaleDateString('pt-BR') : '-'}
+                                            </div>
+                                            {step.extraLabel && (
+                                                <div>
+                                                    <span className="font-medium text-foreground">{step.extraLabel}:</span> <br />
+                                                    {step.extraValue ? new Date(step.extraValue).toLocaleDateString('pt-BR') : '-'}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* Item 2: Fase Interna */}
-                                <div className="mb-8 ml-6 relative">
-                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.faseInternaSALC?.executed ? 'bg-green-500' : tender.dates?.faseInternaSALC?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
-                                        {tender.dates?.faseInternaSALC?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
-                                    </span>
-                                    <h3 className="text-base font-semibold text-foreground">Fase Interna SALC → CJU</h3>
-                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
-                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.faseInternaSALC?.defined ? new Date(tender.dates.faseInternaSALC.defined).toLocaleDateString('pt-BR') : '-'}</div>
-                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.faseInternaSALC?.executed ? new Date(tender.dates.faseInternaSALC.executed).toLocaleDateString('pt-BR') : '-'}</div>
-                                    </div>
-                                </div>
-
-                                {/* Item 3: CJU */}
-                                <div className="mb-8 ml-6 relative">
-                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.retornoCJU?.occurred ? 'bg-green-500' : tender.dates?.retornoCJU?.estimated ? 'bg-amber-500' : 'bg-muted'}`}>
-                                        {tender.dates?.retornoCJU?.occurred ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
-                                    </span>
-                                    <h3 className="text-base font-semibold text-foreground">Retorno da CJU</h3>
-                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
-                                        <div><span className="font-medium text-foreground">Estimado:</span> <br />{tender.dates?.retornoCJU?.estimated ? new Date(tender.dates.retornoCJU.estimated).toLocaleDateString('pt-BR') : '-'}</div>
-                                        <div><span className="font-medium text-foreground">Ocorrido:</span> <br />{tender.dates?.retornoCJU?.occurred ? new Date(tender.dates.retornoCJU.occurred).toLocaleDateString('pt-BR') : '-'}</div>
-                                    </div>
-                                </div>
-
-                                {/* Item 4: Ajustes */}
-                                <div className="mb-8 ml-6 relative">
-                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.ajustesPublicacao?.executed ? 'bg-green-500' : tender.dates?.ajustesPublicacao?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
-                                        {tender.dates?.ajustesPublicacao?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
-                                    </span>
-                                    <h3 className="text-base font-semibold text-foreground">Ajustes até Publicação</h3>
-                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
-                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.ajustesPublicacao?.defined ? new Date(tender.dates.ajustesPublicacao.defined).toLocaleDateString('pt-BR') : '-'}</div>
-                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.ajustesPublicacao?.executed ? new Date(tender.dates.ajustesPublicacao.executed).toLocaleDateString('pt-BR') : '-'}</div>
-                                    </div>
-                                </div>
-
-                                {/* Item 5: Sessao */}
-                                <div className="mb-8 ml-6 relative">
-                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.inicioSessaoPublica?.executed ? 'bg-green-500' : tender.dates?.inicioSessaoPublica?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
-                                        {tender.dates?.inicioSessaoPublica?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
-                                    </span>
-                                    <h3 className="text-base font-semibold text-foreground">Início Sessão Pública</h3>
-                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
-                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.inicioSessaoPublica?.defined ? new Date(tender.dates.inicioSessaoPublica.defined).toLocaleDateString('pt-BR') : '-'}</div>
-                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.inicioSessaoPublica?.executed ? new Date(tender.dates.inicioSessaoPublica.executed).toLocaleDateString('pt-BR') : '-'}</div>
-                                    </div>
-                                </div>
-
-                                {/* Item 6: Homologacao */}
-                                <div className="mb-0 ml-6 relative">
-                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.homologacao?.executed ? 'bg-green-500' : tender.dates?.homologacao?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
-                                        {tender.dates?.homologacao?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
-                                    </span>
-                                    <h3 className="text-base font-semibold text-foreground">Homologação pela SALC</h3>
-                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
-                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.homologacao?.defined ? new Date(tender.dates.homologacao.defined).toLocaleDateString('pt-BR') : '-'}</div>
-                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.homologacao?.executed ? new Date(tender.dates.homologacao.executed).toLocaleDateString('pt-BR') : '-'}</div>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                             {(tender.dates?.vigenciaAnterior || tender.dates?.prazoGCALC) && (
                                 <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
