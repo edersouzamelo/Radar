@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Usando require porque pdf-parse causa erro de default export em módulo ESM
-const pdf = require('pdf-parse');
+// Require is removed, we will dynamic import inside the function to avoid ESM top-level crashes
 
 // Initialize Supabase admin client (requires service role key or anon key depending on your setup)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -66,7 +65,9 @@ export async function POST(req: Request) {
 
         // 2. Extract text (currently assuming PDF, but we can add more logic)
         if (fileName.toLowerCase().endsWith('.pdf')) {
-            const pdfData = await pdf(buffer);
+            const pdfModule = await import('pdf-parse');
+            const pdfFn = pdfModule.default || pdfModule;
+            const pdfData = await pdfFn(buffer);
             extractedText = pdfData.text;
         } else {
             // Se for TXT ou outro formato de texto simples
