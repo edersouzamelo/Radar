@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Require is removed, we will dynamic import inside the function to avoid ESM top-level crashes
+const pdf = require('pdf-parse');
+
 export const maxDuration = 60; // 1 min (Vercel max for Hobby)
 export const dynamic = 'force-dynamic';
 
@@ -67,9 +68,7 @@ export async function POST(req: Request) {
 
         // 2. Extract text (currently assuming PDF, but we can add more logic)
         if (fileName.toLowerCase().endsWith('.pdf')) {
-            const pdfModule = await import('pdf-parse');
-            const pdfFn = (pdfModule as any).default || pdfModule;
-            const pdfData = await pdfFn(buffer);
+            const pdfData = await pdf(buffer);
             extractedText = pdfData.text;
         } else {
             // Se for TXT ou outro formato de texto simples
