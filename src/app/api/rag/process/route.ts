@@ -23,7 +23,7 @@ function chunkText(text: string): string[] {
     return chunks;
 }
 
-async function getEmbedding(text: string) {
+async function getEmbeddingsBatch(texts: string[]) {
     const response = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
         headers: {
@@ -31,17 +31,18 @@ async function getEmbedding(text: string) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            input: text.replace(/\n/g, ' '),
+            input: texts.map(t => t.replace(/\n/g, ' ')),
             model: 'text-embedding-ada-002'
         })
     });
 
     if (!response.ok) {
-        throw new Error(`OpenAI API Error: ${response.statusText}`);
+        let errText = await response.text();
+        throw new Error(`OpenAI API Error: ${response.status} - ${errText}`);
     }
 
     const result = await response.json();
-    return result.data[0].embedding;
+    return result.data.map((item: any) => item.embedding);
 }
 
 export async function POST(req: Request) {
@@ -84,29 +85,30 @@ export async function POST(req: Request) {
         // 3. Chunk text
         const chunks = chunkText(extractedText);
 
-        // 4. Generate Embeddings and Save to Supabase
-        // Process in batches to avoid rate limits or memory issues
-        const insertedChunks = [];
+        // 4. Generate Embeddings and Save to Supabase (BATCH)
+        const batchSize = 50;
+        let totalInserted = 0;
 
-        for (let i = 0; i < chunks.length; i++) {
-            const chunkContent = chunks[i];
-            const embedding = await getEmbedding(chunkContent);
+        for (let i = 0; i < chunks.length; i += batchSize) {
+            const currentBatch = chunks.slice(i, i + batchSize);
+            const embeddings = await getEmbeddingsBatch(currentBatch);
 
-            const { data, error } = await supabase
+            const documentsToInsert = currentBatch.map((content, idx) => ({
+                tender_id: tenderId,
+                file_id: fileId,
+                content: content,
+                embedding: embeddings[idx]
+            }));
+
+            const { error } = await supabase
                 .from('tender_document_chunks')
-                .insert({
-                    tender_id: tenderId,
-                    file_id: fileId,
-                    content: chunkContent,
-                    embedding: embedding
-                });
+                .insert(documentsToInsert);
 
             if (error) {
-                console.error("Supabase Insert Error:", error);
-                throw new Error("Falha ao salvar chunk no banco.");
+                console.error("Supabase Bulk Insert Error:", error);
+                throw new Error("Falha ao salvar chunks no banco de vetores.");
             }
-
-            insertedChunks.push({ id: i });
+            totalInserted += documentsToInsert.length;
         }
 
         return NextResponse.json({
