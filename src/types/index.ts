@@ -196,6 +196,7 @@ export interface Tender {
     section?: string;
     responsibleInternal?: string;
     responsibleExternal?: string;
+    pregoeiro?: string;
     biPublication?: string;
     optimizationNotes?: string;
     nextDeadline?: string;

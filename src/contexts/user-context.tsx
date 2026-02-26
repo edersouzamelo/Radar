@@ -237,10 +237,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
     };
 
     const loginWithGoogle = async () => {
+        // Detect if we are on localhost vs production
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        let redirectUrl = window.location.origin;
+
+        // Ensure proper callback URL for Supabase
+        if (isLocalhost) {
+            redirectUrl = 'http://localhost:3000';
+        } else {
+            // Production origin is fine for Vercel, Supabase is configured with it
+            redirectUrl = window.location.origin;
+        }
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: redirectUrl
             }
         });
         if (error) {
