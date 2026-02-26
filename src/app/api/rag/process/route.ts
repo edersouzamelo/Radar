@@ -66,7 +66,7 @@ export async function POST(req: Request) {
         // 2. Extract text (currently assuming PDF, but we can add more logic)
         if (fileName.toLowerCase().endsWith('.pdf')) {
             const pdfModule = await import('pdf-parse');
-            const pdfFn = pdfModule.default || pdfModule;
+            const pdfFn = (pdfModule as any).default || pdfModule;
             const pdfData = await pdfFn(buffer);
             extractedText = pdfData.text;
         } else {

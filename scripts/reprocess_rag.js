@@ -70,7 +70,7 @@ async function reprocessAllFiles() {
             }
 
             // Call the local API built for this exact purpose
-            const reqUrl = 'http://localhost:3000/api/rag/process';
+            const reqUrl = 'https://radar-jet.vercel.app/api/rag/process';
 
             const response = await fetch(reqUrl, {
                 method: 'POST',
