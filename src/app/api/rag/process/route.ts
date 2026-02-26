@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Require is removed, we will dynamic import inside the function to avoid ESM top-level crashes
+export const maxDuration = 60; // 1 min (Vercel max for Hobby)
+export const dynamic = 'force-dynamic';
 
 // Initialize Supabase admin client (requires service role key or anon key depending on your setup)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
