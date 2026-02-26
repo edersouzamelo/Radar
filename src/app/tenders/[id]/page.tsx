@@ -7,13 +7,24 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EditTenderModal } from "@/components/edit-tender-modal";
 import { ObservationModal } from "@/components/observation-modal";
-import { ArrowLeft, Calendar, DollarSign, Building2, AlertCircle, CheckCircle2, User, Users, ClipboardCheck, Info, Lightbulb, History, Zap } from "lucide-react";
-import { use } from "react";
+import { TenderFiles } from "@/components/tender-files";
+import { TenderMiniChat } from "@/components/tender-mini-chat";
+import { ArrowLeft, Calendar, DollarSign, Building2, AlertCircle, CheckCircle2, User, Users, ClipboardCheck, Info, Lightbulb, History, Zap, Pencil, Trash2, Check, X } from "lucide-react";
+import { useState, use } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function TenderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const { tenders } = useTenders();
+    const { tenders, updateTender } = useTenders();
     const tender = tenders.find((t) => t.id === id);
+
+    const [editingObsId, setEditingObsId] = useState<string | null>(null);
+    const [editObsContent, setEditObsContent] = useState("");
+
+    const [editingHistoryId, setEditingHistoryId] = useState<string | null>(null);
+    const [editHistoryContent, setEditHistoryContent] = useState("");
 
     if (!tender) {
         return (
@@ -27,7 +38,33 @@ export default function TenderDetailsPage({ params }: { params: Promise<{ id: st
     }
 
     // Ordenar atualizações da mais recente para a mais antiga
-    const sortedUpdates = [...tender.updates].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const sortedUpdates = [...(tender.updates || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const saveObservation = (obsId: string) => {
+        if (!tender || editObsContent.trim() === "") return;
+        const newObs = tender.observations?.map(obs => obs.id === obsId ? { ...obs, content: editObsContent } : obs) || [];
+        updateTender(tender.id, { observations: newObs });
+        setEditingObsId(null);
+    };
+
+    const deleteObservation = (obsId: string) => {
+        if (!tender || !confirm("Excluir observação permanentemente?")) return;
+        const newObs = tender.observations?.filter(obs => obs.id !== obsId) || [];
+        updateTender(tender.id, { observations: newObs });
+    };
+
+    const saveHistory = (histId: string) => {
+        if (!tender || editHistoryContent.trim() === "") return;
+        const newUpdates = tender.updates?.map(up => up.id === histId ? { ...up, description: editHistoryContent } : up) || [];
+        updateTender(tender.id, { updates: newUpdates });
+        setEditingHistoryId(null);
+    };
+
+    const deleteHistory = (histId: string) => {
+        if (!tender || !confirm("Excluir evento do histórico permanentemente?")) return;
+        const newUpdates = tender.updates?.filter(up => up.id !== histId) || [];
+        updateTender(tender.id, { updates: newUpdates });
+    };
 
     return (
         <div className="space-y-6">
@@ -64,93 +101,89 @@ export default function TenderDetailsPage({ params }: { params: Promise<{ id: st
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">
-                {/* Coluna Principal: Detalhes e Linha do Tempo */}
+                {/* Coluna Principal: Arquivos, Detalhes e Linha do Tempo */}
                 <div className="md:col-span-2 space-y-6">
-                    {/* Tabela de Prazos */}
+                    {/* Componente de Arquivos Anexados */}
+                    <TenderFiles tenderId={tender.id} />
+
+                    {/* Linha do Tempo de Prazos */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Controle de Prazos</CardTitle>
+                            <CardTitle>Linha do Tempo de Prazos</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead className="text-xs uppercase bg-muted">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left">Etapa</th>
-                                            <th className="px-4 py-3 text-left">Prazo Definido</th>
-                                            <th className="px-4 py-3 text-left">Prazo Executado</th>
-                                            <th className="px-4 py-3 text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        <tr className="hover:bg-muted/50">
-                                            <td className="px-4 py-3 font-medium">Protocolo Setor Requisitante</td>
-                                            <td className="px-4 py-3">{tender.dates?.protocoloSetorRequisitante?.defined ? new Date(tender.dates.protocoloSetorRequisitante.defined).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3">{tender.dates?.protocoloSetorRequisitante?.executed ? new Date(tender.dates.protocoloSetorRequisitante.executed).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3 text-center">
-                                                {tender.dates?.protocoloSetorRequisitante?.executed ?
-                                                    <CheckCircle2 className="h-5 w-5 text-green-500 inline" /> :
-                                                    <AlertCircle className="h-5 w-5 text-gray-400 inline" />
-                                                }
-                                            </td>
-                                        </tr>
-                                        <tr className="hover:bg-muted/50">
-                                            <td className="px-4 py-3 font-medium">Fase Interna SALC → CJU</td>
-                                            <td className="px-4 py-3">{tender.dates?.faseInternaSALC?.defined ? new Date(tender.dates.faseInternaSALC.defined).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3">{tender.dates?.faseInternaSALC?.executed ? new Date(tender.dates.faseInternaSALC.executed).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3 text-center">
-                                                {tender.dates?.faseInternaSALC?.executed ?
-                                                    <CheckCircle2 className="h-5 w-5 text-green-500 inline" /> :
-                                                    <AlertCircle className="h-5 w-5 text-gray-400 inline" />
-                                                }
-                                            </td>
-                                        </tr>
-                                        <tr className="hover:bg-muted/50">
-                                            <td className="px-4 py-3 font-medium">Retorno da CJU</td>
-                                            <td className="px-4 py-3">{tender.dates?.retornoCJU?.estimated ? new Date(tender.dates.retornoCJU.estimated).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3">{tender.dates?.retornoCJU?.occurred ? new Date(tender.dates.retornoCJU.occurred).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3 text-center">
-                                                {tender.dates?.retornoCJU?.occurred ?
-                                                    <CheckCircle2 className="h-5 w-5 text-green-500 inline" /> :
-                                                    <AlertCircle className="h-5 w-5 text-gray-400 inline" />
-                                                }
-                                            </td>
-                                        </tr>
-                                        <tr className="hover:bg-muted/50">
-                                            <td className="px-4 py-3 font-medium">Ajustes até Publicação</td>
-                                            <td className="px-4 py-3">{tender.dates?.ajustesPublicacao?.defined ? new Date(tender.dates.ajustesPublicacao.defined).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3">{tender.dates?.ajustesPublicacao?.executed ? new Date(tender.dates.ajustesPublicacao.executed).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3 text-center">
-                                                {tender.dates?.ajustesPublicacao?.executed ?
-                                                    <CheckCircle2 className="h-5 w-5 text-green-500 inline" /> :
-                                                    <AlertCircle className="h-5 w-5 text-gray-400 inline" />
-                                                }
-                                            </td>
-                                        </tr>
-                                        <tr className="hover:bg-muted/50">
-                                            <td className="px-4 py-3 font-medium">Início Sessão Pública</td>
-                                            <td className="px-4 py-3">{tender.dates?.inicioSessaoPublica?.defined ? new Date(tender.dates.inicioSessaoPublica.defined).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3">{tender.dates?.inicioSessaoPublica?.executed ? new Date(tender.dates.inicioSessaoPublica.executed).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3 text-center">
-                                                {tender.dates?.inicioSessaoPublica?.executed ?
-                                                    <CheckCircle2 className="h-5 w-5 text-green-500 inline" /> :
-                                                    <AlertCircle className="h-5 w-5 text-gray-400 inline" />
-                                                }
-                                            </td>
-                                        </tr>
-                                        <tr className="hover:bg-muted/50">
-                                            <td className="px-4 py-3 font-medium">Homologação</td>
-                                            <td className="px-4 py-3">{tender.dates?.homologacao?.defined ? new Date(tender.dates.homologacao.defined).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3">{tender.dates?.homologacao?.executed ? new Date(tender.dates.homologacao.executed).toLocaleDateString('pt-BR') : '-'}</td>
-                                            <td className="px-4 py-3 text-center">
-                                                {tender.dates?.homologacao?.executed ?
-                                                    <CheckCircle2 className="h-5 w-5 text-green-500 inline" /> :
-                                                    <AlertCircle className="h-5 w-5 text-gray-400 inline" />
-                                                }
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div className="relative border-l-2 border-muted ml-3 space-y-8 pb-4 mt-2">
+                                {/* Item 1: Protocolo */}
+                                <div className="mb-8 ml-6 relative">
+                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.protocoloSetorRequisitante?.executed ? 'bg-green-500' : tender.dates?.protocoloSetorRequisitante?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
+                                        {tender.dates?.protocoloSetorRequisitante?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
+                                    </span>
+                                    <h3 className="text-base font-semibold text-foreground">Protocolo Inicial do Setor Requisitante</h3>
+                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
+                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.protocoloSetorRequisitante?.defined ? new Date(tender.dates.protocoloSetorRequisitante.defined).toLocaleDateString('pt-BR') : '-'}</div>
+                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.protocoloSetorRequisitante?.executed ? new Date(tender.dates.protocoloSetorRequisitante.executed).toLocaleDateString('pt-BR') : '-'}</div>
+                                    </div>
+                                </div>
+
+                                {/* Item 2: Fase Interna */}
+                                <div className="mb-8 ml-6 relative">
+                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.faseInternaSALC?.executed ? 'bg-green-500' : tender.dates?.faseInternaSALC?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
+                                        {tender.dates?.faseInternaSALC?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
+                                    </span>
+                                    <h3 className="text-base font-semibold text-foreground">Fase Interna SALC → CJU</h3>
+                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
+                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.faseInternaSALC?.defined ? new Date(tender.dates.faseInternaSALC.defined).toLocaleDateString('pt-BR') : '-'}</div>
+                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.faseInternaSALC?.executed ? new Date(tender.dates.faseInternaSALC.executed).toLocaleDateString('pt-BR') : '-'}</div>
+                                    </div>
+                                </div>
+
+                                {/* Item 3: CJU */}
+                                <div className="mb-8 ml-6 relative">
+                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.retornoCJU?.occurred ? 'bg-green-500' : tender.dates?.retornoCJU?.estimated ? 'bg-amber-500' : 'bg-muted'}`}>
+                                        {tender.dates?.retornoCJU?.occurred ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
+                                    </span>
+                                    <h3 className="text-base font-semibold text-foreground">Retorno da CJU</h3>
+                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
+                                        <div><span className="font-medium text-foreground">Estimado:</span> <br />{tender.dates?.retornoCJU?.estimated ? new Date(tender.dates.retornoCJU.estimated).toLocaleDateString('pt-BR') : '-'}</div>
+                                        <div><span className="font-medium text-foreground">Ocorrido:</span> <br />{tender.dates?.retornoCJU?.occurred ? new Date(tender.dates.retornoCJU.occurred).toLocaleDateString('pt-BR') : '-'}</div>
+                                    </div>
+                                </div>
+
+                                {/* Item 4: Ajustes */}
+                                <div className="mb-8 ml-6 relative">
+                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.ajustesPublicacao?.executed ? 'bg-green-500' : tender.dates?.ajustesPublicacao?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
+                                        {tender.dates?.ajustesPublicacao?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
+                                    </span>
+                                    <h3 className="text-base font-semibold text-foreground">Ajustes até Publicação</h3>
+                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
+                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.ajustesPublicacao?.defined ? new Date(tender.dates.ajustesPublicacao.defined).toLocaleDateString('pt-BR') : '-'}</div>
+                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.ajustesPublicacao?.executed ? new Date(tender.dates.ajustesPublicacao.executed).toLocaleDateString('pt-BR') : '-'}</div>
+                                    </div>
+                                </div>
+
+                                {/* Item 5: Sessao */}
+                                <div className="mb-8 ml-6 relative">
+                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.inicioSessaoPublica?.executed ? 'bg-green-500' : tender.dates?.inicioSessaoPublica?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
+                                        {tender.dates?.inicioSessaoPublica?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
+                                    </span>
+                                    <h3 className="text-base font-semibold text-foreground">Início Sessão Pública</h3>
+                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
+                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.inicioSessaoPublica?.defined ? new Date(tender.dates.inicioSessaoPublica.defined).toLocaleDateString('pt-BR') : '-'}</div>
+                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.inicioSessaoPublica?.executed ? new Date(tender.dates.inicioSessaoPublica.executed).toLocaleDateString('pt-BR') : '-'}</div>
+                                    </div>
+                                </div>
+
+                                {/* Item 6: Homologacao */}
+                                <div className="mb-0 ml-6 relative">
+                                    <span className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${tender.dates?.homologacao?.executed ? 'bg-green-500' : tender.dates?.homologacao?.defined ? 'bg-amber-500' : 'bg-muted'}`}>
+                                        {tender.dates?.homologacao?.executed ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-white" />}
+                                    </span>
+                                    <h3 className="text-base font-semibold text-foreground">Homologação pela SALC</h3>
+                                    <div className="mt-2 text-sm text-muted-foreground grid grid-cols-2 gap-2">
+                                        <div><span className="font-medium text-foreground">Definido:</span> <br />{tender.dates?.homologacao?.defined ? new Date(tender.dates.homologacao.defined).toLocaleDateString('pt-BR') : '-'}</div>
+                                        <div><span className="font-medium text-foreground">Executado:</span> <br />{tender.dates?.homologacao?.executed ? new Date(tender.dates.homologacao.executed).toLocaleDateString('pt-BR') : '-'}</div>
+                                    </div>
+                                </div>
                             </div>
                             {(tender.dates?.vigenciaAnterior || tender.dates?.prazoGCALC) && (
                                 <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-4">
@@ -216,11 +249,40 @@ export default function TenderDetailsPage({ params }: { params: Promise<{ id: st
                             <CardContent>
                                 <div className="space-y-4">
                                     {tender.observations.map((obs) => (
-                                        <div key={obs.id} className="border-l-4 border-radar-gold pl-4 py-2">
-                                            <p className="text-sm text-foreground">{obs.content}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Por <span className="font-medium">{obs.author}</span> em {new Date(obs.date).toLocaleDateString('pt-BR')}
-                                            </p>
+                                        <div key={obs.id} className="border-l-4 border-radar-gold pl-4 py-2 group relative pr-16 bg-muted/10 hover:bg-muted/30 transition-colors rounded-r-lg">
+                                            {editingObsId === obs.id ? (
+                                                <div className="space-y-2 mt-1">
+                                                    <Textarea
+                                                        value={editObsContent}
+                                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditObsContent(e.target.value)}
+                                                        className="min-h-[80px]"
+                                                    />
+                                                    <div className="flex gap-2">
+                                                        <Button size="sm" onClick={() => saveObservation(obs.id)} className="h-8 shadow-sm">
+                                                            <Check className="h-4 w-4 mr-1" /> Salvar
+                                                        </Button>
+                                                        <Button size="sm" variant="outline" onClick={() => setEditingObsId(null)} className="h-8">
+                                                            <X className="h-4 w-4 mr-1" /> Cancelar
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <p className="text-sm text-foreground whitespace-pre-wrap">{obs.content}</p>
+                                                    <p className="text-xs text-muted-foreground mt-2 font-medium">
+                                                        Por <span className="text-foreground">{obs.author}</span> em {new Date(obs.date).toLocaleDateString('pt-BR')}
+                                                    </p>
+
+                                                    <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-radar-gold hover:bg-radar-gold/10" onClick={() => { setEditingObsId(obs.id); setEditObsContent(obs.content); }}>
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950" onClick={() => deleteObservation(obs.id)}>
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -236,22 +298,53 @@ export default function TenderDetailsPage({ params }: { params: Promise<{ id: st
                         <CardContent>
                             <div className="relative border-l border-border ml-3 space-y-8 pb-4">
                                 {sortedUpdates.map((update) => (
-                                    <div key={update.id} className="mb-8 ml-6 relative">
-                                        <span className={`absolute -left-[37px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background ${update.type === 'alert' ? 'bg-red-500' :
+                                    <div key={update.id} className="mb-8 ml-6 relative group">
+                                        <span className={`absolute -left-[37px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background shadow-sm ${update.type === 'alert' ? 'bg-red-500' :
                                             update.type === 'warning' ? 'bg-amber-500' :
                                                 update.type === 'success' ? 'bg-green-500' :
                                                     'bg-blue-500'
                                             }`}>
                                         </span>
-                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline">
-                                            <h3 className="text-base font-semibold text-foreground">{update.description}</h3>
-                                            <time className="block mb-1 text-sm font-normal leading-none text-muted-foreground sm:order-last sm:mb-0">
-                                                {new Date(update.date).toLocaleDateString('pt-BR')} às {new Date(update.date).toLocaleTimeString('pt-BR')}
-                                            </time>
+                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline relative pr-16 bg-muted/5 hover:bg-muted/30 p-2 -ml-2 rounded-lg transition-colors">
+
+                                            {editingHistoryId === update.id ? (
+                                                <div className="w-full space-y-2">
+                                                    <Input
+                                                        value={editHistoryContent}
+                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditHistoryContent(e.target.value)}
+                                                        className="font-semibold text-base"
+                                                    />
+                                                    <div className="flex gap-2">
+                                                        <Button size="sm" onClick={() => saveHistory(update.id)} className="h-8 shadow-sm">
+                                                            <Check className="h-4 w-4 mr-1" /> Salvar
+                                                        </Button>
+                                                        <Button size="sm" variant="outline" onClick={() => setEditingHistoryId(null)} className="h-8">
+                                                            <X className="h-4 w-4 mr-1" /> Cancelar
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="w-full">
+                                                    <h3 className="text-base font-semibold text-foreground">{update.description}</h3>
+                                                    <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                                                        <time className="block text-xs font-medium text-muted-foreground">
+                                                            {new Date(update.date).toLocaleDateString('pt-BR')} às {new Date(update.date).toLocaleTimeString('pt-BR').substring(0, 5)}
+                                                        </time>
+                                                        <span className="text-xs text-muted-foreground">•</span>
+                                                        <span className="text-xs text-foreground font-medium bg-muted px-2 py-0.5 rounded-full">{update.author}</span>
+                                                    </div>
+
+                                                    <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-radar-gold hover:bg-radar-gold/10" onClick={() => { setEditingHistoryId(update.id); setEditHistoryContent(update.description); }}>
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950" onClick={() => deleteHistory(update.id)}>
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <p className="mb-4 text-sm font-normal text-muted-foreground">
-                                            Registrado por: <span className="font-medium text-foreground">{update.author}</span>
-                                        </p>
                                     </div>
                                 ))}
                             </div>
@@ -356,6 +449,9 @@ export default function TenderDetailsPage({ params }: { params: Promise<{ id: st
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Chat Contextual do Pregão */}
+                    <TenderMiniChat tender={tender} />
                 </div>
             </div>
         </div>
