@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Ignore native modules from webpack bundling
+  serverExternalPackages: ['pdf-parse'],
 };
 
 export default nextConfig;

@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { FileText, UploadCloud, Download, Trash2, Loader2 } from 'lucide-react';
+import { FileText, UploadCloud, Download, Trash2, Loader2, ShieldAlert } from 'lucide-react';
+import { useUser } from '@/contexts/user-context';
 
 interface TenderFile {
     id: string;
@@ -17,6 +18,10 @@ interface TenderFile {
 }
 
 export function TenderFiles({ tenderId }: { tenderId: string }) {
+    const { role, user } = useUser();
+    const isMajor = user?.email?.toLowerCase().trim() === 'edersouzamelo@gmail.com';
+    const canManageFiles = role === 'Chefe da Seção de Licitações' || role === 'Administrador' || role === 'Pregoeiro' || isMajor;
+
     const [files, setFiles] = useState<TenderFile[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +83,7 @@ export function TenderFiles({ tenderId }: { tenderId: string }) {
                 .getPublicUrl(filePath);
 
             // Save to DB
-            const { error: dbError } = await supabase
+            const { data: insertedData, error: dbError } = await supabase
                 .from('tender_files')
                 .insert([{
                     tender_id: tenderId,
@@ -86,9 +91,29 @@ export function TenderFiles({ tenderId }: { tenderId: string }) {
                     file_size: file.size,
                     file_url: publicUrl,
                     uploaded_by: uploadedBy
-                }]);
+                }])
+                .select();
 
             if (dbError) throw dbError;
+
+            // Trigger RAG Processing text extraction
+            if (insertedData && insertedData[0]) {
+                try {
+                    await fetch('/api/rag/process', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fileUrl: publicUrl,
+                            tenderId: tenderId,
+                            fileId: insertedData[0].id,
+                            fileName: file.name
+                        })
+                    });
+                } catch (ragError) {
+                    console.error("Erro interno no RAG endpoint:", ragError);
+                    // Falha no RAG não deve impedir a lista de carregar a interface do PDF.
+                }
+            }
 
             // Refresh list
             fetchFiles();
@@ -148,25 +173,33 @@ export function TenderFiles({ tenderId }: { tenderId: string }) {
                         Minutas e Documentos
                     </CardTitle>
                     <div>
-                        <input
-                            type="file"
-                            className="hidden"
-                            ref={fileInputRef}
-                            onChange={handleFileUpload}
-                            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
-                        />
-                        <Button
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                            className="bg-radar-gold text-radar-dark hover:bg-radar-gold/80 font-semibold"
-                        >
-                            {isUploading ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
-                            ) : (
-                                <><UploadCloud className="mr-2 h-4 w-4" /> Enviar Arquivo</>
-                            )}
-                        </Button>
+                        {canManageFiles ? (
+                            <>
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    ref={fileInputRef}
+                                    onChange={handleFileUpload}
+                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
+                                />
+                                <Button
+                                    size="sm"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isUploading}
+                                    className="bg-radar-gold text-radar-dark hover:bg-radar-gold/80 font-semibold"
+                                >
+                                    {isUploading ? (
+                                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Lendo para IA...</>
+                                    ) : (
+                                        <><UploadCloud className="mr-2 h-4 w-4" /> Enviar Arquivo</>
+                                    )}
+                                </Button>
+                            </>
+                        ) : (
+                            <span className="text-[10px] text-muted-foreground flex items-center font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                                <ShieldAlert className="w-3 h-3 text-amber-500 mr-1" /> Somente Gestores enviam arquivos.
+                            </span>
+                        )}
                     </div>
                 </div>
             </CardHeader>
@@ -208,9 +241,11 @@ export function TenderFiles({ tenderId }: { tenderId: string }) {
                                             <Download className="h-3.5 w-3.5" /> Baixar
                                         </Button>
                                     </a>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950" onClick={() => handleDelete(file.id, file.file_url)} title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    {canManageFiles && (
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950" onClick={() => handleDelete(file.id, file.file_url)} title="Excluir">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         ))}

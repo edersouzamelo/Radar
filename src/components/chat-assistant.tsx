@@ -13,6 +13,7 @@ export function ChatAssistant() {
 
     // Simplificando os dados para enviar menos tokens e apenas o essencial para a IA
     const simplifiedTenders = tenders.map(t => ({
+        id: t.id,
         numero: t.number,
         status: t.status,
         faseAtual: t.currentStage,

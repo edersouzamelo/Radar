@@ -15,6 +15,7 @@ export function TenderMiniChat({ tender }: { tender: Tender }) {
 
     // Simplifying the data so it only contains the contextual tender
     const simplifiedTender = [{
+        id: tender.id,
         numero: tender.number,
         status: tender.status,
         faseAtual: tender.currentStage,
