@@ -34,10 +34,16 @@ export function ChatAssistant() {
         }
     });
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (scrollContainerRef.current) {
+            const { scrollHeight, clientHeight } = scrollContainerRef.current;
+            scrollContainerRef.current.scrollTo({
+                top: scrollHeight - clientHeight,
+                behavior: 'smooth'
+            });
+        }
     };
 
     useEffect(() => {
@@ -71,7 +77,10 @@ export function ChatAssistant() {
 
             <CardContent className="p-0 flex flex-col flex-1 overflow-hidden">
                 {/* Janela de Mensagens */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 relative scroll-smooth bg-slate-50/50 dark:bg-transparent">
+                <div
+                    ref={scrollContainerRef}
+                    className="flex-1 overflow-y-auto p-4 space-y-4 relative scroll-smooth bg-slate-50/50 dark:bg-transparent"
+                >
                     {messages.length === 0 && (
                         <div className="h-full flex flex-col items-center justify-center text-center opacity-60 px-6">
                             <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-radar-gold/20 shadow-lg bg-slate-100 dark:bg-slate-800 mb-4 shrink-0">
@@ -125,7 +134,6 @@ export function ChatAssistant() {
                             <span className="text-xs font-medium">Analisando processos...</span>
                         </div>
                     )}
-                    <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input Area */}
