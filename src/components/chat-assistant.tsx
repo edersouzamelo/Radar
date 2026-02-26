@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function ChatAssistant() {
-    const { tenders } = useTenders();
+    const { tenders, people, pregoeiros, supervisors } = useTenders();
 
     // Simplificando os dados para enviar menos tokens e apenas o essencial para a IA
     const simplifiedTenders = tenders.map(t => ({
@@ -30,7 +30,8 @@ export function ChatAssistant() {
     const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
         api: '/api/chat',
         body: {
-            tendersData: simplifiedTenders
+            tendersData: simplifiedTenders,
+            teamData: { people, pregoeiros, supervisors }
         }
     });
 

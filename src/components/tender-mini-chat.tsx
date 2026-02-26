@@ -7,8 +7,10 @@ import { Send, Loader2, Sparkles, AlertCircle, Maximize2, Minimize2 } from "luci
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Tender } from '@/types';
+import { useTenders } from '@/contexts/tenders-context';
 
 export function TenderMiniChat({ tender }: { tender: Tender }) {
+    const { people, pregoeiros, supervisors } = useTenders();
     const [isExpanded, setIsExpanded] = useState(false);
 
     // Simplifying the data so it only contains the contextual tender
@@ -30,7 +32,8 @@ export function TenderMiniChat({ tender }: { tender: Tender }) {
     const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
         api: '/api/chat',
         body: {
-            tendersData: simplifiedTender
+            tendersData: simplifiedTender,
+            teamData: { people, pregoeiros, supervisors }
         }
     });
 
