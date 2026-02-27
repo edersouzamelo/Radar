@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+// We use pdfjs-dist directly for Edge/Serverless compatibility
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 
-const pdf = require('pdf-parse');
+// Defina o worker local (necessário pelo pdfjs-dist)
+// Nota: Em serverless na Vercel o PDF.JS funciona melhor na versão Legacy sem canvas dom dependencies
+pdfjsLib.GlobalWorkerOptions.workerSrc = `pdfjs-dist/legacy/build/pdf.worker.js`;
 
 export const maxDuration = 60; // 1 min (Vercel max for Hobby)
 export const dynamic = 'force-dynamic';
@@ -68,8 +72,23 @@ export async function POST(req: Request) {
 
         // 2. Extract text (currently assuming PDF, but we can add more logic)
         if (fileName.toLowerCase().endsWith('.pdf')) {
-            const pdfData = await pdf(buffer);
-            extractedText = pdfData.text;
+            const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
+            const pdfDoc = await loadingTask.promise;
+
+            const numPages = pdfDoc.numPages;
+            const textPromises = [];
+
+            for (let i = 1; i <= numPages; i++) {
+                textPromises.push(
+                    pdfDoc.getPage(i).then(page => page.getTextContent())
+                );
+            }
+
+            const pagesContent = await Promise.all(textPromises);
+
+            extractedText = pagesContent.map(page =>
+                page.items.map((item: any) => item.str).join(' ')
+            ).join('\n\n');
         } else {
             // Se for TXT ou outro formato de texto simples
             // Seria implementado conversão docx, etc, aqui. 
