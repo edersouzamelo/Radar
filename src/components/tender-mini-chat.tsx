@@ -109,7 +109,7 @@ export function TenderMiniChat({ tender }: { tender: Tender }) {
                                 className={cn(
                                     "flex flex-col max-w-[85%] rounded-2xl px-3 py-2 shadow-sm text-sm border",
                                     message.role === "user"
-                                        ? "bg-slate-800 text-slate-50 dark:bg-slate-700 dark:text-white self-end rounded-tr-sm border-transparent"
+                                        ? "bg-radar-dark text-white self-end rounded-tr-sm border-transparent"
                                         : "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 self-start rounded-tl-sm border-slate-200 dark:border-slate-700"
                                 )}
                             >
