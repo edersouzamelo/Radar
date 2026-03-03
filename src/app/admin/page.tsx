@@ -511,19 +511,21 @@ export default function AdminPage() {
                                                                     console.error('[Permissão] Erro RPC:', rpcErr.message);
                                                                     alert('Erro ao salvar: ' + rpcErr.message);
                                                                 }
-                                                            } else if (u.profile_id) {
-                                                                // Membro com ID sintético mas que já tem login: salva só em profiles
-                                                                const { error: pErr } = await supabase.rpc('update_profile_permissions', {
-                                                                    p_profile_id: u.profile_id,
+                                                            } else if (u.email) {
+                                                                // ID sintético mas tem email: salva por email via RPC
+                                                                const { error: emailErr } = await supabase.rpc('update_member_permissions_by_email', {
+                                                                    p_email: u.email.toLowerCase().trim(),
                                                                     p_permissions: newPerms
                                                                 });
-                                                                if (pErr) {
-                                                                    // Fallback directo ao Supabase client
+                                                                if (emailErr) {
+                                                                    console.error('[Permissão] Erro RPC by_email:', emailErr.message);
+                                                                }
+                                                                // Também sincroniza em profiles se tiver login
+                                                                if (u.profile_id) {
                                                                     await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
                                                                 }
                                                             } else {
-                                                                // ID sintético e sem login ainda: informa ao admin
-                                                                alert('Este membro ainda não foi sincronizado com o banco. Use "Forçar Upload" no topo da página para sincronizar a equipe, depois tente novamente.');
+                                                                alert('Defina um e-mail para este membro antes de atribuir permissões.');
                                                             }
                                                         }}
                                                     >
