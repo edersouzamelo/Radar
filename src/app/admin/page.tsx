@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useUser, UserRole } from "@/contexts/user-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -48,8 +48,9 @@ export default function AdminPage() {
     } = useTenders()
 
     const [allProfiles, setAllProfiles] = useState<any[]>([]);
-    // Override local de permissões para atualização otimística (sem reload)
-    const [permOverrides, setPermOverrides] = useState<Record<string, any>>({});
+    // Estado isolado para checkboxes de permissão — inicializado uma única vez do banco
+    const [permChecked, setPermChecked] = useState<Record<string, Record<string, boolean>>>({});
+    const permCheckedInit = useRef(false);
 
     const fetchProfiles = async () => {
         const { data } = await supabase.from('profiles').select('*');
@@ -126,13 +127,24 @@ export default function AdminPage() {
         return {
             ...member,
             full_name: profile?.full_name || member.name,
-            // usa email como chave do override (estável entre syncs de ID)
-            permissions: permOverrides[member.email] !== undefined ? permOverrides[member.email] : basePerms,
+            permissions: basePerms,
             profile_id: profile?.id,
             is_auth_user: !!profile
         };
     }).sort((a, b) => a.full_name.localeCompare(b.full_name))
         .filter((member, index, self) => index === self.findIndex(m => m.id === member.id));
+
+    // Inicializa permChecked UMA VEZ com permissões do banco
+    useEffect(() => {
+        if (permCheckedInit.current || teamMembers.length === 0) return;
+        const initial: Record<string, Record<string, boolean>> = {};
+        teamMembers.forEach(m => {
+            const key = (m.email || '').toLowerCase().trim();
+            if (key) initial[key] = m.permissions || {};
+        });
+        setPermChecked(initial);
+        permCheckedInit.current = true;
+    }, [teamMembers]);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [editingMember, setEditingMember] = useState<any>(null)
@@ -485,54 +497,49 @@ export default function AdminPage() {
                                                 />
                                             </td>
                                             {/* Permissões */}
-                                            {(['edit_tenders', 'edit_dates', 'bulk_check', 'edit_users', 'view_all'] as const).map(permId => (
-                                                <td key={permId} className="px-3 py-2 text-center">
-                                                    <button
-                                                        title={!u.email ? 'Defina o e-mail primeiro' : (u.permissions?.[permId] ? 'Revogar permissão' : 'Conceder permissão')}
-                                                        className={`h-5 w-5 rounded border-2 mx-auto flex items-center justify-center transition-all ${u.permissions?.[permId]
-                                                            ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
-                                                            : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
-                                                            } ${!u.email ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}`}
-                                                        onClick={async () => {
-                                                            if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
-                                                            const newPerms = { ...(u.permissions || {}), [permId]: !u.permissions?.[permId] };
-                                                            // Atualiza UI imediatamente (otimístico — chave por email, estável entre syncs)
-                                                            setPermOverrides(prev => ({ ...prev, [u.email]: newPerms }));
-                                                            // Valida se o ID é UUID real (do banco) ou sintético (localStorage)
-                                                            const isRealUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(u.id);
-                                                            if (isRealUuid) {
-                                                                // Membro com ID real: atualiza via RPC com SECURITY DEFINER
-                                                                const { error: rpcErr } = await supabase.rpc('update_member_permissions', {
-                                                                    p_member_id: u.id,
-                                                                    p_permissions: newPerms,
-                                                                    p_profile_id: u.profile_id || null
-                                                                });
-                                                                if (rpcErr) {
-                                                                    console.error('[Permissão] Erro RPC:', rpcErr.message);
-                                                                    alert('Erro ao salvar: ' + rpcErr.message);
+                                            {(['edit_tenders', 'edit_dates', 'bulk_check', 'edit_users', 'view_all'] as const).map(permId => {
+                                                const emailKey = (u.email || '').toLowerCase().trim();
+                                                const isChecked = !!(permChecked[emailKey]?.[permId]);
+                                                return (
+                                                    <td key={permId} className="px-3 py-2 text-center">
+                                                        <button
+                                                            title={!u.email ? 'Defina o e-mail primeiro' : (isChecked ? 'Revogar permissão' : 'Conceder permissão')}
+                                                            className={`h-5 w-5 rounded border-2 mx-auto flex items-center justify-center transition-all ${isChecked
+                                                                ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
+                                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
+                                                                } ${!u.email ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}`}
+                                                            onClick={async () => {
+                                                                if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
+                                                                const currentPerms = permChecked[emailKey] || {};
+                                                                const newPerms = { ...currentPerms, [permId]: !currentPerms[permId] };
+                                                                // Atualiza UI imediatamente (fonte única de verdade visual)
+                                                                setPermChecked(prev => ({ ...prev, [emailKey]: newPerms }));
+                                                                // Salva no banco
+                                                                const isRealUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(u.id);
+                                                                if (isRealUuid) {
+                                                                    const { error: rpcErr } = await supabase.rpc('update_member_permissions', {
+                                                                        p_member_id: u.id,
+                                                                        p_permissions: newPerms,
+                                                                        p_profile_id: u.profile_id || null
+                                                                    });
+                                                                    if (rpcErr) console.error('[Permissão] Erro RPC:', rpcErr.message);
+                                                                } else if (emailKey) {
+                                                                    const { error: emailErr } = await supabase.rpc('update_member_permissions_by_email', {
+                                                                        p_email: emailKey,
+                                                                        p_permissions: newPerms
+                                                                    });
+                                                                    if (emailErr) console.error('[Permissão] Erro RPC by_email:', emailErr.message);
+                                                                    if (u.profile_id) {
+                                                                        await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+                                                                    }
                                                                 }
-                                                            } else if (u.email) {
-                                                                // ID sintético mas tem email: salva por email via RPC
-                                                                const { error: emailErr } = await supabase.rpc('update_member_permissions_by_email', {
-                                                                    p_email: u.email.toLowerCase().trim(),
-                                                                    p_permissions: newPerms
-                                                                });
-                                                                if (emailErr) {
-                                                                    console.error('[Permissão] Erro RPC by_email:', emailErr.message);
-                                                                }
-                                                                // Também sincroniza em profiles se tiver login
-                                                                if (u.profile_id) {
-                                                                    await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
-                                                                }
-                                                            } else {
-                                                                alert('Defina um e-mail para este membro antes de atribuir permissões.');
-                                                            }
-                                                        }}
-                                                    >
-                                                        {u.permissions?.[permId] && <CheckSquare className="h-3 w-3" />}
-                                                    </button>
-                                                </td>
-                                            ))}
+                                                            }}
+                                                        >
+                                                            {isChecked && <CheckSquare className="h-3 w-3" />}
+                                                        </button>
+                                                    </td>
+                                                );
+                                            })}
                                             {/* Ações */}
                                             <td className="px-3 py-2 text-center">
                                                 <div className="flex items-center justify-center gap-1">
