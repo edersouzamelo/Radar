@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Shield, UserPlus, Key, UserCog, AlertTriangle, Download, Trash2, Users, Radio, CheckSquare, Square } from "lucide-react"
+import { Shield, UserPlus, Key, UserCog, AlertTriangle, Download, Trash2, Users, Radio, CheckSquare } from "lucide-react"
 import { useTenders } from "@/contexts/tenders-context"
 import { exportTendersToCSV } from "@/lib/export-utils"
 import { DatabaseMonitor } from "@/components/admin/database-monitor"
@@ -155,7 +155,7 @@ export default function AdminPage() {
                         <Shield className="mr-2 h-8 w-8 text-radar-gold" />
                         Painel de Controle SALC
                     </h1>
-                    <p className="text-muted-foreground">Monitoramento ao vivo e gestão de prerrogativas do sistema</p>
+                    <p className="text-muted-foreground">Monitoramento ao vivo e gestão de permissões do sistema</p>
                 </div>
                 <div className="flex space-x-2">
                     <Button
@@ -321,44 +321,63 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Equipe Atual</CardTitle>
-                        <CardDescription>Gerencie as funções dos membros da seção</CardDescription>
+            <div className="space-y-4">
+                <Card className="border-none shadow-sm">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-radar-gold" />Gerenciamento de Usuários</CardTitle>
+                                <CardDescription>Gerencie funções e permissões de cada membro da seção</CardDescription>
+                            </div>
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {teamMembers.map((u) => (
-                                <div key={u.id} className="group relative flex flex-col p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-radar-gold/50 transition-all shadow-sm">
-                                    <div className="flex items-center justify-between w-full">
-                                        <div className="flex items-center space-x-4">
-                                            <div className="h-10 w-10 bg-radar-dark text-white rounded-full flex items-center justify-center font-bold">
-                                                {u.full_name ? u.full_name[0] : (u.name ? u.name[0] : '?')}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-radar-dark dark:text-white truncate">{u.full_name || u.name}</p>
-                                                <div className="flex items-center gap-2 group/email">
-                                                    <p className={`text-xs truncate ${!u.email ? 'text-red-500 font-bold' : 'text-muted-foreground'}`}>
-                                                        {u.email || '⚠️ Sem e-mail (Clique ao lado)'}
-                                                    </p>
+                    <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                        <th className="text-left px-4 py-3 font-black text-[11px] uppercase tracking-wide text-radar-dark dark:text-white min-w-[160px]">Nome</th>
+                                        <th className="text-left px-4 py-3 font-black text-[11px] uppercase tracking-wide text-radar-dark dark:text-white min-w-[180px]">E-mail</th>
+                                        <th className="text-left px-4 py-3 font-black text-[11px] uppercase tracking-wide text-radar-dark dark:text-white min-w-[120px]">Função</th>
+                                        <th className="text-center px-3 py-3 font-black text-[10px] uppercase tracking-wide text-radar-dark dark:text-white min-w-[80px]">Ed. Pregões</th>
+                                        <th className="text-center px-3 py-3 font-black text-[10px] uppercase tracking-wide text-radar-dark dark:text-white min-w-[80px]">Ed. Datas</th>
+                                        <th className="text-center px-3 py-3 font-black text-[10px] uppercase tracking-wide text-radar-dark dark:text-white min-w-[80px]">Conferência</th>
+                                        <th className="text-center px-3 py-3 font-black text-[10px] uppercase tracking-wide text-radar-dark dark:text-white min-w-[80px]">Ed. Usuários</th>
+                                        <th className="text-center px-3 py-3 font-black text-[10px] uppercase tracking-wide text-radar-dark dark:text-white min-w-[80px]">Visualização</th>
+                                        <th className="text-center px-3 py-3 font-black text-[10px] uppercase tracking-wide text-muted-foreground min-w-[60px]">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {teamMembers.map((u, idx) => (
+                                        <tr key={u.id} className={`border-b border-slate-100 dark:border-slate-800 hover:bg-amber-50/40 dark:hover:bg-slate-800/50 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-transparent' : 'bg-slate-50/50 dark:bg-slate-900/20'}`}>
+                                            {/* Nome */}
+                                            <td className="px-4 py-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-7 w-7 bg-radar-dark text-white rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0">
+                                                        {(u.full_name || u.name || '?')[0]}
+                                                    </div>
+                                                    <span className="font-semibold text-radar-dark dark:text-white text-xs truncate max-w-[120px]">{u.full_name || u.name}</span>
+                                                </div>
+                                            </td>
+                                            {/* E-mail */}
+                                            <td className="px-4 py-2">
+                                                <div className="flex items-center gap-1">
+                                                    <span className={`text-xs truncate max-w-[150px] ${!u.email ? 'text-red-500 font-bold' : 'text-muted-foreground'}`}>
+                                                        {u.email || '⚠️ Sem e-mail'}
+                                                    </span>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="h-6 w-6 bg-radar-gold/10 hover:bg-radar-gold text-radar-dark border border-radar-gold/20"
+                                                        className="h-5 w-5 bg-radar-gold/10 hover:bg-radar-gold text-radar-dark border border-radar-gold/20 flex-shrink-0"
+                                                        title="Definir e-mail"
                                                         onClick={async () => {
-                                                            const newEmail = prompt(`Definir E-mail Institucional para ${u.name}:`, u.email || "");
+                                                            const newEmail = prompt(`Definir E-mail para ${u.name}:`, u.email || "");
                                                             if (newEmail !== null && newEmail.trim() !== "") {
                                                                 const emailLower = newEmail.toLowerCase().trim();
                                                                 try {
-                                                                    // 1. Persistência IMEDIATA
                                                                     const { error: updateErr } = await supabase.from('team_members').update({ email: emailLower }).eq('id', u.id);
                                                                     if (updateErr) throw updateErr;
-
-                                                                    // 2. Garantir Perfil/Vínculo
-                                                                    // NOTA: Não criamos perfis aqui para evitar erros de ID nulo.
-                                                                    // O vínculo é ativado automaticamente no primeiro login do usuário.
-                                                                    alert(`E-mail definido para: ${emailLower}. Você já pode configurar as prerrogativas abaixo.`);
+                                                                    alert(`E-mail definido: ${emailLower}`);
                                                                     window.location.reload();
                                                                 } catch (err: any) {
                                                                     alert("Erro ao salvar e-mail: " + err.message);
@@ -366,132 +385,197 @@ export default function AdminPage() {
                                                             }
                                                         }}
                                                     >
-                                                        <UserCog className="h-4 w-4" />
+                                                        <UserCog className="h-3 w-3" />
                                                     </Button>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col space-y-2 mt-4 p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-100 dark:border-gray-700">
-                                        <p className="text-[10px] font-black uppercase text-radar-dark/50 tracking-tighter mb-1">Prerrogativas do Perfil</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {availablePermissions.map(perm => (
-                                                <Button
-                                                    key={perm.id}
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={`h-7 px-2 text-[10px] border ${u.permissions?.[perm.id] ? 'bg-radar-gold/20 border-radar-gold text-radar-dark font-bold' : 'bg-white border-gray-200 text-gray-400'}`}
-                                                    onClick={async () => {
-                                                        let currentPermissions = u.permissions || {};
-
-                                                        if (!u.email) {
-                                                            alert("Erro: Defina o e-mail no botão amarelo acima primeiro.");
-                                                            return;
-                                                        }
-
-                                                        // Executa a atualização das permissões
-                                                        const newPerms = { ...currentPermissions, [perm.id]: !currentPermissions[perm.id] };
-
-                                                        if (u.is_auth_user) {
-                                                            // Caso padrão: usuário já logou, salvamos no perfil
-                                                            const { error } = await supabase
-                                                                .from('profiles')
-                                                                .update({ permissions: newPerms })
-                                                                .eq('id', u.profile_id);
-                                                            if (error) alert("Erro ao salvar no perfil: " + error.message);
-                                                            else window.location.reload();
-                                                        } else {
-                                                            // CASO ANTECIPADO: Salvamos na gaveta (team_members)
-                                                            const { error } = await supabase
-                                                                .from('team_members')
-                                                                .update({ permissions: newPerms })
-                                                                .eq('id', u.id);
-                                                            if (error) alert("Erro ao salvar prerrogativa antecipada: " + error.message);
-                                                            else window.location.reload();
+                                            </td>
+                                            {/* Função */}
+                                            <td className="px-4 py-2">
+                                                <input
+                                                    defaultValue={u.role || ''}
+                                                    className="text-xs bg-transparent border-b border-transparent hover:border-radar-gold/40 focus:border-radar-gold outline-none w-full text-muted-foreground focus:text-radar-dark dark:focus:text-white transition-colors py-0.5 px-1"
+                                                    placeholder="Sem função"
+                                                    onBlur={async (e) => {
+                                                        const newRole = e.target.value.trim();
+                                                        if (newRole !== (u.role || '')) {
+                                                            try {
+                                                                const { error } = await supabase.from('team_members').update({ role: newRole }).eq('id', u.id);
+                                                                if (error) alert('Erro ao salvar função: ' + error.message);
+                                                                else window.location.reload();
+                                                            } catch (err: any) {
+                                                                alert('Erro: ' + err.message);
+                                                            }
                                                         }
                                                     }}
-                                                >
-                                                    {u.permissions?.[perm.id] ? <CheckSquare className="h-3 w-3 mr-1" /> : <Square className="h-3 w-3 mr-1" />}
-                                                    {perm.name}
-                                                </Button>
+                                                />
+                                            </td>
+                                            {/* Permissões */}
+                                            {(['edit_tenders', 'edit_dates', 'bulk_check', 'edit_users', 'view_all'] as const).map(permId => (
+                                                <td key={permId} className="px-3 py-2 text-center">
+                                                    <button
+                                                        title={!u.email ? 'Defina o e-mail primeiro' : (u.permissions?.[permId] ? 'Revogar permissão' : 'Conceder permissão')}
+                                                        className={`h-5 w-5 rounded border-2 mx-auto flex items-center justify-center transition-all ${u.permissions?.[permId]
+                                                                ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
+                                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
+                                                            } ${!u.email ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}`}
+                                                        onClick={async () => {
+                                                            if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
+                                                            const newPerms = { ...(u.permissions || {}), [permId]: !u.permissions?.[permId] };
+                                                            if (u.is_auth_user) {
+                                                                const { error } = await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+                                                                if (error) alert('Erro ao salvar permissão: ' + error.message);
+                                                                else window.location.reload();
+                                                            } else {
+                                                                const { error } = await supabase.from('team_members').update({ permissions: newPerms }).eq('id', u.id);
+                                                                if (error) alert('Erro ao salvar permissão: ' + error.message);
+                                                                else window.location.reload();
+                                                            }
+                                                        }}
+                                                    >
+                                                        {u.permissions?.[permId] && <CheckSquare className="h-3 w-3" />}
+                                                    </button>
+                                                </td>
                                             ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Modal de Edição */}
-                        {editingMember && (
-                            <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
-                                <DialogContent className="bg-white dark:bg-slate-900 border-radar-gold">
-                                    <form onSubmit={handleEditMember}>
-                                        <DialogHeader>
-                                            <DialogTitle>Editar Membro: {editingMember.full_name || editingMember.name}</DialogTitle>
-                                            <DialogDescription>Atualize os dados de contato ou função.</DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="edit-name">Nome / Posto ou Grad</Label>
-                                                <Input id="edit-name" value={editingMember.name} onChange={e => setEditingMember({ ...editingMember, name: e.target.value })} />
-                                            </div>
-                                            <div className="grid gap-2 text-radar-dark dark:text-white">
-                                                <Label htmlFor="edit-email">E-mail</Label>
-                                                <Input id="edit-email" type="email" value={editingMember.email} onChange={e => setEditingMember({ ...editingMember, email: e.target.value })} />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="edit-whatsapp">WhatsApp</Label>
-                                                <Input id="edit-whatsapp" value={editingMember.whatsapp} onChange={e => setEditingMember({ ...editingMember, whatsapp: e.target.value })} />
-                                            </div>
-                                            <div className="grid gap-2 text-radar-dark dark:text-white">
-                                                <Label>Função / Cargo</Label>
-                                                <Input value={editingMember.role} onChange={e => setEditingMember({ ...editingMember, role: e.target.value })} />
-                                            </div>
-                                            {editingMember.type === 'requisitante' && (
-                                                <div className="grid gap-2 text-radar-dark dark:text-white">
-                                                    <Label htmlFor="edit-sector">OM / Setor Requisitante</Label>
-                                                    <Input id="edit-sector" value={editingMember.sector} onChange={e => setEditingMember({ ...editingMember, sector: e.target.value })} />
+                                            {/* Ações */}
+                                            <td className="px-3 py-2 text-center">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 text-blue-500" title="Editar membro" onClick={() => setEditingMember(u)}>
+                                                        <UserCog className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-red-50 text-red-400" title="Remover membro" onClick={() => handleDeleteMember(u)}>
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <DialogFooter>
-                                            <Button type="submit" className="bg-radar-dark text-white w-full">Salvar Alterações</Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                        )}
+                                            </td>
+                                        </tr>
+                                    ))}
+
+                                    {/* Visitantes: usuários autenticados sem cadastro em team_members */}
+                                    {allProfiles
+                                        .filter(p => !teamMembers.some(m => m.email?.toLowerCase().trim() === p.email?.toLowerCase().trim()))
+                                        .map((visitor, idx) => (
+                                            <tr key={visitor.id} className={`border-b border-slate-100 dark:border-slate-800 opacity-70 ${idx === 0 ? 'border-t-2 border-t-slate-200 dark:border-t-slate-700' : ''}`}>
+                                                {/* Nome visitante */}
+                                                <td className="px-4 py-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-7 w-7 bg-slate-400 text-white rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0">
+                                                            {(visitor.full_name || visitor.email || '?')[0].toUpperCase()}
+                                                        </div>
+                                                        <span className="font-medium text-xs text-slate-500 dark:text-slate-400 truncate max-w-[120px]">{visitor.full_name || visitor.email?.split('@')[0]}</span>
+                                                    </div>
+                                                </td>
+                                                {/* E-mail visitante */}
+                                                <td className="px-4 py-2">
+                                                    <span className="text-xs text-muted-foreground truncate max-w-[150px] block">{visitor.email}</span>
+                                                </td>
+                                                {/* Função = Visitante */}
+                                                <td className="px-4 py-2">
+                                                    <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">Visitante</span>
+                                                </td>
+                                                {/* Permissões visitante */}
+                                                {(['edit_tenders', 'edit_dates', 'bulk_check', 'edit_users', 'view_all'] as const).map(permId => (
+                                                    <td key={permId} className="px-3 py-2 text-center">
+                                                        <button
+                                                            className={`h-5 w-5 rounded border-2 mx-auto flex items-center justify-center transition-all cursor-pointer hover:scale-110 ${visitor.permissions?.[permId]
+                                                                    ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
+                                                                    : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
+                                                                }`}
+                                                            title={visitor.permissions?.[permId] ? 'Revogar permissão' : 'Conceder permissão'}
+                                                            onClick={async () => {
+                                                                const newPerms = { ...(visitor.permissions || {}), [permId]: !visitor.permissions?.[permId] };
+                                                                const { error } = await supabase.from('profiles').update({ permissions: newPerms }).eq('id', visitor.id);
+                                                                if (error) alert('Erro ao salvar permissão: ' + error.message);
+                                                                else window.location.reload();
+                                                            }}
+                                                        >
+                                                            {visitor.permissions?.[permId] && <CheckSquare className="h-3 w-3" />}
+                                                        </button>
+                                                    </td>
+                                                ))}
+                                                {/* Sem ações de edição para visitantes */}
+                                                <td className="px-3 py-2 text-center">
+                                                    <span className="text-[10px] text-slate-300">—</span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Segurança e Senhas</CardTitle>
-                        <CardDescription>Redefinição de credenciais de acesso</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="user-select">Selecionar Usuário</Label>
-                            <select id="user-select" className="w-full p-2 bg-white dark:bg-gray-800 border rounded-md">
-                                {teamMembers.map(u => <option key={u.id} value={u.id}>{u.full_name || u.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="new-password">Nova Senha Temporária</Label>
-                            <div className="flex space-x-2">
-                                <Input id="new-password" type="password" placeholder="********" />
-                                <Button variant="outline">
-                                    <Key className="mr-2 h-4 w-4" />
-                                    Gerar
-                                </Button>
+                {/* Modal de Edição */}
+                {editingMember && (
+                    <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
+                        <DialogContent className="bg-white dark:bg-slate-900 border-radar-gold">
+                            <form onSubmit={handleEditMember}>
+                                <DialogHeader>
+                                    <DialogTitle>Editar Membro: {editingMember.full_name || editingMember.name}</DialogTitle>
+                                    <DialogDescription>Atualize os dados de contato ou função.</DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="edit-name">Nome / Posto ou Grad</Label>
+                                        <Input id="edit-name" value={editingMember.name} onChange={e => setEditingMember({ ...editingMember, name: e.target.value })} />
+                                    </div>
+                                    <div className="grid gap-2 text-radar-dark dark:text-white">
+                                        <Label htmlFor="edit-email">E-mail</Label>
+                                        <Input id="edit-email" type="email" value={editingMember.email} onChange={e => setEditingMember({ ...editingMember, email: e.target.value })} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="edit-whatsapp">WhatsApp</Label>
+                                        <Input id="edit-whatsapp" value={editingMember.whatsapp} onChange={e => setEditingMember({ ...editingMember, whatsapp: e.target.value })} />
+                                    </div>
+                                    <div className="grid gap-2 text-radar-dark dark:text-white">
+                                        <Label>Função / Cargo</Label>
+                                        <Input value={editingMember.role} onChange={e => setEditingMember({ ...editingMember, role: e.target.value })} />
+                                    </div>
+                                    {editingMember.type === 'requisitante' && (
+                                        <div className="grid gap-2 text-radar-dark dark:text-white">
+                                            <Label htmlFor="edit-sector">OM / Setor Requisitante</Label>
+                                            <Input id="edit-sector" value={editingMember.sector} onChange={e => setEditingMember({ ...editingMember, sector: e.target.value })} />
+                                        </div>
+                                    )}
+                                </div>
+                                <DialogFooter>
+                                    <Button type="submit" className="bg-radar-dark text-white w-full">Salvar Alterações</Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+                )}
+
+                <div className="grid gap-6 md:grid-cols-2">
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Segurança e Senhas</CardTitle>
+                            <CardDescription>Redefinição de credenciais de acesso</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="user-select">Selecionar Usuário</Label>
+                                <select id="user-select" className="w-full p-2 bg-white dark:bg-gray-800 border rounded-md">
+                                    {teamMembers.map(u => <option key={u.id} value={u.id}>{u.full_name || u.name}</option>)}
+                                </select>
                             </div>
-                        </div>
-                        <Button className="w-full bg-radar-dark text-white hover:bg-gray-800">
-                            Atualizar Credenciais
-                        </Button>
-                    </CardContent>
-                </Card>
+                            <div className="space-y-2">
+                                <Label htmlFor="new-password">Nova Senha Temporária</Label>
+                                <div className="flex space-x-2">
+                                    <Input id="new-password" type="password" placeholder="********" />
+                                    <Button variant="outline">
+                                        <Key className="mr-2 h-4 w-4" />
+                                        Gerar
+                                    </Button>
+                                </div>
+                            </div>
+                            <Button className="w-full bg-radar-dark text-white hover:bg-gray-800">
+                                Atualizar Credenciais
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div >
     )
