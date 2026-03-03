@@ -500,43 +500,32 @@ export default function AdminPage() {
                                             {(['edit_tenders', 'edit_dates', 'bulk_check', 'edit_users', 'view_all'] as const).map(permId => {
                                                 const emailKey = (u.email || '').toLowerCase().trim();
                                                 const isChecked = !!(permChecked[emailKey]?.[permId]);
+                                                const handleToggle = async () => {
+                                                    if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
+                                                    const currentPerms = permChecked[emailKey] || {};
+                                                    const newPerms = { ...currentPerms, [permId]: !currentPerms[permId] };
+                                                    setPermChecked(prev => ({ ...prev, [emailKey]: newPerms }));
+                                                    const isRealUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(u.id);
+                                                    if (isRealUuid) {
+                                                        const { error: rpcErr } = await supabase.rpc('update_member_permissions', {
+                                                            p_member_id: u.id, p_permissions: newPerms, p_profile_id: u.profile_id || null
+                                                        });
+                                                        if (rpcErr) console.error('[Permissão] Erro RPC:', rpcErr.message);
+                                                    } else if (emailKey) {
+                                                        await supabase.rpc('update_member_permissions_by_email', { p_email: emailKey, p_permissions: newPerms });
+                                                        if (u.profile_id) await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+                                                    }
+                                                };
                                                 return (
                                                     <td key={permId} className="px-3 py-2 text-center">
-                                                        <button
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isChecked}
+                                                            onChange={handleToggle}
+                                                            disabled={!u.email}
                                                             title={!u.email ? 'Defina o e-mail primeiro' : (isChecked ? 'Revogar permissão' : 'Conceder permissão')}
-                                                            className={`h-5 w-5 rounded border-2 mx-auto flex items-center justify-center transition-all ${isChecked
-                                                                ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
-                                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
-                                                                } ${!u.email ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}`}
-                                                            onClick={async () => {
-                                                                if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
-                                                                const currentPerms = permChecked[emailKey] || {};
-                                                                const newPerms = { ...currentPerms, [permId]: !currentPerms[permId] };
-                                                                // Atualiza UI imediatamente (fonte única de verdade visual)
-                                                                setPermChecked(prev => ({ ...prev, [emailKey]: newPerms }));
-                                                                // Salva no banco
-                                                                const isRealUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(u.id);
-                                                                if (isRealUuid) {
-                                                                    const { error: rpcErr } = await supabase.rpc('update_member_permissions', {
-                                                                        p_member_id: u.id,
-                                                                        p_permissions: newPerms,
-                                                                        p_profile_id: u.profile_id || null
-                                                                    });
-                                                                    if (rpcErr) console.error('[Permissão] Erro RPC:', rpcErr.message);
-                                                                } else if (emailKey) {
-                                                                    const { error: emailErr } = await supabase.rpc('update_member_permissions_by_email', {
-                                                                        p_email: emailKey,
-                                                                        p_permissions: newPerms
-                                                                    });
-                                                                    if (emailErr) console.error('[Permissão] Erro RPC by_email:', emailErr.message);
-                                                                    if (u.profile_id) {
-                                                                        await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
-                                                                    }
-                                                                }
-                                                            }}
-                                                        >
-                                                            {isChecked && <CheckSquare className="h-3 w-3" />}
-                                                        </button>
+                                                            className="h-4 w-4 accent-amber-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed mx-auto block"
+                                                        />
                                                     </td>
                                                 );
                                             })}
