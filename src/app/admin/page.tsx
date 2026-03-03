@@ -272,12 +272,12 @@ export default function AdminPage() {
                         <CardContent className="p-4">
                             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
+                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
                                         Acessando Agora
                                         <Badge variant="outline" className="text-[10px] h-4 bg-green-50 text-green-700 border-green-200">
                                             {onlineUsers.length} ONLINE
                                         </Badge>
-                                    </p>
+                                    </div>
                                     <div className="space-y-2">
                                         {onlineUsers.map(u => (
                                             <div key={u.id} className="flex items-center gap-3 p-2 bg-green-50/30 rounded-lg border border-green-100/50">
@@ -295,12 +295,12 @@ export default function AdminPage() {
                                 </div>
 
                                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
+                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
                                         Histórico do Dia (Acessos Hoje)
                                         <span className="text-[10px] font-bold text-slate-400">
                                             {dailyUsers.length} TOTAL
                                         </span>
-                                    </p>
+                                    </div>
                                     <div className="space-y-2">
                                         {dailyUsers.filter(du => !onlineUsers.find(ou => ou.id === du.id)).map(u => (
                                             <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group">
@@ -415,8 +415,8 @@ export default function AdminPage() {
                                                     <button
                                                         title={!u.email ? 'Defina o e-mail primeiro' : (u.permissions?.[permId] ? 'Revogar permissão' : 'Conceder permissão')}
                                                         className={`h-5 w-5 rounded border-2 mx-auto flex items-center justify-center transition-all ${u.permissions?.[permId]
-                                                                ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
-                                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
+                                                            ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
+                                                            : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
                                                             } ${!u.email ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}`}
                                                         onClick={async () => {
                                                             if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
@@ -477,8 +477,8 @@ export default function AdminPage() {
                                                     <td key={permId} className="px-3 py-2 text-center">
                                                         <button
                                                             className={`h-5 w-5 rounded border-2 mx-auto flex items-center justify-center transition-all cursor-pointer hover:scale-110 ${visitor.permissions?.[permId]
-                                                                    ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
-                                                                    : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
+                                                                ? 'bg-radar-gold border-radar-gold text-white shadow-sm'
+                                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-radar-gold/50'
                                                                 }`}
                                                             title={visitor.permissions?.[permId] ? 'Revogar permissão' : 'Conceder permissão'}
                                                             onClick={async () => {

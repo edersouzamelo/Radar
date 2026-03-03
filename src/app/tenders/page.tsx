@@ -80,6 +80,7 @@ const TenderRow = memo(({
     isHighlighted,
     pregoeiros,
     canManage,
+    canEditDates,
     showNotesColumn
 }: {
     tender: any,
@@ -98,6 +99,7 @@ const TenderRow = memo(({
     isHighlighted?: boolean,
     pregoeiros: any[],
     canManage: boolean,
+    canEditDates: boolean,
     showNotesColumn: boolean
 }) => {
     // Estados locais para inputs para evitar re-renders globais ao digitar
@@ -267,12 +269,12 @@ const TenderRow = memo(({
                         "bg-transparent border-none focus:ring-0 p-0 text-sm w-[110px] transition-colors font-bold",
                         getDateColor(val, isChecked, isCancelled)
                     )}
-                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                    disabled={!canEditDates}
                     value={val || ''}
                     onChange={(e) => handleDateChange(field, subField, e.target.value)}
                 />
                 <button
-                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                    disabled={!canEditDates}
                     onClick={() => toggleDateCheck(tender.id, dateKey)}
                     className={cn(
                         "p-0.5 rounded-full transition-all active:scale-95 flex-shrink-0 disabled:cursor-not-allowed",
@@ -329,7 +331,7 @@ const TenderRow = memo(({
                 <td className="px-3 py-2 text-center">
                     <div className="flex items-center justify-center">
                         <button
-                            disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                            disabled={!canEditDates}
                             onClick={() => setConferenceStatus(tender.id, conferenceStatuses[tender.id] === 'OK' ? 'Pendente' : 'OK')}
                             className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase transition-all shadow-sm active:scale-95 disabled:cursor-not-allowed ${conferenceStatuses[tender.id] === 'OK'
                                 ? 'bg-green-600 text-white hover:bg-green-700'
@@ -433,7 +435,7 @@ const TenderRow = memo(({
                     type="text"
                     className="bg-transparent border-none focus:ring-0 p-0 text-xs w-[130px] text-foreground dark:text-gray-100 font-semibold"
                     placeholder="NUP..."
-                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                    disabled={!canManage}
                     value={localNup}
                     onChange={(e) => setLocalNup(e.target.value)}
                     onBlur={(e) => handleBlur('nup', e.target.value)}
@@ -442,7 +444,7 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                    disabled={!canManage}
                     value={tender.commitment || 'Outros'}
                     onValueChange={(value) => updateTender(tender.id, { commitment: value as any }, editorName)}
                 >
@@ -459,7 +461,7 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                    disabled={!canManage}
                     value={tender.coordinator || 'A definir'}
                     onValueChange={(value) => updateTender(tender.id, { coordinator: value as any }, editorName)}
                 >
@@ -476,7 +478,7 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                    disabled={!canManage}
                     value={tender.requesterSector || 'A definir'}
                     onValueChange={(value) => updateTender(tender.id, { requesterSector: value as any }, editorName)}
                 >
@@ -533,7 +535,7 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                    disabled={!canManage}
                     value={tender.pregoeiroFaseInternaId || 'none'}
                     onValueChange={(value) => updateTender(tender.id, { pregoeiroFaseInternaId: value === 'none' ? undefined : value }, editorName)}
                 >
@@ -550,7 +552,7 @@ const TenderRow = memo(({
             </td>
             <td className="px-3 py-2">
                 <Select
-                    disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                    disabled={!canManage}
                     value={tender.pregoeiroFaseExternaId || 'none'}
                     onValueChange={(value) => updateTender(tender.id, { pregoeiroFaseExternaId: value === 'none' ? undefined : value }, editorName)}
                 >
@@ -568,7 +570,7 @@ const TenderRow = memo(({
             <td className="px-3 py-2">
                 <div className="flex items-center gap-3">
                     <Select
-                        disabled={role !== 'Chefe da Seção de Licitações' && role !== 'Administrador'}
+                        disabled={!canManage}
                         value={tender.status}
                         onValueChange={(value) => updateTender(tender.id, { status: value as any }, editorName)}
                     >
@@ -675,15 +677,17 @@ export default function TendersPage() {
         pullDataFromCloud,
         importTendersFromCSV
     } = useTenders();
-    const { role, user } = useUser();
+    const { role, user, hasPermission } = useUser();
     const editorName = user?.name || role || 'Usuário';
 
     const searchParams = useSearchParams();
     const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
-    // Permissão mestre unificada (Role + Email Failsafe)
+    // Permissão mestre unificada (Role + Email Failsafe + Permissões do banco)
     const isMajor = user?.email?.toLowerCase().trim() === 'edersouzamelo@gmail.com';
-    const canManage = role === 'Chefe da Seção de Licitações' || role === 'Administrador' || isMajor;
+    const isAdmin = role === 'Chefe da Seção de Licitações' || role === 'Administrador' || isMajor;
+    const canManage = isAdmin || hasPermission('edit_tenders');
+    const canEditDates = isAdmin || hasPermission('edit_dates');
 
     // Sincronizar highlightId da URL com o contexto
     useEffect(() => {
@@ -1188,6 +1192,7 @@ export default function TendersPage() {
                                         isHighlighted={highlightId === tender.id}
                                         pregoeiros={pregoeiros}
                                         canManage={canManage}
+                                        canEditDates={canEditDates}
                                         showNotesColumn={showNotesColumn}
                                     />
                                 ))}
