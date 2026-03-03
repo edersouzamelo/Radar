@@ -478,12 +478,11 @@ export default function AdminPage() {
                                             </td>
                                             {/* Função */}
                                             <td className="px-4 py-2">
-                                                <input
+                                                <select
                                                     defaultValue={u.role || ''}
-                                                    className="text-xs bg-transparent border-b border-transparent hover:border-radar-gold/40 focus:border-radar-gold outline-none w-full text-muted-foreground focus:text-radar-dark dark:focus:text-white transition-colors py-0.5 px-1"
-                                                    placeholder="Sem função"
-                                                    onBlur={async (e) => {
-                                                        const newRole = e.target.value.trim();
+                                                    className="text-xs bg-transparent border-b border-transparent hover:border-radar-gold/40 focus:border-radar-gold outline-none w-full text-muted-foreground focus:text-radar-dark dark:focus:text-white transition-colors py-0.5 px-0.5 cursor-pointer"
+                                                    onChange={async (e) => {
+                                                        const newRole = e.target.value;
                                                         if (newRole !== (u.role || '')) {
                                                             try {
                                                                 // 1. Atualiza team_members
@@ -495,13 +494,24 @@ export default function AdminPage() {
                                                                     await supabase.from('profiles').update({ role: newRole }).eq('email', u.email.toLowerCase().trim());
                                                                 }
 
+                                                                alert(`Função de ${u.name} alterada para: ${newRole}`);
                                                                 window.location.reload();
                                                             } catch (err: any) {
                                                                 alert('Erro ao salvar função: ' + err.message);
                                                             }
                                                         }
                                                     }}
-                                                />
+                                                >
+                                                    <option value="">Sem função</option>
+                                                    <option value="Administrador">Administrador 🔑</option>
+                                                    <option value="Chefe da Seção de Licitações">Chefe da Seção (SALC)</option>
+                                                    <option value="Pregoeiro">Pregoeiro</option>
+                                                    <option value="Auxiliar">Auxiliar</option>
+                                                    <option value="Setor Requisitante">Setor Requisitante</option>
+                                                    <option value="Ordenador de Despesas">Ordenador de Despesas</option>
+                                                    <option value="Agente Diretor">Agente Diretor</option>
+                                                    <option value="Visitante">Visitante</option>
+                                                </select>
                                             </td>
                                             {/* Permissões */}
                                             {(['edit_tenders', 'edit_dates', 'bulk_check', 'edit_users', 'view_all'] as const).map(permId => {
