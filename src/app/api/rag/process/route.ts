@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import pdf from 'pdf-parse';
+const pdf = require('pdf-parse');
 
 export const maxDuration = 60; // 1 min (Vercel max for Hobby)
 export const dynamic = 'force-dynamic';
