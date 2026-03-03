@@ -88,8 +88,8 @@ export default function AgendaPage() {
                 }
             }
 
-            // Mapear cada campo de data conhecido
-            addEvent(t.dates?.protocoloSetorRequisitante?.defined, "Prazo SAL", "protocoloSetorRequisitante")
+            // Mapear cada campo de data conhecido (Sincronizado com TenderRow)
+            addEvent(t.dates?.protocoloSetorRequisitante?.defined, "Prazo SAL", "protocoloSetorRequisitante.defined")
             addEvent(t.dates?.cjuSendDeadline, "Envio CJU", "cjuSendDeadline")
             addEvent(t.dates?.cjuReturnDate, "Regresso CJU", "cjuReturnDate", "effective")
             addEvent(t.dates?.publicationAdjustmentsDeadline, "Ajustes Publicação", "publicationAdjustmentsDeadline")
