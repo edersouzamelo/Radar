@@ -498,20 +498,15 @@ export default function AdminPage() {
                                                             const newPerms = { ...(u.permissions || {}), [permId]: !u.permissions?.[permId] };
                                                             // Atualiza UI imediatamente (otimístico)
                                                             setPermOverrides(prev => ({ ...prev, [u.id]: newPerms }));
-                                                            // Salva via API server-side (bypassa RLS com service role)
-                                                            const res = await fetch('/api/admin/save-permissions', {
-                                                                method: 'POST',
-                                                                headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({
-                                                                    memberId: u.id,
-                                                                    permissions: newPerms,
-                                                                    profileId: u.profile_id || null
-                                                                })
+                                                            // Salva via RPC com SECURITY DEFINER (bypassa RLS)
+                                                            const { error: rpcErr } = await supabase.rpc('update_member_permissions', {
+                                                                p_member_id: u.id,
+                                                                p_permissions: newPerms,
+                                                                p_profile_id: u.profile_id || null
                                                             });
-                                                            const result = await res.json();
-                                                            if (!res.ok) {
-                                                                console.error('[Permissão] Erro API:', result.error);
-                                                                alert('Erro ao salvar: ' + result.error);
+                                                            if (rpcErr) {
+                                                                console.error('[Permissão] Erro RPC:', rpcErr.message);
+                                                                alert('Erro ao salvar: ' + rpcErr.message);
                                                             }
                                                         }}
                                                     >
