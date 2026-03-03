@@ -234,6 +234,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
 
         fetchUserProfile(session.user.id, email);
+
+        // Registra log de acesso para histórico permanente
+        supabase.from('access_logs').insert([{
+            user_id: session.user.id,
+            user_name: session.user.user_metadata.full_name || email.split('@')[0] || 'Usuário',
+            user_email: email,
+            user_role: null, // será atualizado após fetchUserProfile
+            accessed_at: new Date().toISOString()
+        }]).then(({ error }) => {
+            if (error) console.warn('[AccessLog] Erro ao registrar acesso:', error.message);
+        });
     };
 
     const loginWithGoogle = async () => {

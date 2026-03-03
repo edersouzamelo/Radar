@@ -57,6 +57,47 @@ export default function AdminPage() {
         fetchProfiles();
     }, []);
 
+    // Monitor de Adesão com histórico por período
+    const [accessPeriod, setAccessPeriod] = useState<'today' | 'week' | 'month' | 'year'>('today');
+    const [accessLogs, setAccessLogs] = useState<any[]>([]);
+    const [logsLoading, setLogsLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchAccessLogs = async () => {
+            setLogsLoading(true);
+            const now = new Date();
+            let since: Date;
+            if (accessPeriod === 'today') {
+                since = new Date(now); since.setHours(0, 0, 0, 0);
+            } else if (accessPeriod === 'week') {
+                since = new Date(now); since.setDate(now.getDate() - 7);
+            } else if (accessPeriod === 'month') {
+                since = new Date(now); since.setMonth(now.getMonth() - 1);
+            } else {
+                since = new Date(now); since.setFullYear(now.getFullYear() - 1);
+            }
+
+            const { data } = await supabase
+                .from('access_logs')
+                .select('*')
+                .gte('accessed_at', since.toISOString())
+                .order('accessed_at', { ascending: false });
+
+            if (data) {
+                // Desduplicar: manter apenas o acesso mais recente por usuário
+                const seen = new Set<string>();
+                const unique = data.filter(log => {
+                    if (seen.has(log.user_id)) return false;
+                    seen.add(log.user_id);
+                    return true;
+                });
+                setAccessLogs(unique);
+            }
+            setLogsLoading(false);
+        };
+        fetchAccessLogs();
+    }, [accessPeriod]);
+
     // TODO: Tasks
     // - [x] Correção de Camadas (Sidebar z-index)
     // - [x] Codificação por Cores: Compromisso (GCALC, PCA, Perseu)
@@ -264,56 +305,83 @@ export default function AdminPage() {
                 <div className="col-span-1 lg:col-span-1">
                     <Card className="h-full border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
                         <CardHeader className="bg-slate-50 dark:bg-slate-800/50 py-3">
-                            <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                <Radio className="w-4 h-4 text-green-500 animate-pulse" />
-                                Monitor de Adesão Diária
-                            </CardTitle>
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <Radio className="w-4 h-4 text-green-500 animate-pulse" />
+                                    Monitor de Adesão
+                                </CardTitle>
+                                <select
+                                    className="text-[10px] font-bold uppercase bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 cursor-pointer"
+                                    value={accessPeriod}
+                                    onChange={e => setAccessPeriod(e.target.value as any)}
+                                >
+                                    <option value="today">Hoje</option>
+                                    <option value="week">Semana</option>
+                                    <option value="month">Mês</option>
+                                    <option value="year">Ano</option>
+                                </select>
+                            </div>
                         </CardHeader>
                         <CardContent className="p-4">
-                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                <div>
-                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
-                                        Acessando Agora
-                                        <Badge variant="outline" className="text-[10px] h-4 bg-green-50 text-green-700 border-green-200">
-                                            {onlineUsers.length} ONLINE
-                                        </Badge>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {onlineUsers.map(u => (
-                                            <div key={u.id} className="flex items-center gap-3 p-2 bg-green-50/30 rounded-lg border border-green-100/50">
-                                                <div className="h-8 w-8 rounded-full bg-radar-dark text-white flex items-center justify-center text-xs font-bold">
-                                                    {u.name[0]}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-bold truncate">{u.name}</p>
-                                                    <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
-                                                </div>
-                                                <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                                            </div>
-                                        ))}
-                                    </div>
+                            {/* Online agora */}
+                            <div className="mb-3">
+                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
+                                    Acessando Agora
+                                    <Badge variant="outline" className="text-[10px] h-4 bg-green-50 text-green-700 border-green-200">
+                                        {onlineUsers.length} ONLINE
+                                    </Badge>
                                 </div>
+                                <div className="space-y-1">
+                                    {onlineUsers.length === 0 ? (
+                                        <p className="text-[11px] text-muted-foreground italic">Apenas você online...</p>
+                                    ) : onlineUsers.map(u => (
+                                        <div key={u.id} className="flex items-center gap-2 p-1.5 bg-green-50/40 rounded-lg border border-green-100/60">
+                                            <div className="h-6 w-6 rounded-full bg-radar-dark text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">{u.name[0]}</div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[11px] font-bold truncate">{u.name}</p>
+                                                <p className="text-[9px] text-muted-foreground truncate">{u.email}</p>
+                                            </div>
+                                            <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)] flex-shrink-0" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
 
-                                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <div className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
-                                        Histórico do Dia (Acessos Hoje)
-                                        <span className="text-[10px] font-bold text-slate-400">
-                                            {dailyUsers.length} TOTAL
-                                        </span>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {dailyUsers.filter(du => !onlineUsers.find(ou => ou.id === du.id)).map(u => (
-                                            <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors group">
-                                                <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold group-hover:bg-radar-gold group-hover:text-radar-dark transition-colors">
-                                                    {u.name[0]}
+                            {/* Histórico do período */}
+                            <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+                                <div className="text-[10px] font-black uppercase text-muted-foreground mb-2 flex items-center justify-between">
+                                    {accessPeriod === 'today' && 'Acessos Hoje'}
+                                    {accessPeriod === 'week' && 'Acessos na Semana'}
+                                    {accessPeriod === 'month' && 'Acessos no Mês'}
+                                    {accessPeriod === 'year' && 'Acessos no Ano'}
+                                    <span className="text-[10px] font-bold text-slate-400">{accessLogs.length} usuários</span>
+                                </div>
+                                <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                                    {logsLoading ? (
+                                        <p className="text-[11px] text-muted-foreground italic">Carregando...</p>
+                                    ) : accessLogs.length === 0 ? (
+                                        <p className="text-[11px] text-muted-foreground italic">Nenhum acesso registrado neste período.</p>
+                                    ) : accessLogs.map(log => {
+                                        const isOnline = onlineUsers.some(u => u.id === log.user_id);
+                                        const ts = new Date(log.accessed_at);
+                                        const isToday = ts.toDateString() === new Date().toDateString();
+                                        const label = isToday
+                                            ? ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                                            : ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                                        return (
+                                            <div key={log.id} className="flex items-center gap-2 p-1.5 hover:bg-slate-50 rounded-lg transition-colors">
+                                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isOnline ? 'bg-radar-dark text-white' : 'bg-slate-200 text-slate-500'
+                                                    }`}>
+                                                    {(log.user_name || '?')[0].toUpperCase()}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-medium truncate">{u.name}</p>
-                                                    <p className="text-[10px] text-muted-foreground truncate">Visto em: {new Date(u.lastSeen).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                                                    <p className="text-[11px] font-semibold truncate">{log.user_name || log.user_email}</p>
+                                                    <p className="text-[9px] text-muted-foreground truncate">{label}</p>
                                                 </div>
+                                                {isOnline && <div className="h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />}
                                             </div>
-                                        ))}
-                                    </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </CardContent>
