@@ -486,11 +486,18 @@ export default function AdminPage() {
                                                         const newRole = e.target.value.trim();
                                                         if (newRole !== (u.role || '')) {
                                                             try {
+                                                                // 1. Atualiza team_members
                                                                 const { error } = await supabase.from('team_members').update({ role: newRole }).eq('id', u.id);
-                                                                if (error) alert('Erro ao salvar função: ' + error.message);
-                                                                else window.location.reload();
+                                                                if (error) throw error;
+
+                                                                // 2. Sincroniza profiles pelo email
+                                                                if (u.email) {
+                                                                    await supabase.from('profiles').update({ role: newRole }).eq('email', u.email.toLowerCase().trim());
+                                                                }
+
+                                                                window.location.reload();
                                                             } catch (err: any) {
-                                                                alert('Erro: ' + err.message);
+                                                                alert('Erro ao salvar função: ' + err.message);
                                                             }
                                                         }
                                                     }}
@@ -511,9 +518,13 @@ export default function AdminPage() {
                                                             p_member_id: u.id, p_permissions: newPerms, p_profile_id: u.profile_id || null
                                                         });
                                                         if (rpcErr) console.error('[Permissão] Erro RPC:', rpcErr.message);
-                                                    } else if (emailKey) {
+                                                    }
+
+                                                    // Sincronização definitiva pelo email para ambos os casos (UUID ou FakeID)
+                                                    if (emailKey) {
                                                         await supabase.rpc('update_member_permissions_by_email', { p_email: emailKey, p_permissions: newPerms });
-                                                        if (u.profile_id) await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+                                                        // Força atualização direta no profiles para garantir sincronia imediata
+                                                        await supabase.from('profiles').update({ permissions: newPerms }).eq('email', emailKey);
                                                     }
                                                 };
                                                 return (

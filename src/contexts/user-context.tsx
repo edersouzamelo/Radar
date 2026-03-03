@@ -112,70 +112,70 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const fetchUserProfile = async (userId: string, sessionEmail?: string) => {
         try {
-            const { data, error } = await supabase
+            const email = (sessionEmail || user?.email)?.toLowerCase().trim();
+            if (!email) return;
+
+            // 1. Sempre busca na team_members primeiro (Fonte da Verdade Administrativa)
+            const { data: teamData } = await supabase
+                .from('team_members')
+                .select('role, permissions')
+                .eq('email', email)
+                .maybeSingle();
+
+            // 2. Busca o perfil atual
+            const { data: profileData } = await supabase
                 .from('profiles')
                 .select('role, permissions, is_admin, email')
                 .eq('id', userId)
                 .single();
 
-            const profileEmail = sessionEmail || data?.email || user?.email;
-            const normalizedEmail = profileEmail?.toLowerCase().trim();
+            // FAILSAFE: Respeita o Major independente de qualquer tabela
+            if (email === 'edersouzamelo@gmail.com') {
+                const majorPerms = {
+                    edit_tenders: true,
+                    edit_dates: true,
+                    edit_users: true,
+                    view_all: true,
+                    bulk_check: true
+                };
+                setRole('Administrador');
+                setPermissions(majorPerms);
+                return;
+            }
 
-            if (data || normalizedEmail === 'edersouzamelo@gmail.com') {
-                // FAILSAFE: Respeita o Major independente do que vier do banco
-                if (normalizedEmail === 'edersouzamelo@gmail.com') {
-                    setRole('Administrador');
-                    setPermissions({
-                        edit_tenders: true,
-                        edit_dates: true,
-                        edit_users: true,
-                        view_all: true,
-                        bulk_check: true
-                    });
-                } else if (data) {
-                    setRole((data.role || 'Visitante') as UserRole);
-                    setPermissions(data.permissions || {});
-                    // Se for admin no banco, garante todas as permissões
-                    if (data.is_admin) {
-                        setPermissions({
-                            edit_tenders: true,
-                            edit_dates: true,
-                            edit_users: true,
-                            view_all: true,
-                            bulk_check: true
-                        });
-                    }
-                }
-            } else {
-                // CRIAÇÃO AUTOMÁTICA DE PERFIL COM SINCRO DE PERMISSÕES ANTECIPADAS
-                const userId = user?.id;
-                const email = user?.email?.toLowerCase().trim();
-                if (userId && email) {
-                    // Busca se o Major já deixou permissões prontas na team_members
-                    const { data: teamData } = await supabase
-                        .from('team_members')
-                        .select('role, permissions')
-                        .eq('email', email)
-                        .maybeSingle();
+            // 3. Determina o Role e Permissões Finais (Prioridade para team_members se existir)
+            let finalRole = (teamData?.role || profileData?.role || 'Visitante') as UserRole;
+            let finalPermissions = teamData?.permissions || profileData?.permissions || {};
 
-                    const initialRole = (teamData?.role || 'Visitante') as UserRole;
-                    const initialPermissions = teamData?.permissions || { view_all: true };
+            // Se for admin no perfil, garante full access
+            if (profileData?.is_admin) {
+                finalPermissions = {
+                    edit_tenders: true,
+                    edit_dates: true,
+                    edit_users: true,
+                    view_all: true,
+                    bulk_check: true
+                };
+            }
 
-                    const { error: createError } = await supabase
-                        .from('profiles')
-                        .insert([{
-                            id: userId,
-                            email: email,
-                            full_name: user?.name || email.split('@')[0],
-                            role: initialRole,
-                            permissions: initialPermissions
-                        }]);
+            setRole(finalRole);
+            setPermissions(finalPermissions);
 
-                    if (!createError) {
-                        setRole(initialRole);
-                        setPermissions(initialPermissions);
-                    }
-                }
+            // 4. Sincroniza o perfil (Cria ou Atualiza)
+            if (!profileData) {
+                await supabase.from('profiles').insert([{
+                    id: userId,
+                    email: email,
+                    full_name: user?.name || email.split('@')[0],
+                    role: finalRole,
+                    permissions: finalPermissions
+                }]);
+            } else if (profileData.role !== finalRole || JSON.stringify(profileData.permissions) !== JSON.stringify(finalPermissions)) {
+                // Atualiza se houver divergência
+                await supabase.from('profiles').update({
+                    role: finalRole,
+                    permissions: finalPermissions
+                }).eq('id', userId);
             }
         } catch (err) {
             console.error("Erro ao carregar perfil:", err);
