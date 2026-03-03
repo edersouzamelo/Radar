@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-// We use pdfjs-dist directly for Edge/Serverless compatibility
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-
-// Defina o worker local (necessário pelo pdfjs-dist)
-// Nota: Em serverless na Vercel o PDF.JS funciona melhor na versão Legacy sem canvas dom dependencies
-pdfjsLib.GlobalWorkerOptions.workerSrc = `pdfjs-dist/legacy/build/pdf.worker.js`;
+import pdf from 'pdf-parse';
 
 export const maxDuration = 60; // 1 min (Vercel max for Hobby)
 export const dynamic = 'force-dynamic';
 
-// Initialize Supabase admin client (requires service role key or anon key depending on your setup)
+// Initialize Supabase admin client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -70,29 +65,16 @@ export async function POST(req: Request) {
 
         let extractedText = '';
 
-        // 2. Extract text (currently assuming PDF, but we can add more logic)
+        // 2. Extract text
         if (fileName.toLowerCase().endsWith('.pdf')) {
-            const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
-            const pdfDoc = await loadingTask.promise;
-
-            const numPages = pdfDoc.numPages;
-            const textPromises = [];
-
-            for (let i = 1; i <= numPages; i++) {
-                textPromises.push(
-                    pdfDoc.getPage(i).then(page => page.getTextContent())
-                );
+            try {
+                const data = await pdf(buffer);
+                extractedText = data.text;
+            } catch (err: any) {
+                console.error('pdf-parse error:', err);
+                throw new Error('Falha ao extrair texto do PDF.');
             }
-
-            const pagesContent = await Promise.all(textPromises);
-
-            extractedText = pagesContent.map(page =>
-                page.items.map((item: any) => item.str).join(' ')
-            ).join('\n\n');
         } else {
-            // Se for TXT ou outro formato de texto simples
-            // Seria implementado conversão docx, etc, aqui. 
-            // Mas para fallback de texto:
             extractedText = buffer.toString('utf-8');
         }
 
