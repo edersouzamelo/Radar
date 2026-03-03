@@ -49,11 +49,12 @@ export default function AdminPage() {
 
     const [allProfiles, setAllProfiles] = useState<any[]>([]);
 
+    const fetchProfiles = async () => {
+        const { data } = await supabase.from('profiles').select('*');
+        if (data) setAllProfiles(data);
+    };
+
     useEffect(() => {
-        const fetchProfiles = async () => {
-            const { data } = await supabase.from('profiles').select('*');
-            if (data) setAllProfiles(data);
-        };
         fetchProfiles();
     }, []);
 
@@ -118,10 +119,11 @@ export default function AdminPage() {
 
         return {
             ...member,
-            // Normalização de campos para evitar erros de tipagem e duplicidade
             full_name: profile?.full_name || member.name,
-            // PRIORIDADE: Perfil real > Gaveta (team_members) > Vazio
-            permissions: profile?.permissions || (member as any).permissions || {},
+            // Merge seguro: usa profile.permissions SÓ se tiver pelo menos uma chave definida como true
+            permissions: (
+                profile?.permissions && Object.values(profile.permissions).some(Boolean)
+            ) ? profile.permissions : (member as any).permissions || {},
             profile_id: profile?.id,
             is_auth_user: !!profile
         };
@@ -491,14 +493,16 @@ export default function AdminPage() {
                                                         onClick={async () => {
                                                             if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
                                                             const newPerms = { ...(u.permissions || {}), [permId]: !u.permissions?.[permId] };
-                                                            // Salva SEMPRE em team_members (fonte de verdade para usuários sem login)
+                                                            // Salva em team_members (fonte de verdade)
                                                             const { error: tmErr } = await supabase.from('team_members').update({ permissions: newPerms }).eq('id', u.id);
-                                                            if (tmErr) { alert('Erro ao salvar permissão: ' + tmErr.message); return; }
-                                                            // Se já tem perfil autenticado, sincroniza também em profiles
+                                                            if (tmErr) { alert('Erro ao salvar (team_members): ' + tmErr.message); return; }
+                                                            // Sincroniza em profiles se o usuário já tem login
                                                             if (u.is_auth_user && u.profile_id) {
-                                                                await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+                                                                const { error: pErr } = await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+                                                                if (pErr) console.warn('Aviso: não foi possível sincronizar profiles:', pErr.message);
                                                             }
-                                                            window.location.reload();
+                                                            // Atualiza estado local sem reload
+                                                            await fetchProfiles();
                                                         }}
                                                     >
                                                         {u.permissions?.[permId] && <CheckSquare className="h-3 w-3" />}
