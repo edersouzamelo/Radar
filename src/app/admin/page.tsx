@@ -125,7 +125,9 @@ export default function AdminPage() {
             profile_id: profile?.id,
             is_auth_user: !!profile
         };
-    }).sort((a, b) => a.full_name.localeCompare(b.full_name));
+    }).sort((a, b) => a.full_name.localeCompare(b.full_name))
+        // Desduplicar: um membro pode estar em mais de uma lista (pregoeiro + supervisor)
+        .filter((member, index, self) => index === self.findIndex(m => m.id === member.id));
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [editingMember, setEditingMember] = useState<any>(null)
@@ -489,15 +491,14 @@ export default function AdminPage() {
                                                         onClick={async () => {
                                                             if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
                                                             const newPerms = { ...(u.permissions || {}), [permId]: !u.permissions?.[permId] };
-                                                            if (u.is_auth_user) {
-                                                                const { error } = await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
-                                                                if (error) alert('Erro ao salvar permissão: ' + error.message);
-                                                                else window.location.reload();
-                                                            } else {
-                                                                const { error } = await supabase.from('team_members').update({ permissions: newPerms }).eq('id', u.id);
-                                                                if (error) alert('Erro ao salvar permissão: ' + error.message);
-                                                                else window.location.reload();
+                                                            // Salva SEMPRE em team_members (fonte de verdade para usuários sem login)
+                                                            const { error: tmErr } = await supabase.from('team_members').update({ permissions: newPerms }).eq('id', u.id);
+                                                            if (tmErr) { alert('Erro ao salvar permissão: ' + tmErr.message); return; }
+                                                            // Se já tem perfil autenticado, sincroniza também em profiles
+                                                            if (u.is_auth_user && u.profile_id) {
+                                                                await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
                                                             }
+                                                            window.location.reload();
                                                         }}
                                                     >
                                                         {u.permissions?.[permId] && <CheckSquare className="h-3 w-3" />}
