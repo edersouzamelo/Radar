@@ -126,8 +126,8 @@ export default function AdminPage() {
         return {
             ...member,
             full_name: profile?.full_name || member.name,
-            // permOverrides tem prioridade total (atualização otimística)
-            permissions: permOverrides[member.id] !== undefined ? permOverrides[member.id] : basePerms,
+            // usa email como chave do override (estável entre syncs de ID)
+            permissions: permOverrides[member.email] !== undefined ? permOverrides[member.email] : basePerms,
             profile_id: profile?.id,
             is_auth_user: !!profile
         };
@@ -496,8 +496,8 @@ export default function AdminPage() {
                                                         onClick={async () => {
                                                             if (!u.email) { alert('Defina o e-mail primeiro.'); return; }
                                                             const newPerms = { ...(u.permissions || {}), [permId]: !u.permissions?.[permId] };
-                                                            // Atualiza UI imediatamente (otimístico)
-                                                            setPermOverrides(prev => ({ ...prev, [u.id]: newPerms }));
+                                                            // Atualiza UI imediatamente (otimístico — chave por email, estável entre syncs)
+                                                            setPermOverrides(prev => ({ ...prev, [u.email]: newPerms }));
                                                             // Valida se o ID é UUID real (do banco) ou sintético (localStorage)
                                                             const isRealUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(u.id);
                                                             if (isRealUuid) {
