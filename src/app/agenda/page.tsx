@@ -52,6 +52,9 @@ export default function AgendaPage() {
         const events: AgendaEvent[] = []
 
         tenders.forEach(t => {
+            const isCancelled = t.status.includes('CANCELADO') || t.status === 'ABANDONADO';
+            if (isCancelled) return;
+
             const checks = dateChecks[t.id] || {}
 
             const addEvent = (dateStr: string | undefined, label: string, checkKey: string, type: AgendaEvent['type'] = 'deadline') => {
@@ -61,7 +64,7 @@ export default function AgendaPage() {
                     if (!isValid(date)) return
 
                     const isOk = !!checks[checkKey]
-                    const isFinished = t.status.includes('CANCELADO') || t.status === 'HOMOLOGADO'
+                    const isFinished = t.status === 'HOMOLOGADO'
                     const isOverdue = !isOk && isBefore(date, today) && !isFinished
                     const daysDiff = differenceInDays(today, date)
 
