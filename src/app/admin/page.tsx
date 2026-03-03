@@ -498,15 +498,32 @@ export default function AdminPage() {
                                                             const newPerms = { ...(u.permissions || {}), [permId]: !u.permissions?.[permId] };
                                                             // Atualiza UI imediatamente (otimístico)
                                                             setPermOverrides(prev => ({ ...prev, [u.id]: newPerms }));
-                                                            // Salva via RPC com SECURITY DEFINER (bypassa RLS)
-                                                            const { error: rpcErr } = await supabase.rpc('update_member_permissions', {
-                                                                p_member_id: u.id,
-                                                                p_permissions: newPerms,
-                                                                p_profile_id: u.profile_id || null
-                                                            });
-                                                            if (rpcErr) {
-                                                                console.error('[Permissão] Erro RPC:', rpcErr.message);
-                                                                alert('Erro ao salvar: ' + rpcErr.message);
+                                                            // Valida se o ID é UUID real (do banco) ou sintético (localStorage)
+                                                            const isRealUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(u.id);
+                                                            if (isRealUuid) {
+                                                                // Membro com ID real: atualiza via RPC com SECURITY DEFINER
+                                                                const { error: rpcErr } = await supabase.rpc('update_member_permissions', {
+                                                                    p_member_id: u.id,
+                                                                    p_permissions: newPerms,
+                                                                    p_profile_id: u.profile_id || null
+                                                                });
+                                                                if (rpcErr) {
+                                                                    console.error('[Permissão] Erro RPC:', rpcErr.message);
+                                                                    alert('Erro ao salvar: ' + rpcErr.message);
+                                                                }
+                                                            } else if (u.profile_id) {
+                                                                // Membro com ID sintético mas que já tem login: salva só em profiles
+                                                                const { error: pErr } = await supabase.rpc('update_profile_permissions', {
+                                                                    p_profile_id: u.profile_id,
+                                                                    p_permissions: newPerms
+                                                                });
+                                                                if (pErr) {
+                                                                    // Fallback directo ao Supabase client
+                                                                    await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
+                                                                }
+                                                            } else {
+                                                                // ID sintético e sem login ainda: informa ao admin
+                                                                alert('Este membro ainda não foi sincronizado com o banco. Use "Forçar Upload" no topo da página para sincronizar a equipe, depois tente novamente.');
                                                             }
                                                         }}
                                                     >
