@@ -498,17 +498,20 @@ export default function AdminPage() {
                                                             const newPerms = { ...(u.permissions || {}), [permId]: !u.permissions?.[permId] };
                                                             // Atualiza UI imediatamente (otimístico)
                                                             setPermOverrides(prev => ({ ...prev, [u.id]: newPerms }));
-                                                            // Salva em team_members
-                                                            const { error: tmErr } = await supabase.from('team_members').update({ permissions: newPerms }).eq('id', u.id);
-                                                            if (tmErr) {
-                                                                console.error('[Permissão] Erro ao salvar em team_members:', tmErr.message, tmErr);
-                                                                alert('Erro ao salvar permissão: ' + tmErr.message + '\n\nVerifique as políticas RLS do Supabase.');
-                                                                // Não reverte: o admin precisa saber que falhou mas a UI fica marcada
-                                                            }
-                                                            // Sincroniza em profiles se o usuário já tem login
-                                                            if (u.is_auth_user && u.profile_id) {
-                                                                const { error: pErr } = await supabase.from('profiles').update({ permissions: newPerms }).eq('id', u.profile_id);
-                                                                if (pErr) console.error('[Permissão] Erro ao sincronizar profiles:', pErr.message);
+                                                            // Salva via API server-side (bypassa RLS com service role)
+                                                            const res = await fetch('/api/admin/save-permissions', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({
+                                                                    memberId: u.id,
+                                                                    permissions: newPerms,
+                                                                    profileId: u.profile_id || null
+                                                                })
+                                                            });
+                                                            const result = await res.json();
+                                                            if (!res.ok) {
+                                                                console.error('[Permissão] Erro API:', result.error);
+                                                                alert('Erro ao salvar: ' + result.error);
                                                             }
                                                         }}
                                                     >
