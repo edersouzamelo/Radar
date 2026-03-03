@@ -1,16 +1,20 @@
-layouimport type { NextConfig } from "next";
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['pdf-parse', 'canvas'],
-  turbopack: {
-    resolveAlias: {
-      canvas: { browser: './empty-module.js', default: './empty-module.js' },
-    },
-  },
+  serverExternalPackages: ['pdfjs-dist'],
+  // For standard next build (Webpack)
   webpack: (config) => {
     config.resolve.alias.canvas = false;
-    config.externals = [...(config.externals || []), { canvas: 'canvas' }];
+    config.resolve.alias.encoding = false;
     return config;
+  },
+  // For Turbopack (Next.js 15 builders)
+  experimental: {
+    turbo: {
+      resolveAlias: {
+        canvas: './empty-module.js',
+      },
+    },
   },
 };
 
