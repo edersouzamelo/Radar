@@ -1,4 +1,5 @@
 export type TenderStatus =
+    | 'PLANEJADO'
     | 'CANCELADO POR ABANDONO'
     | 'CANCELADO POR REVOGAÇÃO'
     | 'CANCELADO POR DUPLICIDADE DE OBJETO'

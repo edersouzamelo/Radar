@@ -15,9 +15,10 @@ export default function Dashboard() {
 
   // Cálculos de métricas dinâmicas
   const totalTenders = tenders.length;
-  const cancelledCount = tenders.filter(t => t.status.startsWith('CANCELADO')).length;
+  const plannedCount = tenders.filter(t => t.status === 'PLANEJADO').length;
+  const cancelledCount = tenders.filter(t => t.status.startsWith('CANCELADO') || t.status === 'ABANDONADO').length;
   const completedCount = tenders.filter(t => t.status === 'HOMOLOGADO').length;
-  const inProgressCount = totalTenders - cancelledCount - completedCount;
+  const inProgressCount = totalTenders - plannedCount - cancelledCount - completedCount;
   const issuesCount = tenders.filter(t => t.status === 'FASE INTERNA - CORREÇÕES PARA PUBLICAÇÃO' || t.hasIssues).length;
 
   // Obter atualizações recentes
@@ -28,6 +29,7 @@ export default function Dashboard() {
 
   // Categorias Detalhadas para a barra lateral
   const statusCategories = [
+    { label: 'Planejados', match: (s: string) => s === 'PLANEJADO' },
     { label: 'Interna: OMDS', match: (s: string) => s === 'FASE INTERNA NA OMDS' },
     { label: 'Interna: SAL', match: (s: string) => s === 'FASE INTERNA NA SAL' },
     { label: 'Interna: IRP', match: (s: string) => s === 'FASE INTERNA - IRP' },
@@ -36,7 +38,7 @@ export default function Dashboard() {
     { label: 'Externa: Edital Publicado', match: (s: string) => s === 'FASE EXTERNA - EDITAL PUBLICADO' },
     { label: 'Externa: Sessão/Lances', match: (s: string) => s.includes('EXTERNA') && !s.includes('EDITAL') },
     { label: 'Homologados', match: (s: string) => s === 'HOMOLOGADO' },
-    { label: 'Cancelados/Suspensos', match: (s: string) => s.startsWith('CANCELADO') },
+    { label: 'Cancelados/Suspensos', match: (s: string) => s.startsWith('CANCELADO') || s === 'ABANDONADO' },
   ];
 
   return (
@@ -154,9 +156,10 @@ export default function Dashboard() {
                         <div
                           className={cn(
                             "h-1.5 rounded-full transition-all duration-1000",
-                            cat.label.includes('Interna') ? "bg-rose-500" :
-                              cat.label.includes('Externa') ? "bg-radar-gold" :
-                                cat.label.includes('Homologados') ? "bg-green-500" : "bg-slate-400"
+                            cat.label === 'Planejados' ? "bg-slate-500" :
+                              cat.label.includes('Interna') ? "bg-rose-500" :
+                                cat.label.includes('Externa') ? "bg-radar-gold" :
+                                  cat.label.includes('Homologados') ? "bg-green-500" : "bg-slate-400"
                           )}
                           style={{ width: `${percentage}%` }}
                         />

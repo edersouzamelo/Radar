@@ -20,6 +20,10 @@ interface TendersContextType {
     setCoordinatorFilter: (filter: string) => void;
     requesterSectorFilter: string;
     setRequesterSectorFilter: (filter: string) => void;
+    pregoeiroInternoFilter: string;
+    setPregoeiroInternoFilter: (filter: string) => void;
+    pregoeiroExternoFilter: string;
+    setPregoeiroExternoFilter: (filter: string) => void;
     objectFilter: string;
     setObjectFilter: (filter: string) => void;
     updateTender: (id: string, updates: Partial<Tender>, editorName?: string) => void;
@@ -77,6 +81,8 @@ export function TendersProvider({ children }: { children: ReactNode }) {
     const [commitmentFilter, setCommitmentFilter] = useState("all");
     const [coordinatorFilter, setCoordinatorFilter] = useState("all");
     const [requesterSectorFilter, setRequesterSectorFilter] = useState("all");
+    const [pregoeiroInternoFilter, setPregoeiroInternoFilter] = useState("all");
+    const [pregoeiroExternoFilter, setPregoeiroExternoFilter] = useState("all");
     const [objectFilter, setObjectFilter] = useState("");
     const [highlightId, setHighlightId] = useState<string | null>(null);
 
@@ -257,45 +263,90 @@ export function TendersProvider({ children }: { children: ReactNode }) {
         return () => { if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current); };
     }, [pushDataToCloud, isLoaded]);
 
+    // --- HISTORY HELPERS ---
+    const saveToHistory = useCallback(() => {
+        setHistory(prev => {
+            const newState = {
+                tenders: [...tenders.map(t => ({ ...t }))], // Shallow copy mais eficiente que JSON.parse(JSON.stringify)
+                conferenceStatuses: { ...conferenceStatuses },
+                dateChecks: { ...dateChecks } // DateChecks já é um objeto simples
+            };
+            return [newState, ...prev].slice(0, 50);
+        });
+    }, [tenders, conferenceStatuses, dateChecks]);
+
+    const undo = useCallback(() => {
+        if (history.length === 0) return;
+
+        const [lastState, ...remainingHistory] = history;
+
+        hasUserInteracted.current = true;
+        setTenders(lastState.tenders);
+        setConferenceStatuses(lastState.conferenceStatuses);
+        setDateChecks(lastState.dateChecks);
+        setHistory(remainingHistory);
+    }, [history]);
+
     const updateTender = useCallback((id: string, updates: Partial<Tender>, editorName?: string) => {
+        saveToHistory();
         hasUserInteracted.current = true;
         setTenders(prev => prev.map(t => t.id === id ? { ...t, ...updates, lastUpdatedAt: new Date().toISOString(), lastUpdatedBy: editorName || t.lastUpdatedBy } : t));
-    }, []);
+    }, [saveToHistory]);
 
     const setConferenceStatus = useCallback((id: string, status: 'OK' | 'Pendente') => {
+        saveToHistory();
         hasUserInteracted.current = true;
         setConferenceStatuses(prev => ({ ...prev, [id]: status }));
-    }, []);
+    }, [saveToHistory]);
 
     const bulkSetConferenceStatus = useCallback((status: 'OK' | 'Pendente') => {
+        saveToHistory();
         hasUserInteracted.current = true;
         const next: Record<string, 'OK' | 'Pendente'> = {};
         tenders.forEach(t => next[t.id] = status);
         setConferenceStatuses(next);
-    }, [tenders]);
+    }, [tenders, saveToHistory]);
 
     const toggleConferenceColumn = useCallback(() => setShowConferenceColumn(prev => !prev), []);
 
-    const deleteTender = useCallback((id: string) => {
+    const deleteTender = useCallback(async (id: string) => {
         if (confirm("Tem certeza que deseja excluir este pregão permanentemente?")) {
+            saveToHistory();
             hasUserInteracted.current = true;
+
+            // 1. Remover do estado local
             setTenders(prev => prev.filter(t => t.id !== id));
+
+            // 2. Remover do banco de dados (Supabase)
+            if (supabase) {
+                try {
+                    const { error } = await supabase.from('tenders').delete().eq('id', id);
+                    if (error) throw error;
+                    console.log(`[Radar] Pregão ${id} excluído com sucesso do banco.`);
+                } catch (err: any) {
+                    console.error("[Radar] Erro ao excluir do banco:", err.message);
+                    alert("Erro ao excluir do servidor. Mas a linha foi removida da sua tela.");
+                }
+            }
         }
-    }, []);
+    }, [saveToHistory]);
 
     const resetToOriginalData = useCallback(() => {
         if (confirm("Isso irá resetar os dados para o estado inicial do arquivo data.ts. Continuar?")) {
+            saveToHistory();
             hasUserInteracted.current = true;
             setTenders(initialTenders);
         }
-    }, []);
+    }, [saveToHistory]);
 
     const toggleDateCheck = useCallback((tenderId: string, dateKey: string) => {
+        saveToHistory();
         hasUserInteracted.current = true;
         setDateChecks(prev => ({ ...prev, [tenderId]: { ...(prev[tenderId] || {}), [dateKey]: !(prev[tenderId]?.[dateKey]) } }));
-    }, []);
+    }, [saveToHistory]);
 
     const addTenderBelow = useCallback((id: string) => {
+        saveToHistory();
         hasUserInteracted.current = true;
         setTenders(prev => {
             const idx = prev.findIndex(t => t.id === id);
@@ -305,7 +356,7 @@ export function TendersProvider({ children }: { children: ReactNode }) {
             list.splice(idx + 1, 0, nt);
             return list;
         });
-    }, []);
+    }, [saveToHistory]);
 
     // GESTÃO DE EQUIPE UNIFICADA
     const addPerson = useCallback((d: Omit<Person, 'id'>) => { hasUserInteracted.current = true; setPeople(prev => [...prev, { ...d, id: `person-${Date.now()}` }]); }, []);
@@ -332,7 +383,9 @@ export function TendersProvider({ children }: { children: ReactNode }) {
 
     return (
         <TendersContext.Provider value={{
-            tenders, searchQuery, setSearchQuery, statusFilter, setStatusFilter, nupFilter, setNupFilter, commitmentFilter, setCommitmentFilter, coordinatorFilter, setCoordinatorFilter, requesterSectorFilter, setRequesterSectorFilter, updateTender, refreshTender: (_id: string, _editorName?: string) => loadDataFromCloud(true), showConferenceColumn, toggleConferenceColumn, conferenceStatuses, setConferenceStatus, bulkSetConferenceStatus, dateChecks, toggleDateCheck, deleteTender, addTenderBelow, undo: () => { }, canUndo: false, historyCount: 0, resetToOriginalData, objectFilter, setObjectFilter, people, addPerson, updatePerson, deletePerson, pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro, assignTenderToPregoeiro, supervisors, addSupervisor, updateSupervisor, deleteSupervisor, highlightId, setHighlightId, cloudStatus, forceCloudSync: pushDataToCloud, pullDataFromCloud: loadDataFromCloud, importTendersFromCSV
+            tenders, searchQuery, setSearchQuery, statusFilter, setStatusFilter, nupFilter, setNupFilter, commitmentFilter, setCommitmentFilter, coordinatorFilter, setCoordinatorFilter, requesterSectorFilter, setRequesterSectorFilter,
+            pregoeiroInternoFilter, setPregoeiroInternoFilter, pregoeiroExternoFilter, setPregoeiroExternoFilter,
+            updateTender, refreshTender: (_id: string, _editorName?: string) => loadDataFromCloud(true), showConferenceColumn, toggleConferenceColumn, conferenceStatuses, setConferenceStatus, bulkSetConferenceStatus, dateChecks, toggleDateCheck, deleteTender, addTenderBelow, undo, canUndo: history.length > 0, historyCount: history.length, resetToOriginalData, objectFilter, setObjectFilter, people, addPerson, updatePerson, deletePerson, pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro, assignTenderToPregoeiro, supervisors, addSupervisor, updateSupervisor, deleteSupervisor, highlightId, setHighlightId, cloudStatus, forceCloudSync: pushDataToCloud, pullDataFromCloud: loadDataFromCloud, importTendersFromCSV
         }}>
             {children}
         </TendersContext.Provider>
