@@ -216,3 +216,19 @@ export interface Tender {
     pregoeiroFaseInternaId?: string; // ID do pregoeiro na Fase Interna
     pregoeiroFaseExternaId?: string; // ID do pregoeiro na Fase Externa
 }
+
+export interface AgendaEvent {
+    id: string;
+    tenderId: string;
+    tenderNumber: string;
+    label: string;
+    date: Date;
+    type: 'deadline' | 'effective' | 'forecast';
+    isOk: boolean;
+    isOverdue: boolean;
+    tenderStatus: string;
+    uasg: string;
+    description: string;
+    requesterSector: string;
+    daysDiff: number;
+}

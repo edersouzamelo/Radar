@@ -22,22 +22,11 @@ import { cn } from "@/lib/utils"
 import { motion, AnimatePresence, type Variants } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { AgendaEvent, Person } from "@/types"
+import { generateAgendaReport } from "@/lib/report-utils"
+import { FileDown, MessageSquare } from "lucide-react"
 
-interface AgendaEvent {
-    id: string;
-    tenderId: string;
-    tenderNumber: string;
-    label: string;
-    date: Date;
-    type: 'deadline' | 'effective' | 'forecast';
-    isOk: boolean;
-    isOverdue: boolean;
-    tenderStatus: string;
-    uasg: string;
-    description: string;
-    requesterSector: string;
-    daysDiff: number;
-}
+
 
 export default function AgendaPage() {
     const { tenders, dateChecks } = useTenders()
@@ -170,7 +159,17 @@ export default function AgendaPage() {
         }
     }
 
+    const handleWhatsAppNotify = (event: AgendaEvent) => {
+        const message = `Olá! Sou do setor de licitações. Gostaria de avisar que o prazo para o evento "${event.label}" do Pregão nº ${event.tenderNumber} vence em ${format(event.date, "dd/MM/yyyy")}. Favor providenciar a documentação necessária.`;
+        const encodedMessage = encodeURIComponent(message);
+
+        // Tentar encontrar o contato do setor se houver telefone
+        const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
     const EventItem = ({ event }: { event: AgendaEvent }) => (
+
         <div
             className={cn(
                 "group relative flex items-center gap-4 p-4 rounded-xl border transition-all duration-300",
@@ -222,7 +221,19 @@ export default function AgendaPage() {
                 </div>
             </div>
 
-            <div className="shrink-0 flex items-center gap-3">
+            <div className="shrink-0 flex items-center gap-2">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                    title="Avisar via WhatsApp"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleWhatsAppNotify(event);
+                    }}
+                >
+                    <MessageSquare className="w-4 h-4" />
+                </Button>
                 {event.isOverdue ? (
                     <AlertCircle
                         className="w-5 h-5 text-red-500 cursor-pointer hover:scale-125 transition-transform"
@@ -235,6 +246,7 @@ export default function AgendaPage() {
                     <Clock className="w-5 h-5 text-slate-300 group-hover:text-radar-gold transition-colors" />
                 )}
             </div>
+
         </div>
     )
 
@@ -251,16 +263,39 @@ export default function AgendaPage() {
                     <p className="text-muted-foreground mt-1">Visão analítica de atrasos e próximos passos operacionais.</p>
                 </div>
 
-                <div className="relative group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-radar-gold transition-colors" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por Pregão, UASG ou Órgão..."
-                        className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 shadow-sm border rounded-xl text-sm w-full md:w-96 focus:ring-2 focus:ring-radar-gold/20 outline-none transition-all border-slate-200"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                <div className="flex items-center gap-2">
+                    <Button
+                        onClick={() => generateAgendaReport(allEvents)}
+                        className="bg-white hover:bg-slate-50 text-radar-dark border-slate-200 shadow-sm gap-2 rounded-xl h-10 px-4"
+                        variant="outline"
+                    >
+                        <FileDown className="w-4 h-4 text-radar-gold" />
+                        <span className="font-bold text-[10px] uppercase tracking-tight">Geral</span>
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            const salEvents = allEvents.filter(e => e.label.includes("Prazo SAL") && !e.isOk);
+                            generateAgendaReport(salEvents, "Relatório de Acionamento - Requisitantes (Prazo SAL)");
+                        }}
+                        className="bg-white hover:bg-blue-50 text-blue-700 border-blue-100 shadow-sm gap-2 rounded-xl h-10 px-4"
+                        variant="outline"
+                    >
+                        <FileDown className="w-4 h-4 text-blue-500" />
+                        <span className="font-bold text-[10px] uppercase tracking-tight">Requisitantes (SAL)</span>
+                    </Button>
+
+                    <div className="relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-radar-gold transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por Pregão, UASG ou Órgão..."
+                            className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 shadow-sm border rounded-xl text-sm w-full md:w-80 focus:ring-2 focus:ring-radar-gold/20 outline-none transition-all border-slate-200"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
                 </div>
+
             </div>
 
             <div className="grid gap-6 lg:grid-cols-12">

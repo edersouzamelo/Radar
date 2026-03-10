@@ -1,8 +1,15 @@
-"use client";
-import { Bell, Menu, RefreshCw } from "lucide-react";
+import { Bell, Menu, RefreshCw, Trash2, CheckCircle, Info, AlertTriangle } from "lucide-react";
 import { UserNav } from "@/components/user-nav";
 import { useTenders } from "@/contexts/tenders-context";
+import { useNotifications } from "@/contexts/notifications-context";
 import { useState } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
+
 
 interface HeaderProps {
     onMenuOpen?: () => void;
@@ -10,7 +17,9 @@ interface HeaderProps {
 
 export function Header({ onMenuOpen }: HeaderProps) {
     const { searchQuery, setSearchQuery, cloudStatus, pullDataFromCloud } = useTenders();
+    const { alerts, unreadCount, markAsRead, markAllAsRead, clearAlerts } = useNotifications();
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const router = useRouter();
 
     const handleRefresh = async () => {
         setIsRefreshing(true);
@@ -113,11 +122,80 @@ export function Header({ onMenuOpen }: HeaderProps) {
                     <span>Atualizar</span>
                 </button>
 
-                <button type="button" className="p-2 text-gray-500 hover:text-radar-gold transition-colors relative flex-shrink-0">
-                    <span className="sr-only">Ver notificações</span>
-                    <Bell className="h-5 w-5" aria-hidden="true" />
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-radar-gold ring-2 ring-white"></span>
-                </button>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <button type="button" className="p-2 text-gray-500 hover:text-radar-gold transition-colors relative flex-shrink-0">
+                            <span className="sr-only">Ver notificações</span>
+                            <Bell className="h-5 w-5" aria-hidden="true" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 h-4 min-w-4 flex items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white ring-2 ring-white">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[450px] p-0 rounded-2xl border-slate-100 shadow-xl" align="end">
+                        <div className="flex items-center justify-between p-4 border-b">
+                            <h3 className="font-bold text-sm">Notificações</h3>
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-blue-600" onClick={markAllAsRead}>
+                                    Ler Tudo
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-red-600" onClick={clearAlerts}>
+                                    Limpar
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="max-h-[500px] overflow-y-auto">
+
+                            {alerts.length > 0 ? (
+                                <div className="flex flex-col">
+                                    {alerts.map((alert) => (
+                                        <div
+                                            key={alert.id}
+                                            onClick={() => {
+                                                markAsRead(alert.id);
+                                                if (alert.tenderId) router.push(`/agenda`);
+                                            }}
+                                            className={`p-4 border-b last:border-0 cursor-pointer transition-colors hover:bg-slate-50 relative ${!alert.isRead ? 'bg-blue-50/30' : ''}`}
+                                        >
+                                            {!alert.isRead && <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                                            <div className="flex gap-3">
+                                                <div className={`mt-1 h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${alert.type === 'error' ? 'bg-red-100 text-red-600' :
+                                                    alert.type === 'warning' ? 'bg-amber-100 text-amber-600' :
+                                                        'bg-blue-100 text-blue-600'
+                                                    }`}>
+                                                    {alert.type === 'error' ? <AlertTriangle className="h-4 w-4" /> :
+                                                        alert.type === 'warning' ? <Info className="h-4 w-4" /> :
+                                                            <CheckCircle className="h-4 w-4" />
+                                                    }
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-xs font-bold leading-tight ${!alert.isRead ? 'text-slate-900' : 'text-slate-600'}`}>
+                                                        {alert.title}
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                                                        {alert.message}
+                                                    </p>
+                                                    <p className="text-[9px] text-slate-400 mt-2">
+                                                        {format(new Date(alert.date), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-12 text-slate-400 px-8 text-center">
+                                    <Bell className="h-12 w-12 mb-4 opacity-10" />
+                                    <p className="text-xs font-bold uppercase tracking-widest opacity-40">Nenhuma notificação</p>
+                                    <p className="text-[11px] mt-1 opacity-60">Seus alertas de prazos aparecerão aqui.</p>
+                                </div>
+                            )}
+                        </div>
+
+                    </PopoverContent>
+                </Popover>
 
                 <div className="flex items-center pl-2 border-l border-gray-200">
                     <UserNav />
@@ -126,3 +204,4 @@ export function Header({ onMenuOpen }: HeaderProps) {
         </header>
     );
 }
+

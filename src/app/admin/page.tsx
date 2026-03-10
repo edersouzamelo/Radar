@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Shield, UserPlus, Key, UserCog, AlertTriangle, Download, Trash2, Users, Radio, CheckSquare } from "lucide-react"
+import { Shield, UserPlus, Key, UserCog, AlertTriangle, Download, Trash2, Users, Radio, CheckSquare, RefreshCw } from "lucide-react"
 import { useTenders } from "@/contexts/tenders-context"
+
 import { exportTendersToCSV } from "@/lib/export-utils"
 import { DatabaseMonitor } from "@/components/admin/database-monitor"
 import { supabase } from "@/lib/supabase"
@@ -51,11 +52,20 @@ export default function AdminPage() {
     // Estado isolado para checkboxes de permissão — inicializado uma única vez do banco
     const [permChecked, setPermChecked] = useState<Record<string, Record<string, boolean>>>({});
     const permCheckedInit = useRef(false);
+    const [isSyncing, setIsSyncing] = useState(false);
 
     const fetchProfiles = async () => {
-        const { data } = await supabase.from('profiles').select('*');
-        if (data) setAllProfiles(data);
+        setIsSyncing(true);
+        try {
+            const { data } = await supabase.from('profiles').select('*');
+            if (data) setAllProfiles(data);
+            // Simular um leve delay para o "conforto espiritual" da animação
+            await new Promise(r => setTimeout(r, 800));
+        } finally {
+            setIsSyncing(false);
+        }
     };
+
 
     useEffect(() => {
         fetchProfiles();
@@ -226,6 +236,17 @@ export default function AdminPage() {
                         <Download className="mr-2 h-4 w-4" />
                         Exportar Banco
                     </Button>
+
+                    <Button
+                        variant="default"
+                        className="bg-blue-600 text-white hover:bg-blue-700 font-bold px-4 shadow-lg border-2 border-blue-400/30 gap-2"
+                        onClick={fetchProfiles}
+                        disabled={isSyncing}
+                    >
+                        <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                        {isSyncing ? 'Sincronizando...' : 'Sincronizar Dados'}
+                    </Button>
+
 
                     <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                         <DialogTrigger asChild>

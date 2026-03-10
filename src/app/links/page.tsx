@@ -17,8 +17,10 @@ import {
     Trash2,
     Edit2,
     GripVertical,
-    ShieldCheck
+    ShieldCheck,
+    RefreshCw
 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -45,10 +47,25 @@ export default function LinksPage() {
         pregoeiros, addPregoeiro, updatePregoeiro, deletePregoeiro,
         supervisors, addSupervisor, updateSupervisor, deleteSupervisor,
         tenders, assignTenderToPregoeiro,
-        searchQuery, setSearchQuery
+        searchQuery, setSearchQuery,
+        pullDataFromCloud
     } = useTenders()
 
+
+    const [isSyncing, setIsSyncing] = useState(false)
     const [enabled, setEnabled] = useState(false);
+
+    const handleSync = async () => {
+        setIsSyncing(true)
+        try {
+            await pullDataFromCloud(true)
+            // Delay para conforto espiritual
+            await new Promise(r => setTimeout(r, 800))
+        } finally {
+            setIsSyncing(false)
+        }
+    }
+
 
     useEffect(() => {
         setEnabled(true);
@@ -188,10 +205,21 @@ export default function LinksPage() {
                     <div className="p-2 bg-amber-100 rounded-xl">
                         <Users2 className="w-6 h-6 text-amber-700" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <h1 className="text-2xl font-bold tracking-tight">Módulo de Vínculos</h1>
                         <p className="text-muted-foreground text-sm font-medium">Gerenciamento de contatos e atribuição de responsabilidades</p>
                     </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-2 font-bold px-4 h-9 shadow-sm border border-blue-100"
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                    >
+                        <RefreshCw className={cn("w-4 h-4", isSyncing && "animate-spin")} />
+                        {isSyncing ? "Sincronizando..." : "Sincronizar Dados"}
+                    </Button>
+
                 </div>
             </header>
 

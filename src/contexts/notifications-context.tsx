@@ -4,28 +4,122 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { Subscriber, NotificationLog } from '@/types';
 import { useTenders } from './tenders-context';
 
+interface Alert {
+    id: string;
+    title: string;
+    message: string;
+    type: 'warning' | 'error' | 'info';
+    date: string;
+    isRead: boolean;
+    tenderId?: string;
+}
+
 interface NotificationsContextType {
     subscribers: Subscriber[];
     logs: NotificationLog[];
+    alerts: Alert[];
+    unreadCount: number;
     addSubscriber: (subscriber: Omit<Subscriber, 'id' | 'createdAt'>) => void;
     removeSubscriber: (id: string) => void;
     checkAndSendNotifications: () => Promise<void>;
+    markAsRead: (id: string) => void;
+    markAllAsRead: () => void;
+    clearAlerts: () => void;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
 
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
-    const { tenders, people, pregoeiros, supervisors } = useTenders();
+    const { tenders, people, pregoeiros, supervisors, dateChecks } = useTenders();
+
     const [manualSubscribers, setManualSubscribers] = useState<Subscriber[]>([]);
     const [logs, setLogs] = useState<NotificationLog[]>([]);
+    const [alerts, setAlerts] = useState<Alert[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Carregar logs salvos (Logs podem continuar no localStorage ou ir pro DB no futuro)
+    // Carregar logs e alertas salvos
     useEffect(() => {
         const savedLogs = localStorage.getItem('radar_logs');
+        const savedAlerts = localStorage.getItem('radar_alerts');
         if (savedLogs) setLogs(JSON.parse(savedLogs));
+        if (savedAlerts) setAlerts(JSON.parse(savedAlerts));
         setIsLoaded(true);
     }, []);
+
+    // Salvar alertas sempre que mudarem
+    useEffect(() => {
+        if (isLoaded) {
+            localStorage.setItem('radar_alerts', JSON.stringify(alerts));
+        }
+    }, [alerts, isLoaded]);
+
+    // Gerar alertas in-app baseados nos pregões
+    useEffect(() => {
+        if (!isLoaded || tenders.length === 0) return;
+
+        const today = new Date();
+        const activeAlerts: Alert[] = [];
+
+        tenders.forEach(t => {
+            // Se o processo está homologado ou cancelado, não deve ter alerta ativo
+            if (t.status === 'HOMOLOGADO' || t.status.includes('CANCELADO')) return;
+
+            const deadlineStr = t.dates?.protocoloSetorRequisitante?.defined;
+            const checks = dateChecks[t.id] || {};
+            const isOk = !!checks["protocoloSetorRequisitante.defined"];
+
+            // Se o prazo já foi cumprido (Check azul na agenda), não deve ter alerta
+            if (!deadlineStr || isOk) return;
+
+
+            const deadline = new Date(deadlineStr);
+            const diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Identificador único baseado na data e ID para evitar duplicatas, mas permitir atualizações se a data mudar
+            const alertId = `deadline-${t.id}-${deadlineStr}`;
+
+            // Regras de Alertas (Sincronizadas com a Agenda)
+            if (diffDays <= 0) {
+                activeAlerts.push({
+                    id: alertId,
+                    title: diffDays === 0 ? `Prazo Vence Hoje: ${t.number}` : `Prazo ATRASADO: ${t.number}`,
+                    message: `O Prazo SAL do pregão ${t.number} (${t.uasg}) ${diffDays === 0 ? 'vence hoje' : `está atrasado há ${Math.abs(diffDays)} dias`}.`,
+                    type: diffDays === 0 ? 'warning' : 'error',
+                    date: new Date().toISOString(),
+                    isRead: alerts.find(a => a.id === alertId)?.isRead || false,
+                    tenderId: t.id
+                });
+            } else if (diffDays <= 5) {
+                activeAlerts.push({
+                    id: alertId,
+                    title: `Prazo Próximo: ${t.number}`,
+                    message: `Faltam apenas ${diffDays} dias para o Prazo SAL do pregão ${t.number}.`,
+                    type: 'info',
+                    date: new Date().toISOString(),
+                    isRead: alerts.find(a => a.id === alertId)?.isRead || false,
+                    tenderId: t.id
+                });
+            }
+        });
+
+        // Substituir os alertas antigos pelos ativos (Sincronismo Total)
+        setAlerts(activeAlerts);
+    }, [tenders, isLoaded]);
+
+
+    const unreadCount = useMemo(() => alerts.filter(a => !a.isRead).length, [alerts]);
+
+    const markAsRead = (id: string) => {
+        setAlerts(prev => prev.map(a => a.id === id ? { ...a, isRead: true } : a));
+    };
+
+    const markAllAsRead = () => {
+        setAlerts(prev => prev.map(a => ({ ...a, isRead: true })));
+    };
+
+    const clearAlerts = () => {
+        setAlerts([]);
+    };
 
     // DERIVAÇÃO UNIFICADA: Os subscritores são SEMPRE os membros da equipe + manuais
     const subscribers = useMemo(() => {
@@ -79,8 +173,11 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         const newLogs: NotificationLog[] = [];
 
         for (const tender of tenders) {
-            const openingDate = new Date(tender.openingDate);
-            const diffDays = Math.ceil((openingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            const deadlineStr = tender.dates?.protocoloSetorRequisitante?.defined;
+            if (!deadlineStr) continue;
+
+            const deadlineDate = new Date(deadlineStr);
+            const diffDays = Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
             // Alerta se faltar 30, 5 ou 0 dias
             if ([30, 5, 0].includes(diffDays)) {
@@ -89,21 +186,20 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
 
                     if (sub.preferences.email && sub.email) {
                         try {
-                            // Interface com API de disparo (Vercel/Node)
                             const response = await fetch('/api/notifications/email', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     to: sub.email,
-                                    subject: `ALERTA RADAR: Pregão ${tender.number} - Faltam ${diffDays} dias`,
+                                    subject: `ALERTA RADAR: Prazo SAL Pregão ${tender.number} - Faltam ${diffDays} dias`,
                                     html: `
                                         <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
                                             <h2 style="color: #1A1A1A;">Olá, ${sub.name}!</h2>
                                             <p>Este é um alerta automático do sistema <strong>RADAR</strong>.</p>
-                                            <p>O <strong>Pregão nº ${tender.number}</strong> (UASG ${tender.uasg}) possui abertura prevista para <strong>${new Date(tender.openingDate).toLocaleDateString('pt-BR')}</strong>.</p>
+                                            <p>O <strong>Prazo SAL do Pregão nº ${tender.number}</strong> vence em <strong>${new Date(deadlineStr).toLocaleDateString('pt-BR')}</strong>.</p>
                                             <hr />
-                                            <p><strong>Status:</strong> Faltam ${diffDays} dias.</p>
-                                            <p>Por favor, verifique se toda a documentação está protocolada na SALC.</p>
+                                            <p><strong>Status:</strong> ${diffDays === 0 ? 'Vence HOJE' : `Faltam ${diffDays} dias`}.</p>
+                                            <p>Por favor, providencie o Termo de Referência (TR).</p>
                                         </div>
                                     `
                                 })
@@ -134,13 +230,19 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         }
     };
 
+
     return (
         <NotificationsContext.Provider value={{
             subscribers,
             logs,
+            alerts,
+            unreadCount,
             addSubscriber,
             removeSubscriber,
-            checkAndSendNotifications
+            checkAndSendNotifications,
+            markAsRead,
+            markAllAsRead,
+            clearAlerts
         }}>
             {children}
         </NotificationsContext.Provider>
@@ -154,3 +256,4 @@ export function useNotifications() {
     }
     return context;
 }
+
